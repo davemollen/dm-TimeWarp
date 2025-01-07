@@ -1,0 +1,163 @@
+name: Build and release
+
+on:
+  release:
+    types: [created]
+
+defaults:
+  run:
+    # This otherwise gets run under dash which does not support brace expansion
+    shell: bash
+
+env:
+  binary_name: dm_grain_stretch
+  plugin_name: dm-GrainStretch
+  mod_package_name: dm-grainstretch
+
+jobs:
+  package-nih-plug:
+    name: Package nih-plug binaries
+    strategy:
+      matrix:
+        include:
+          - { name: ubuntu, os: ubuntu-latest, cross-target: "" }
+          - { name: macos, os: macos-latest, cross-target: x86_64-apple-darwin }
+          - { name: windows, os: windows-latest, cross-target: "" }
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch all git history
+        run: git fetch --force --prune --tags --unshallow
+
+      - name: Install dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libgl-dev libjack-dev libx11-xcb-dev  libxcb1-dev libxcb-dri2-0-dev libxcb-icccm4-dev libxcursor-dev libxkbcommon-dev libxcb-shape0-dev libxcb-xfixes0-dev
+
+      - name: Install dependencies
+        if: startsWith(matrix.os, 'windows')
+        run: choco install zip -y
+
+      - uses: actions/cache@v4
+        # FIXME: Caching `target/` causes the Windows runner to blow up after some time
+        if: startsWith(matrix.os, 'windows')
+        with:
+          path: |
+            ~/nih-plug/.cargo/registry/index/
+            ~/nih-plug/.cargo/registry/cache/
+            ~/nih-plug/.cargo/git/db/
+          key: ${{ matrix.name }}-${{ matrix.cross-target }}
+
+      - uses: actions/cache@v4
+        if: startsWith(matrix.os, 'windows') != true
+        with:
+          path: |
+            ~/nih-plug/.cargo/registry/index/
+            ~/nih-plug/.cargo/registry/cache/
+            ~/nih-plug/.cargo/git/db/
+            target/
+          key: ${{ matrix.name }}-${{ matrix.cross-target }}
+
+      - name: Set up Rust toolchain
+        # Needed for SIMD
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          # The macOS x86_64 build is done from an AArch64 macOS CI runner, so
+          # it needs to be cross compiled
+          targets: ${{ matrix.cross-target }}
+
+      - name: Build nih-plug
+        working-directory: ./nih-plug
+        run: |
+          runner_name=${{ matrix.name }}
+          if [[ $runner_name = 'macos' ]]; then
+            export MACOSX_DEPLOYMENT_TARGET=10.13
+            cargo xtask bundle-universal $binary_name --release
+          else
+            cross_target=${{ matrix.cross-target }}
+            if [[ -n $cross_target ]]; then
+              cargo xtask bundle $binary_name --release --target $cross_target
+            else
+              cargo xtask bundle $binary_name --release
+            fi
+          fi
+
+      - name: Determine build archive name
+        run: |
+          # Windows (usually) doesn't like colons in file names
+          echo "ARCHIVE_NAME=$plugin_name-vst-and-clap-${{ matrix.name }}" >> "$GITHUB_ENV"
+
+      - name: Move all packaged plugin into a directory
+        run: |
+          mkdir -p $ARCHIVE_NAME
+          mv ./nih-plug/target/bundled/* $ARCHIVE_NAME
+
+      - name: Rename plugins
+        run: |
+          for file_name in $ARCHIVE_NAME/$binary_name.*;
+            do mv $file_name "${file_name/$binary_name/$plugin_name}";
+          done
+
+      - name: Add an OS-specific readme file with installation instructions
+        run: cp ".github/workflows/readme-${{ runner.os }}.txt" "$ARCHIVE_NAME/README.txt"
+
+      - name: Zip files
+        run: zip -r $ARCHIVE_NAME.zip $ARCHIVE_NAME
+
+      - name: Add zip to release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{github.ref_name}}
+          files: ${{ env.ARCHIVE_NAME }}.zip
+
+  package-mod-plugin:
+    name: Package mod plugins
+    strategy:
+      matrix:
+        platform: [modduo-new, modduox-new, moddwarf-new]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker image from GHCR
+        run: docker pull ghcr.io/davemollen/${{ matrix.platform }}-plugin-builder:latest
+
+      - name: Run Docker container
+        run: docker run -t -d --name mpb ghcr.io/davemollen/${{ matrix.platform }}-plugin-builder:latest
+
+      - name: Update commit sha in build script
+        run: sed -i 's/<SHA>/${{ github.sha }}/' .github/workflows/$mod_package_name.mk
+
+      - name: Add local build script to Docker container
+        run: |
+          docker exec -w /root/mod-plugin-builder/plugins/package mpb mkdir -p $mod_package_name
+          docker cp .github/workflows/$mod_package_name.mk mpb:/root/mod-plugin-builder/plugins/package/$mod_package_name
+
+      - name: Build for modaudio
+        run: docker exec mpb ./build ${{ matrix.platform }} $mod_package_name
+
+      - name: Determine build archive name
+        run: echo "ARCHIVE_NAME=$plugin_name-${{ matrix.platform }}" >> "$GITHUB_ENV"
+
+      - name: Zip files
+        run: |
+          mkdir -p $ARCHIVE_NAME
+          docker cp mpb:/root/mod-workdir/${{ matrix.platform }}/plugins/$plugin_name.lv2 $ARCHIVE_NAME
+          cp .github/workflows/readme-Mod.txt "$ARCHIVE_NAME/README.txt"
+          zip -r $ARCHIVE_NAME.zip $ARCHIVE_NAME
+
+      - name: Add zip to release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{github.ref_name}}
+          files: ${{ env.ARCHIVE_NAME }}.zip
