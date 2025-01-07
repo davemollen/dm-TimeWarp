@@ -1,0 +1,84 @@
+label {
+  font-size: 14px;
+  color: #e1d9d1;
+}
+
+knob {
+  width: 40px;
+  height: 40px;
+  bottom: 0px;
+}
+
+knob .knob-track {
+  color: #ffb433;
+  background-color: #363636;
+}
+
+knob .knob-head {
+  display: none;
+}
+
+checkbox {
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  border-width: 0px;
+  background-color: #363636;
+  top: 10px;
+}
+
+checkbox:hover {
+  background-color: #e1d9d1;
+}
+
+textbox {
+  font-size: 12px;
+  width: 72px;
+  color: #e1d9d1;
+  background-color: transparent;
+  border-width: 0px;
+  outline-color: none;
+  child-space: 1s;
+}
+
+textbox:hover {
+  background-color: transparent;
+  border-width: 0px;
+  outline-color: none;
+}
+
+textbox:checked.caret {
+  caret-color: #e1d9d1;
+}
+
+button {
+  background-color: #363636;
+  border-width: 0px;
+}
+
+button:hover {
+  background-color: #363636;
+}
+
+button.active:hover {
+  background-color: #51afef;
+}
+
+button.active {
+  background-color: #51afef;
+  border-width: 0px;
+}
+
+.hide {
+  display: none;
+}
+
+.show {
+  display: block;
+}
+
+.line {
+  width: 3px;
+  height: 100%;
+  background-color: #363636;
+}
