@@ -1,3 +1,6 @@
+#[path = "./editor/components/param_checkbox.rs"]
+mod param_checkbox;
+use param_checkbox::ParamCheckbox;
 #[path = "./editor/components/param_knob.rs"]
 mod param_knob;
 use param_knob::{ParamKnob, ParamKnobSize};
@@ -20,7 +23,7 @@ const STYLE: &str = include_str!("./editor/style.css");
 
 // Makes sense to also define this here, makes it a bit easier to keep track of
 pub(crate) fn default_state() -> Arc<ViziaState> {
-  ViziaState::new(|| (504, 344))
+  ViziaState::new(|| (568, 344))
 }
 
 pub(crate) fn create(
@@ -54,6 +57,15 @@ pub(crate) fn create(
               );
               ParamKnob::new(
                 cx,
+                params.spray.name(),
+                UiData::params,
+                params.spray.as_ptr(),
+                |params| &params.spray,
+                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
+                ParamKnobSize::Regular,
+              );
+              ParamKnob::new(
+                cx,
                 params.size.name(),
                 UiData::params,
                 params.size.as_ptr(),
@@ -63,10 +75,10 @@ pub(crate) fn create(
               );
               ParamKnob::new(
                 cx,
-                params.pitch.name(),
+                params.speed.name(),
                 UiData::params,
-                params.pitch.as_ptr(),
-                |params| &params.pitch,
+                params.speed.as_ptr(),
+                |params| &params.speed,
                 |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
                 ParamKnobSize::Large,
               );
@@ -93,6 +105,15 @@ pub(crate) fn create(
             .child_space(Stretch(1.0));
 
             HStack::new(cx, |cx| {
+              ParamCheckbox::new(
+                cx,
+                params.record.name(),
+                UiData::params,
+                params.record.as_ptr(),
+                |params| &params.record,
+                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
+              )
+              .width(Pixels(80.));
               ParamKnob::new(
                 cx,
                 params.time.name(),

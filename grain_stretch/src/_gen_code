@@ -1,0 +1,170 @@
+//ONEPOLE LOWPASS FILTER
+lowpass(input, coeff){
+	History lowpass(0);
+	lowpass = fixdenorm(mix(input, lowpass, coeff));
+	return lowpass;
+}
+
+//LINEAR FADES
+line(lineinput, linetime){
+	History lineoutput(0);
+	
+  	if(lineinput == lineoutput){
+  		lineoutput = lineinput;
+  	}
+  	else {
+		linetrig = delta(lineinput);
+  		linespeed = 1 / linetime;
+  		lineinterp = minimum(plusequals(linespeed, linetrig), 1);
+	
+  		lineorig = latch(lineoutput, linetrig);
+  		linedest = latch(lineinput, linetrig);
+  		lineoutput = interp(lineinterp, lineorig, linedest);
+  	}
+	return lineoutput;
+}
+
+//HIGHPASS & LOWPASS FILTER
+lohipass(x, lofreq, hifreq){
+	History z1, z2;
+	
+	dbl_sr = samplerate * 2;
+	half_period = 1/samplerate/2;
+
+    w1 = tan(lofreq * twopi * half_period) * dbl_sr; //convert to radians/s with freq warping
+ 	w2 = tan(hifreq * twopi * half_period) * dbl_sr; //convert to radians/s with freq warping
+
+	A = w1 - dbl_sr;
+	B = w1 + dbl_sr;
+	C = w2 - dbl_sr;
+	D = w2 + dbl_sr;
+
+	b0 = B * D;
+	b1 = (A*D + B*C) / b0;
+	b2 = (A * C) / b0;
+	a2 = (w2 * dbl_sr) / b0;
+	a0 = a2 * -1;
+	a1 = 0.;
+	
+	//Biquad Transposed Direct Form II
+	y = x * a0 + z1;
+    z1 = fixdenorm(x * a1 + z2 - b1 * y);
+    z2 = fixdenorm(x * a2 - b2 * y);
+	return y;
+}
+
+Delay rec(220941);
+Data gdata(20, 4), win(1024);
+History loadbang(1);
+Param freeze(default=0, min=0, max=1), 
+mode(default=0, min=0, max=1), feedback(default=0, min=0, max=1), time(default=250, min=10, max=5000), 
+speed(default=1, min=-4, max=4), slide(default=0, min=0, max=1), genesize(default=0, min=0, max=1), 
+morph(default=0, min=0, max=1), stretch(default=0, min=0, max=2), dry(default=0, min=-90, max=12), wet(default=1, min=-90, max=12), 
+filteron(default=0, min=0, max=1), lofreq(default=200, min=20, max=20000), hifreq(default=3000, min=20, max=20000);
+if (loadbang){
+	for(i=0; i<1024; i+=1){
+		//RAISED COSINE
+		x = i/1024;
+		y = 0.5*(1-cos(x*pi));
+		poke(win, y, i, 0, 0);
+	}
+	loadbang = 0;
+}
+
+audioin = in1;
+fadetime = mstosamps(20);
+
+timeMod = time * (in2+1);
+speedMod = speed * (in3+1);
+slideMod = clip(slide + in4, 0, 1);
+genesizeMod = clip(genesize + in5, 0, 1);
+morphMod = clip(morph + in6, 0, 1);
+
+timeLP = lowpass(mstosamps(timeMod), 0.9997);
+gdur = scale(genesizeMod, 0, 1, timeLP, fadetime, 0.25);
+gmorph = scale(morphMod, 0, 1, 1, 15, 2);
+gphaser = phasor(samplerate / gdur * gmorph);
+gtrig = delta(gphaser) < 0;
+gspeed = (1 - speedMod) * 0.5;
+
+phasereset = delta(speedMod == 1); //keep the delay in sync when it's at original playback speed
+rphaser = phasor(samplerate / timeLP * (speedMod-1), phasereset); //keep track of the play position
+gstretch = stretch * sign(speedMod) - 1;
+sphaser = phasor(samplerate / timeLP * gstretch); //move the start position with the stretch parameter
+phaseoffset = genesizeMod > 0 || morphMod > 0 ? sphaser : rphaser; //keep the delay in sync when genesize or morph is turned off
+gstart = (1-(slideMod * (in4+1) + phaseoffset)) * 0.5;	
+
+//calculate crossfade parameters
+gwinmode = minimum(gmorph-1, 1);
+gdur += fadetime * (1-gwinmode); //allow the genes to crossfade
+gwinfac = scale(gwinmode, 0, 1, gdur/fadetime, 2);
+xfadefac = timeLP/fadetime;
+xfadeoffs = 1/xfadefac+1; 
+	
+effectOut, gaincomp = 0;	
+if (gtrig) { // when the input becomes 1 for the duration of a sample, attempt to create a new grain
+	for (i=0; i<20; i+=1) { // this for loop walks through all entries.
+		x = peek(gdata, i, 0);
+		if (x==0) { // whenever step value equals to 0, it means it is available for creating a new grain.
+	
+			// store three values in the log;
+			poke(gdata, gdur, i, 0); // gene duration; also functions as the "occupied" flag
+			poke(gdata, 0, i, 1); // initial phase value
+			poke(gdata, gstart, i, 2); // start position
+			break; // when a new grain has been initialized, break from the for-loop
+		}
+	}
+}
+	
+for (i=0; i<20; i+=1) { // walk through all log entries
+	x = peek(gdata, i, 0);
+	gactive = x != 0;
+	if (gactive) { // whenever step value is not equal to zero means this log represents an active grain
+		phase = peek(gdata, i, 1); // retrieve the current phase
+		pos = wrap(peek(gdata, i, 2), 0, 1); // slide position
+		pos1 = pos * 2;
+		pos2 = (pos + 0.5) % 1 * 2;
+				
+		//apply fades for the duration of the gene
+		gwindow = minimum(phase * gwinfac, 1);
+		gwindow *= minimum((1-phase) * gwinfac, 1);
+		gwindow = sample(win, gwindow);
+		
+		//apply fades when playback position reaches the wraparound point
+		xfade1 = clip(pos1 * xfadefac, 0, 1);
+		xfade1 *= clip((xfadeoffs-pos1) * xfadefac, 0, 1);
+		xfade1 = sample(win, xfade1);
+		xfade2 = 1-xfade1;
+			
+		effectOut += rec.read(pos1 * timeLP, interp="spline") * xfade1 * gwindow; // use the phase to read out sound from the buffer using sample() and add this to the sum of all grains
+		effectOut += rec.read(pos2 * timeLP, interp="spline") * xfade2 * gwindow;
+		gaincomp += gwindow;
+		
+		nextphase = phase + 1 / gdur; // update phase for the next round
+		if (nextphase < 1) { // test the updated phase against the threshold
+			poke(gdata, nextphase, i, 1); // store the updated phase
+		}
+		else {
+			poke(gdata, 0, i, 0); // when it doesn't match, free the occupied flag
+		}
+		
+		nextpos = pos + 1 / timeLP * gspeed;
+		poke(gdata, nextpos, i, 2);
+	}
+}
+effectOut *= 1/gaincomp; //keep gain at unity
+
+freeze1 = line(freeze, fadetime);
+freeze2 = 1-freeze1;
+freezetime = sah(timeLP, freeze1, 0);
+
+retain = rec.read(timeLP, interp="linear") * (1-mode) * feedback;
+recycle = effectOut * mode * feedback;
+feedback_tap = retain + recycle;
+if(filteron){
+	feedback_tap = lohipass(feedback_tap, lofreq, hifreq);
+}
+preserve = rec.read(timeLP, interp="linear");
+rec.write( fixdenorm(dcblock((audioin + feedback_tap) * freeze2 + preserve * freeze1)));
+
+out1 = audioin * line(dbtoa(dry), 220) + effectOut * line(dbtoa(wet), 220);

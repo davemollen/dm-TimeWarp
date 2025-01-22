@@ -69,11 +69,13 @@ impl Plugin for DmGrainStretch {
     _context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
     self.process_params.set(
-      self.params.pitch.value(),
-      self.params.size.value(),
       self.params.scan.value(),
+      self.params.spray.value(),
+      self.params.size.value(),
+      self.params.speed.value(),
       self.params.density.value(),
       self.params.stretch.value(),
+      if self.params.record.value() { 1. } else { 0. },
       self.params.time.value(),
       self.params.highpass.value(),
       self.params.lowpass.value(),
@@ -88,7 +90,9 @@ impl Plugin for DmGrainStretch {
       let left_channel = channel_iterator.next().unwrap();
       let right_channel = channel_iterator.next().unwrap();
 
-      (*left_channel, *right_channel) = self.grain_stretch.process((*left_channel, *right_channel));
+      (*left_channel, *right_channel) = self
+        .grain_stretch
+        .process((*left_channel, *right_channel), &mut self.process_params);
     });
     ProcessStatus::Normal
   }

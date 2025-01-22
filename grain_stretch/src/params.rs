@@ -1,14 +1,18 @@
 mod smooth;
 pub use smooth::Smoother;
-use smooth::{ExponentialSmooth, LinearSmooth};
+use smooth::{ExponentialSmooth, LinearSmooth, LogarithmicSmooth};
+
+use crate::shared::float_ext::FloatExt;
 
 pub struct Params {
-  pub pitch: f32,
-  pub size: f32,
+  pub recording_gain: ExponentialSmooth,
   pub scan: f32,
+  pub spray: f32,
+  pub size: f32,
+  pub speed: f32,
   pub density: f32,
   pub stretch: f32,
-  pub time: LinearSmooth,
+  pub time: LogarithmicSmooth,
   pub highpass: LinearSmooth,
   pub lowpass: LinearSmooth,
   pub overdub: LinearSmooth,
@@ -21,29 +25,33 @@ pub struct Params {
 impl Params {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      pitch: 0.,
-      size: 0.,
       scan: 0.,
+      spray: 0.,
+      size: 0.,
+      speed: 0.,
       density: 0.,
       stretch: 0.,
-      time: LinearSmooth::new(sample_rate, 12.),
-      highpass: LinearSmooth::new(sample_rate, 12.),
-      lowpass: LinearSmooth::new(sample_rate, 12.),
-      overdub: LinearSmooth::new(sample_rate, 12.),
-      recycle: LinearSmooth::new(sample_rate, 12.),
-      dry: ExponentialSmooth::new(sample_rate, 12.),
-      wet: ExponentialSmooth::new(sample_rate, 12.),
+      recording_gain: ExponentialSmooth::new(sample_rate, 20.),
+      time: LogarithmicSmooth::new(sample_rate, 0.25),
+      highpass: LinearSmooth::new(sample_rate, 20.),
+      lowpass: LinearSmooth::new(sample_rate, 20.),
+      overdub: LinearSmooth::new(sample_rate, 20.),
+      recycle: LinearSmooth::new(sample_rate, 20.),
+      dry: ExponentialSmooth::new(sample_rate, 20.),
+      wet: ExponentialSmooth::new(sample_rate, 20.),
       is_initialized: false,
     }
   }
 
   pub fn set(
     &mut self,
-    pitch: f32,
-    size: f32,
     scan: f32,
+    spray: f32,
+    size: f32,
+    speed: f32,
     density: f32,
     stretch: f32,
+    recording_gain: f32,
     time: f32,
     highpass: f32,
     lowpass: f32,
@@ -52,13 +60,18 @@ impl Params {
     dry: f32,
     wet: f32,
   ) {
-    self.pitch = pitch;
-    self.size = size;
     self.scan = scan;
-    self.density = density;
+    self.spray = spray;
+    self.size = size.powf(0.25);
+    self.speed = speed;
+    self.density = density * density;
     self.stretch = stretch;
 
+    let dry = dry.dbtoa();
+    let wet = wet.dbtoa();
+
     if self.is_initialized {
+      self.recording_gain.set_target(recording_gain);
       self.time.set_target(time);
       self.highpass.set_target(highpass);
       self.lowpass.set_target(lowpass);
@@ -67,6 +80,7 @@ impl Params {
       self.dry.set_target(dry);
       self.wet.set_target(wet);
     } else {
+      self.recording_gain.reset(recording_gain);
       self.time.reset(time);
       self.highpass.reset(highpass);
       self.lowpass.reset(lowpass);
