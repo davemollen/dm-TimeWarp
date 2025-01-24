@@ -1,5 +1,7 @@
+mod dc_block;
 mod filter;
 mod grain;
+mod grain_trigger;
 mod params;
 mod start_phasor;
 mod stereo_delay_line;
@@ -9,38 +11,47 @@ pub mod shared {
   pub mod phasor;
   pub mod tuple_ext;
 }
-use grain::Grain;
 pub use params::Params;
-use start_phasor::StartPhasor;
-use stereo_delay_line::Interpolation;
 use {
+  dc_block::DcBlock,
   filter::Filter,
+  grain::Grain,
+  grain_trigger::GrainTrigger,
   params::Smoother,
-  shared::{delta::Delta, float_ext::FloatExt, phasor::Phasor, tuple_ext::TupleExt},
-  stereo_delay_line::StereoDelayLine,
+  shared::{float_ext::FloatExt, tuple_ext::TupleExt},
+  start_phasor::StartPhasor,
+  stereo_delay_line::{Interpolation, StereoDelayLine},
 };
+
+pub const MIN_DELAY_TIME: f32 = 10.;
+pub const MAX_DELAY_TIME: f32 = 10000.;
 
 pub struct GrainStretch {
   fade_time: f32,
   sample_rate: f32,
-  trigger_phasor: Phasor,
-  trigger_delta: Delta,
+  grain_trigger: GrainTrigger,
   start_phasor: StartPhasor,
   delay_line: StereoDelayLine,
   filter: Filter,
+  dc_block: DcBlock,
   grains: Vec<Grain>,
 }
 
 impl GrainStretch {
+  const FADE_TIME: f32 = MIN_DELAY_TIME * 2.;
+
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      fade_time: 20_f32.mstosamps(sample_rate),
+      fade_time: Self::FADE_TIME.mstosamps(sample_rate),
       sample_rate,
-      trigger_phasor: Phasor::new(sample_rate),
-      trigger_delta: Delta::new(),
+      grain_trigger: GrainTrigger::new(sample_rate),
       start_phasor: StartPhasor::new(sample_rate),
-      delay_line: StereoDelayLine::new((sample_rate * 10.01) as usize, sample_rate),
+      delay_line: StereoDelayLine::new(
+        (sample_rate * (MAX_DELAY_TIME + Self::FADE_TIME) / 1000.) as usize,
+        sample_rate,
+      ),
       filter: Filter::new(sample_rate),
+      dc_block: DcBlock::new(sample_rate),
       grains: vec![Grain::new(sample_rate); 20],
     }
   }
@@ -67,27 +78,23 @@ impl GrainStretch {
     let time_in_samples = time.mstosamps(self.sample_rate);
     let duration = size.scale(0., 1., time_in_samples, self.fade_time);
     let grain_density = density.scale(0., 1., 1., 15.);
-    let trigger_phase = self
-      .trigger_phasor
-      .process(self.sample_rate / duration * grain_density);
-    let trigger = self.trigger_delta.process(trigger_phase) < 0.;
-    let grain_speed = (1. - speed) * 0.5;
 
+    let trigger = self.grain_trigger.process(duration, grain_density);
     let start_phase = self
       .start_phasor
-      .process(speed, time_in_samples, size, density, stretch)
-      + scan;
+      .process(speed, time_in_samples, size, density, stretch);
 
-    let window_mode = (density - 1.).min(1.);
-    let duration = duration + self.fade_time * (1. - window_mode);
-    let window_factor = window_mode.scale(0., 1., duration / self.fade_time, 2.);
+    let grain_speed = (1. - speed) * 0.5;
+    let window_mode = (grain_density - 1.).min(1.);
+    let grain_duration = duration + self.fade_time * (1. - window_mode);
+    let window_factor = window_mode.scale(0., 1., grain_duration / self.fade_time, 2.);
     let fade_factor = time_in_samples / self.fade_time;
-    let fade_offset = (fade_factor + 1.).recip();
+    let fade_offset = fade_factor.recip() + 1.;
 
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
       match inactive_grain {
-        Some(grain) => grain.set_parameters(spray, start_phase),
+        Some(grain) => grain.set_parameters(scan, spray, start_phase),
         _ => {}
       }
     }
@@ -100,9 +107,9 @@ impl GrainStretch {
         (0., 0., 0.),
         |(left_output, right_output, acc_gain), grain| {
           let (left_grain, right_grain, grain_gain) = grain.process(
-            &mut self.delay_line,
+            &self.delay_line,
             time,
-            duration,
+            grain_duration,
             grain_speed,
             window_factor,
             fade_factor,
@@ -117,22 +124,26 @@ impl GrainStretch {
       );
     let grains_out = (grains_left, grain_right).multiply(gain.recip());
 
-    // let feedback = self
-    //   .delay_line
-    //   .read(time, Interpolation::Linear)
-    //   .multiply((1. - recycle) * overdub)
-    //   .add(grains_out.multiply(recycle * overdub));
-
-    // // Maybe instead of reading from the delay line to preserve buffer content, just stop continuously writing to the buffer
-    // let preserved = self.delay_line.read(time, Interpolation::Linear);
-    // self.delay_line.write(
-    //   input
-    //     .add(self.filter.process(feedback, highpass, lowpass))
-    //     .multiply(recording_gain)
-    //     .add(preserved.multiply(1. - recording_gain)),
-    // );
-
-    self.delay_line.write(input);
+    self.write_to_delay(input, time, grains_out, overdub, recycle, recording_gain);
     input.multiply(dry).add(grains_out.multiply(wet))
+  }
+
+  fn write_to_delay(
+    &mut self,
+    input: (f32, f32),
+    time: f32,
+    grains_out: (f32, f32),
+    overdub: f32,
+    recycle: f32,
+    recording_gain: f32,
+  ) {
+    // Maybe instead of reading from the delay line to preserve buffer content, just stop continuously writing to the buffer
+    let delay_out = self.delay_line.read(time, Interpolation::Linear);
+    let feedback = delay_out.multiply((1. - recycle) * overdub);
+    // .add(grains_out.multiply(recycle * overdub));
+    // let filtered_feedback = self.filter.process(feedback, highpass, lowpass);
+    let delay_in =
+      (input.add(feedback).multiply(recording_gain)).add(delay_out.multiply(1. - recording_gain));
+    self.delay_line.write(delay_in);
   }
 }

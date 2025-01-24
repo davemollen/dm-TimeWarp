@@ -32,7 +32,7 @@ impl Params {
       density: 0.,
       stretch: 0.,
       recording_gain: ExponentialSmooth::new(sample_rate, 20.),
-      time: LogarithmicSmooth::new(sample_rate, 0.25),
+      time: LogarithmicSmooth::new(sample_rate, 0.3),
       highpass: LinearSmooth::new(sample_rate, 20.),
       lowpass: LinearSmooth::new(sample_rate, 20.),
       overdub: LinearSmooth::new(sample_rate, 20.),

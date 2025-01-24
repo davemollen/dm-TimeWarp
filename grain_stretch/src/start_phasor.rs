@@ -16,17 +16,20 @@ impl StartPhasor {
   }
 
   pub fn process(&mut self, speed: f32, time: f32, size: f32, density: f32, stretch: f32) -> f32 {
+    let freq = if size > 0. || density > 0. {
+      self.sample_rate / time * (stretch * speed.signum() - 1.)
+    } else {
+      self.maybe_reset_phasor(speed);
+      self.sample_rate / time * (speed - 1.)
+    };
+
+    self.phasor.process(freq)
+  }
+
+  fn maybe_reset_phasor(&mut self, speed: f32) {
     if speed != self.prev_speed && speed == 1. {
       self.phasor.reset();
     }
     self.prev_speed = speed;
-
-    let freq = if size > 0. || density > 0. {
-      let stretch = stretch * speed.signum() - 1.;
-      self.sample_rate / time * stretch
-    } else {
-      self.sample_rate / time * (speed - 1.)
-    };
-    self.phasor.process(freq)
   }
 }

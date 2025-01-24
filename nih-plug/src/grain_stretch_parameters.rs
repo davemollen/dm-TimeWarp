@@ -1,3 +1,4 @@
+use grain_stretch::{MAX_DELAY_TIME, MIN_DELAY_TIME};
 use nih_plug::{
   formatters::{
     s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
@@ -99,8 +100,8 @@ impl Default for GrainStretchParameters {
         "Time",
         2000.,
         FloatRange::Skewed {
-          min: 10.,
-          max: 10000.,
+          min: MIN_DELAY_TIME,
+          max: MAX_DELAY_TIME,
           factor: 0.3,
         },
       )

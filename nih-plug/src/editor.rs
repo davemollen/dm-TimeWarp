@@ -113,7 +113,8 @@ pub(crate) fn create(
                 |params| &params.record,
                 |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
               )
-              .width(Pixels(80.));
+              .top(Pixels(12.))
+              .width(Pixels(72.));
               ParamKnob::new(
                 cx,
                 params.time.name(),
