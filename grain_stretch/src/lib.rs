@@ -122,9 +122,19 @@ impl GrainStretch {
           )
         },
       );
-    let grains_out = (grains_left, grain_right).multiply(gain.recip());
+    let grains_out =
+      (grains_left, grain_right).multiply(if gain == 0. { 0. } else { gain.recip() });
 
-    self.write_to_delay(input, time, grains_out, overdub, recycle, recording_gain);
+    self.write_to_delay(
+      input,
+      time,
+      grains_out,
+      overdub,
+      recycle,
+      recording_gain,
+      highpass,
+      lowpass,
+    );
     input.multiply(dry).add(grains_out.multiply(wet))
   }
 
@@ -136,14 +146,35 @@ impl GrainStretch {
     overdub: f32,
     recycle: f32,
     recording_gain: f32,
+    highpass: f32,
+    lowpass: f32,
   ) {
     // Maybe instead of reading from the delay line to preserve buffer content, just stop continuously writing to the buffer
     let delay_out = self.delay_line.read(time, Interpolation::Linear);
-    let feedback = delay_out.multiply((1. - recycle) * overdub);
-    // .add(grains_out.multiply(recycle * overdub));
-    // let filtered_feedback = self.filter.process(feedback, highpass, lowpass);
+    let feedback = self.get_feedback(delay_out, grains_out, recycle, overdub, highpass, lowpass);
     let delay_in =
       (input.add(feedback).multiply(recording_gain)).add(delay_out.multiply(1. - recording_gain));
     self.delay_line.write(delay_in);
+  }
+
+  fn get_feedback(
+    &mut self,
+    delay_out: (f32, f32),
+    grains_out: (f32, f32),
+    recycle: f32,
+    overdub: f32,
+    highpass: f32,
+    lowpass: f32,
+  ) -> (f32, f32) {
+    let feedback = delay_out
+      .multiply((1. - recycle) * overdub)
+      .add(grains_out.multiply(recycle * overdub));
+    let feedback = Self::clip(feedback);
+    feedback
+    // self.filter.process(feedback, highpass, lowpass)
+  }
+
+  fn clip(x: (f32, f32)) -> (f32, f32) {
+    (x.0.clamp(-1., 1.), x.1.clamp(-1., 1.))
   }
 }
