@@ -28,7 +28,7 @@ impl Grain {
     &mut self,
     delay_line: &StereoDelayLine,
     time: f32,
-    duration: f32,
+    phase_step_size: f32,
     speed: f32,
     window_factor: f32,
     fade_factor: f32,
@@ -40,7 +40,7 @@ impl Grain {
     let position_a_fade = self.get_read_head_fade(position_a, fade_factor, fade_offset);
     let position_b_fade = 1. - position_a_fade;
 
-    let next_phase = self.phase + duration.recip();
+    let next_phase = self.phase + phase_step_size;
     if next_phase < 1. {
       self.phase = next_phase;
     } else {

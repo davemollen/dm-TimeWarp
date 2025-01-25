@@ -27,14 +27,13 @@ pub const MIN_DELAY_TIME: f32 = 10.;
 pub const MAX_DELAY_TIME: f32 = 10000.;
 
 pub struct GrainStretch {
-  fade_time: f32,
-  sample_rate: f32,
   grain_trigger: GrainTrigger,
   start_phasor: StartPhasor,
   delay_line: StereoDelayLine,
   filter: Filter,
   dc_block: DcBlock,
   grains: Vec<Grain>,
+  sample_rate: f32,
 }
 
 impl GrainStretch {
@@ -42,8 +41,6 @@ impl GrainStretch {
 
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      fade_time: Self::FADE_TIME.mstosamps(sample_rate),
-      sample_rate,
       grain_trigger: GrainTrigger::new(sample_rate),
       start_phasor: StartPhasor::new(sample_rate),
       delay_line: StereoDelayLine::new(
@@ -53,6 +50,7 @@ impl GrainStretch {
       filter: Filter::new(sample_rate),
       dc_block: DcBlock::new(sample_rate),
       grains: vec![Grain::new(sample_rate); 20],
+      sample_rate,
     }
   }
 
@@ -75,20 +73,20 @@ impl GrainStretch {
     let dry = params.dry.next();
     let wet = params.wet.next();
 
-    let time_in_samples = time.mstosamps(self.sample_rate);
-    let duration = size.scale(0., 1., time_in_samples, self.fade_time);
+    let duration = size.scale(0., 1., time, Self::FADE_TIME);
     let grain_density = density.scale(0., 1., 1., 15.);
 
     let trigger = self.grain_trigger.process(duration, grain_density);
     let start_phase = self
       .start_phasor
-      .process(speed, time_in_samples, size, density, stretch);
+      .process(speed, time, size, density, stretch);
 
     let grain_speed = (1. - speed) * 0.5;
     let window_mode = (grain_density - 1.).min(1.);
-    let grain_duration = duration + self.fade_time * (1. - window_mode);
-    let window_factor = window_mode.scale(0., 1., grain_duration / self.fade_time, 2.);
-    let fade_factor = time_in_samples / self.fade_time;
+    let grain_duration = duration + Self::FADE_TIME * (1. - window_mode);
+    let phase_step_size = grain_duration.mstosamps(self.sample_rate).recip();
+    let window_factor = window_mode.scale(0., 1., grain_duration / Self::FADE_TIME, 2.);
+    let fade_factor = time / Self::FADE_TIME;
     let fade_offset = fade_factor.recip() + 1.;
 
     if trigger {
@@ -109,7 +107,7 @@ impl GrainStretch {
           let (left_grain, right_grain, grain_gain) = grain.process(
             &self.delay_line,
             time,
-            grain_duration,
+            phase_step_size,
             grain_speed,
             window_factor,
             fade_factor,

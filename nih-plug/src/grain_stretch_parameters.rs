@@ -94,7 +94,7 @@ impl Default for GrainStretchParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      record: BoolParam::new("Record", false),
+      record: BoolParam::new("Record", true),
 
       time: FloatParam::new(
         "Time",
