@@ -1,4 +1,3 @@
-mod dc_block;
 mod filter;
 mod grains;
 mod params;
