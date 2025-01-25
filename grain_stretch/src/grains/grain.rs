@@ -60,8 +60,9 @@ impl Grain {
     (delay_out.0, delay_out.1, grain_fade)
   }
 
-  pub fn set_parameters(&mut self, scan: f32, spray: f32, start_phase: f32) {
-    let spray = fastrand::f32() * spray;
+  pub fn set_parameters(&mut self, scan: f32, spray: f32, time: f32, start_phase: f32) {
+    let spray = fastrand::f32() * spray / time;
+
     self.phase = 0.;
     self.position = (1. - (scan + spray + start_phase).fract()) * 0.5;
     self.is_active = true;

@@ -61,7 +61,7 @@ impl Grains {
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
       match inactive_grain {
-        Some(grain) => grain.set_parameters(scan, spray, start_phase),
+        Some(grain) => grain.set_parameters(scan, spray, time, start_phase),
         _ => {}
       }
     }
