@@ -115,9 +115,7 @@ impl GrainStretch {
       .multiply((1. - recycle) * overdub)
       .add(grains_out.multiply(recycle * overdub));
     let feedback = Self::clip(feedback);
-    feedback
-    // TODO: implement filter
-    // self.filter.process(feedback, highpass, lowpass)
+    self.filter.process(feedback, highpass, lowpass)
   }
 
   fn clip(x: (f32, f32)) -> (f32, f32) {
