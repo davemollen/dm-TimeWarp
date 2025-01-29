@@ -36,6 +36,7 @@ A granular delay effect with time stretch capabilities.
 		lv2:index 1 ;
 		lv2:symbol "spray" ;
 		lv2:name "Spray" ;
+		lv2:portProperty pprops:logarithmic ;
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 250.0 ;
