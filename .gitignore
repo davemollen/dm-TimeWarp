@@ -1,2 +1,4 @@
 target
+lv2/*/*.so
+lv2/*/*.dylib
 .DS_Store

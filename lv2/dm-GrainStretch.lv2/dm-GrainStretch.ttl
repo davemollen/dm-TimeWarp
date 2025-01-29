@@ -1,0 +1,166 @@
+@prefix doap:  <http://usefulinc.com/ns/doap#> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
+@prefix lv2:   <http://lv2plug.in/ns/lv2core#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix units: <http://lv2plug.in/ns/extensions/units#> .
+@prefix pprops:   <http://lv2plug.in/ns/ext/port-props#> .
+@prefix mod:   <http://moddevices.com/ns/mod#> .
+
+<https://github.com/davemollen/dm-GrainStretch>
+	a lv2:Plugin , lv2:PitchPlugin , mod:DelayPlugin ;
+	lv2:project <http://lv2plug.in/ns/lv2> ;
+	doap:name "dm-GrainStretch" ;
+	doap:license "GPLv3" ;
+	doap:maintainer [
+		foaf:name "Dave Mollen" ;
+		foaf:homepage <https://github.com/davemollen/dm-GrainStretch> ;
+	] ;
+	mod:brand "DM" ;
+	mod:label "GrainStretch" ;
+	rdfs:comment """
+A granular delay effect with time stretch capabilities.
+""" ;
+	lv2:requiredFeature lv2:inPlaceBroken ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	lv2:port [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 0 ;
+		lv2:symbol "scan" ;
+		lv2:name "Scan" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	], [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 1 ;
+		lv2:symbol "spray" ;
+		lv2:name "Spray" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 250.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 2 ;
+		lv2:symbol "size" ;
+		lv2:name "Size" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 3 ;
+		lv2:symbol "speed" ;
+		lv2:name "Speed" ;
+		lv2:default 1.0 ;
+		lv2:minimum -4.0 ;
+		lv2:maximum 4.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 4 ;
+		lv2:symbol "density" ;
+		lv2:name "Density" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 5 ;
+		lv2:symbol "stretch" ;
+		lv2:name "Stretch" ;
+		lv2:default 1.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 2.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 6 ;
+		lv2:symbol "record" ;
+		lv2:name "Record" ;
+		lv2:portProperty lv2:integer, lv2:toggled;
+		lv2:default 0 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 7 ;
+		lv2:symbol "time" ;
+		lv2:name "Time" ;
+		lv2:portProperty pprops:logarithmic, mod:tempoRelatedDynamicScalePoints ;
+		lv2:default 2000.0 ;
+		lv2:minimum 10.0 ;
+		lv2:maximum 10000.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 8 ;
+		lv2:symbol "highpass" ;
+		lv2:name "Highpass" ;
+		lv2:portProperty pprops:logarithmic ;
+		lv2:default 20.0 ;
+		lv2:minimum 20.0 ;
+		lv2:maximum 20000.0 ;
+		units:unit units:hz
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 9 ;
+		lv2:symbol "lowpass" ;
+		lv2:name "Lowpass" ;
+		lv2:portProperty pprops:logarithmic ;
+		lv2:default 20000.0 ;
+		lv2:minimum 20.0 ;
+		lv2:maximum 20000.0 ;
+		units:unit units:hz
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 10 ;
+		lv2:symbol "overdub" ;
+		lv2:name "Overdub" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 11 ;
+		lv2:symbol "recycle" ;
+		lv2:name "Recycle" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 12 ;
+		lv2:symbol "dry" ;
+		lv2:name "Dry" ;
+		lv2:default 0.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum 12.0 ;
+		units:unit units:db
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 13 ;
+		lv2:symbol "wet" ;
+		lv2:name "Wet" ;
+		lv2:default 0.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum 12.0 ;
+		units:unit units:db
+	], [
+		a lv2:AudioPort, lv2:InputPort ;
+		lv2:index 14 ;
+		lv2:symbol "in_left" ;
+		lv2:name "In left"
+	], [
+		a lv2:AudioPort, lv2:InputPort ;
+		lv2:index 15 ;
+		lv2:symbol "in_right" ;
+		lv2:name "In right"
+	] , [
+		a lv2:AudioPort, lv2:OutputPort ;
+		lv2:index 16 ;
+		lv2:symbol "out_left" ;
+		lv2:name "Out left"
+	] , [
+		a lv2:AudioPort, lv2:OutputPort ;
+		lv2:index 17 ;
+		lv2:symbol "out_right" ;
+		lv2:name "Out right"
+	] .

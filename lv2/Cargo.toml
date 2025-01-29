@@ -1,0 +1,16 @@
+[package]
+name = "dm_grain_stretch"
+version = "0.1.0"
+authors = ["davemollen <davemollen@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lv2 = { git = "https://github.com/davemollen/rust-lv2.git", features = [
+    "minimal_plugin",
+] }
+grain_stretch = { path = "../grain_stretch" }
+
+[lib]
+crate-type = ["cdylib"]
