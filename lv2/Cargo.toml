@@ -8,9 +8,10 @@ edition = "2021"
 
 [dependencies]
 lv2 = { git = "https://github.com/davemollen/rust-lv2.git", features = [
-    "minimal_plugin",
+    "plugin",
 ] }
 grain_stretch = { path = "../grain_stretch" }
+wmidi = "3.1.0"
 
 [lib]
 crate-type = ["cdylib"]

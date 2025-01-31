@@ -1,7 +1,9 @@
 extern crate grain_stretch;
 extern crate lv2;
-use grain_stretch::{GrainStretch, Params};
+use std::collections::HashMap;
+use grain_stretch::{GrainStretch, Params, Note};
 use lv2::prelude::*;
+use wmidi::MidiMessage;
 
 #[derive(PortCollection)]
 struct Ports {
@@ -23,12 +25,62 @@ struct Ports {
   input_right: InputPort<Audio>,
   output_left: OutputPort<Audio>,
   output_right: OutputPort<Audio>,
+  control: InputPort<AtomPort>
+}
+
+#[derive(FeatureCollection)]
+pub struct Features<'a> {
+    map: LV2Map<'a>,
+}
+
+#[derive(URIDCollection)]
+pub struct URIDs {
+    atom: AtomURIDCollection,
+    midi: MidiURIDCollection,
+    unit: UnitURIDCollection,
 }
 
 #[uri("https://github.com/davemollen/dm-GrainStretch")]
 struct DmGrainStretch {
   grain_stretch: GrainStretch,
   params: Params,
+  urids: URIDs,
+  notes: HashMap<u8, Note>
+}
+
+impl DmGrainStretch {
+  pub fn process_midi_events(&mut self, ports: &mut Ports) {
+    let sequence_header_reader = match ports.control.read(self.urids.atom.sequence) {
+      Ok(sequence_header_reader) => sequence_header_reader,
+      Err(_) => return,
+    };
+    let sequence_iter = match sequence_header_reader.with_unit(self.urids.unit.beat) {
+      Ok(sequence_iter) => sequence_iter,
+      Err(_) => return,
+    };  
+      
+    for (_, message) in sequence_iter {
+      let midi_message = match message.read(self.urids.midi.wmidi) {
+        Ok(midi_message) => midi_message,
+        Err(_) => return,
+      };
+
+      match midi_message {
+        MidiMessage::NoteOn(_, note, velocity) => {
+          let note: u8 = note.into();
+          let velocity: f32 =  (u8::from(velocity) / 127).into();
+          self.notes.insert(note, Note::new(note, velocity));
+        },
+        MidiMessage::NoteOff(_, note, _) => {
+          let note: u8 = note.into();
+          if self.notes.contains_key(&note) {
+            self.notes.remove(&note);
+          }
+        },
+        _ => (),
+      }
+    }
+  }
 }
 
 impl Plugin for DmGrainStretch {
@@ -36,16 +88,18 @@ impl Plugin for DmGrainStretch {
   type Ports = Ports;
 
   // We don't need any special host features; We can leave them out.
-  type InitFeatures = ();
+  type InitFeatures = Features<'static>;
   type AudioFeatures = ();
 
   // Create a new instance of the plugin; Trivial in this case.
-  fn new(plugin_info: &PluginInfo, _features: &mut ()) -> Option<Self> {
+  fn new(plugin_info: &PluginInfo, features: &mut Features<'static>) -> Option<Self> {
     let sample_rate = plugin_info.sample_rate() as f32;
 
     Some(Self {
       grain_stretch: GrainStretch::new(sample_rate),
       params: Params::new(sample_rate),
+      urids: features.map.populate_collection()?,
+      notes: HashMap::new(),
     })
   }
 
@@ -68,6 +122,7 @@ impl Plugin for DmGrainStretch {
       *ports.dry,
       *ports.wet,
     );
+    self.process_midi_events(ports);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
@@ -80,7 +135,7 @@ impl Plugin for DmGrainStretch {
     {
       (*output_left, *output_right) = self
         .grain_stretch
-        .process((*input_left, *input_right), &mut self.params);
+        .process((*input_left, *input_right), &mut self.params, &self.notes);
     }
   }
 }

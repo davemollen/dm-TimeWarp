@@ -1,14 +1,15 @@
-use grain_stretch::{GrainStretch, Params as ProcessParams};
+use grain_stretch::{GrainStretch, Params as ProcessParams, Note};
 mod grain_stretch_parameters;
 use grain_stretch_parameters::GrainStretchParameters;
 use nih_plug::prelude::*;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 mod editor;
 
 struct DmGrainStretch {
   params: Arc<GrainStretchParameters>,
   grain_stretch: GrainStretch,
   process_params: ProcessParams,
+  notes: HashMap<u8, Note>
 }
 
 impl Default for DmGrainStretch {
@@ -18,6 +19,25 @@ impl Default for DmGrainStretch {
       params: params.clone(),
       grain_stretch: GrainStretch::new(44100.),
       process_params: ProcessParams::new(44100.),
+      notes: HashMap::new(),
+    }
+  }
+}
+
+impl DmGrainStretch {
+  pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
+    while let Some(event) = context.next_event() {
+      match event {
+        NoteEvent::NoteOn { note, velocity, .. } => {
+          self.notes.insert(note, Note::new(note, velocity));
+        },
+        NoteEvent::NoteOff { note, .. } => {
+          if self.notes.contains_key(&note) {
+            self.notes.remove(&note);
+          }
+        }
+        _ => (),
+      }
     }
   }
 }
@@ -34,7 +54,7 @@ impl Plugin for DmGrainStretch {
     main_output_channels: NonZeroU32::new(2),
     ..AudioIOLayout::const_default()
   }];
-  const MIDI_INPUT: MidiConfig = MidiConfig::None;
+  const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
   const SAMPLE_ACCURATE_AUTOMATION: bool = true;
 
   // More advanced plugins can use this to run expensive background tasks. See the field's
@@ -66,7 +86,7 @@ impl Plugin for DmGrainStretch {
     &mut self,
     buffer: &mut Buffer,
     _aux: &mut AuxiliaryBuffers,
-    _context: &mut impl ProcessContext<Self>,
+    context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
     self.process_params.set(
       self.params.scan.value(),
@@ -84,6 +104,7 @@ impl Plugin for DmGrainStretch {
       self.params.dry.value(),
       self.params.wet.value(),
     );
+    self.process_midi_events(context);
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();
@@ -92,7 +113,7 @@ impl Plugin for DmGrainStretch {
 
       (*left_channel, *right_channel) = self
         .grain_stretch
-        .process((*left_channel, *right_channel), &mut self.process_params);
+        .process((*left_channel, *right_channel), &mut self.process_params, &self.notes);
     });
     ProcessStatus::Normal
   }

@@ -8,6 +8,8 @@ pub mod shared {
   pub mod phasor;
   pub mod tuple_ext;
 }
+use std::collections::HashMap;
+
 pub use params::Params;
 use {
   filter::Filter,
@@ -19,6 +21,19 @@ use {
 
 pub const MIN_DELAY_TIME: f32 = 10.;
 pub const MAX_DELAY_TIME: f32 = 10000.;
+
+pub struct Note {
+  note: u8,
+  velocity: f32,
+}
+
+impl Note {
+  pub fn new(note: u8, velocity: f32) -> Self {
+    Self {
+      note, velocity
+    }
+  }
+}
 
 pub struct GrainStretch {
   delay_line: StereoDelayLine,
@@ -40,7 +55,7 @@ impl GrainStretch {
     }
   }
 
-  pub fn process(&mut self, input: (f32, f32), params: &mut Params) -> (f32, f32) {
+  pub fn process(&mut self, input: (f32, f32), params: &mut Params, notes: &HashMap<u8, Note>) -> (f32, f32) {
     let Params {
       scan,
       spray,
