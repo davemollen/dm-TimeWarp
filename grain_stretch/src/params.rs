@@ -19,6 +19,7 @@ pub struct Params {
   pub recycle: LinearSmooth,
   pub dry: ExponentialSmooth,
   pub wet: ExponentialSmooth,
+  pub midi_enabled: bool,
   is_initialized: bool,
 }
 
@@ -39,6 +40,7 @@ impl Params {
       recycle: LinearSmooth::new(sample_rate, 20.),
       dry: ExponentialSmooth::new(sample_rate, 20.),
       wet: ExponentialSmooth::new(sample_rate, 20.),
+      midi_enabled: false,
       is_initialized: false,
     }
   }
@@ -59,6 +61,7 @@ impl Params {
     recycle: f32,
     dry: f32,
     wet: f32,
+    midi_enabled: bool,
   ) {
     self.scan = scan;
     self.spray = spray;
@@ -66,6 +69,7 @@ impl Params {
     self.speed = speed;
     self.density = density * density;
     self.stretch = stretch;
+    self.midi_enabled = midi_enabled;
 
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();

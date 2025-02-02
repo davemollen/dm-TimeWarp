@@ -59,6 +59,9 @@ pub struct GrainStretchParameters {
 
   #[id = "wet"]
   pub wet: FloatParam,
+
+  #[id = "midi_enabled"]
+  pub midi_enabled: BoolParam
 }
 
 impl Default for GrainStretchParameters {
@@ -184,6 +187,8 @@ impl Default for GrainStretchParameters {
           format!("{:.2}", value)
         }
       })),
+
+      midi_enabled: BoolParam::new("Midi On/Off", true)
     }
   }
 }

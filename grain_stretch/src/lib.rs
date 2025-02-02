@@ -22,19 +22,6 @@ use {
 pub const MIN_DELAY_TIME: f32 = 10.;
 pub const MAX_DELAY_TIME: f32 = 10000.;
 
-pub struct Note {
-  note: u8,
-  velocity: f32,
-}
-
-impl Note {
-  pub fn new(note: u8, velocity: f32) -> Self {
-    Self {
-      note, velocity
-    }
-  }
-}
-
 pub struct GrainStretch {
   delay_line: StereoDelayLine,
   grains: Grains,
@@ -55,7 +42,7 @@ impl GrainStretch {
     }
   }
 
-  pub fn process(&mut self, input: (f32, f32), params: &mut Params, notes: &HashMap<u8, Note>) -> (f32, f32) {
+  pub fn process(&mut self, input: (f32, f32), params: &mut Params, note: Option<u8>) -> (f32, f32) {
     let Params {
       scan,
       spray,
@@ -63,6 +50,7 @@ impl GrainStretch {
       density,
       stretch,
       speed,
+      midi_enabled,
       ..
     } = *params;
     let recording_gain = params.recording_gain.next();
@@ -75,15 +63,17 @@ impl GrainStretch {
     let wet = params.wet.next();
 
     let grains_out = self.grains.process(
-      &self.delay_line,
-      size,
-      time,
-      density,
-      speed,
-      stretch,
-      scan,
-      spray,
-    );
+        &self.delay_line,
+        size,
+        time,
+        density,
+        speed,
+        stretch,
+        scan,
+        spray,
+        midi_enabled,
+        note,
+      );
 
     self.write_to_delay(
       input,
