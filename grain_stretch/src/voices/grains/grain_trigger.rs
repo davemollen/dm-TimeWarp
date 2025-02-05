@@ -1,5 +1,6 @@
 use crate::shared::{delta::Delta, phasor::Phasor};
 
+#[derive(Clone)]
 pub struct GrainTrigger {
   phasor: Phasor,
   delta: Delta,

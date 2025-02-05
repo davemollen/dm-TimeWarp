@@ -1,6 +1,6 @@
 use grain_stretch::{GrainStretch, Params as ProcessParams};
 mod grain_stretch_parameters;
-use grain_stretch_parameters::GrainStretchParameters;
+use grain_stretch_parameters::{GrainStretchParameters, VoiceMode};
 use nih_plug::prelude::*;
 use std::sync::Arc;
 mod editor;
@@ -9,7 +9,6 @@ struct DmGrainStretch {
   params: Arc<GrainStretchParameters>,
   grain_stretch: GrainStretch,
   process_params: ProcessParams,
-  note: Option<u8>
 }
 
 impl Default for DmGrainStretch {
@@ -19,7 +18,6 @@ impl Default for DmGrainStretch {
       params: params.clone(),
       grain_stretch: GrainStretch::new(44100.),
       process_params: ProcessParams::new(44100.),
-      note: None
     }
   }
 }
@@ -28,19 +26,21 @@ impl DmGrainStretch {
   pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
     while let Some(event) = context.next_event() {
       match event {
-        NoteEvent::NoteOn { note, .. } => {
-          self.note = Some(note);
-        },
+        NoteEvent::NoteOn { note, velocity, .. } => {
+          self.grain_stretch.note_on(note, velocity);
+        }
         NoteEvent::NoteOff { note, .. } => {
-          if let Some(active_note) = self.note {
-            if note == active_note {
-              self.note = None;
-            }
-          }
+          self.grain_stretch.note_off(note);
         }
         _ => (),
       }
     }
+
+    let voice_count = match self.params.voice_mode.value() {
+      VoiceMode::Mono => 1,
+      VoiceMode::Poly => 8,
+    };
+    self.grain_stretch.set_voice_count(voice_count);
   }
 }
 
@@ -105,7 +105,7 @@ impl Plugin for DmGrainStretch {
       self.params.recycle.value(),
       self.params.dry.value(),
       self.params.wet.value(),
-      self.params.midi_enabled.value()
+      self.params.midi_enabled.value(),
     );
     self.process_midi_events(context);
 
@@ -116,7 +116,7 @@ impl Plugin for DmGrainStretch {
 
       (*left_channel, *right_channel) = self
         .grain_stretch
-        .process((*left_channel, *right_channel), &mut self.process_params, self.note);
+        .process((*left_channel, *right_channel), &mut self.process_params);
     });
     ProcessStatus::Normal
   }

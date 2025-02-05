@@ -1,5 +1,6 @@
 use crate::shared::phasor::Phasor;
 
+#[derive(Clone)]
 pub struct StartPhasor {
   phasor: Phasor,
   prev_speed: f32,

@@ -1,3 +1,6 @@
+mod grain;
+mod grain_trigger;
+mod start_phasor;
 use {
   crate::{
     shared::{float_ext::FloatExt, tuple_ext::TupleExt},
@@ -5,13 +8,10 @@ use {
   },
   grain::Grain,
   grain_trigger::GrainTrigger,
-  start_phasor::StartPhasor
+  start_phasor::StartPhasor,
 };
 
-mod grain;
-mod grain_trigger;
-mod start_phasor;
-
+#[derive(Clone)]
 pub struct Grains {
   grain_trigger: GrainTrigger,
   start_phasor: StartPhasor,
@@ -41,13 +41,7 @@ impl Grains {
     stretch: f32,
     scan: f32,
     spray: f32,
-    midi_enabled: bool,
-    note: Option<u8>
   ) -> (f32, f32) {
-    if midi_enabled && note.is_none() {
-      return (0., 0.)
-    }
-    let speed = if midi_enabled { 2_f32.powf((note.unwrap() as f32 - 60.).clamp(-24., 24.) / 12.) } else { speed };
     let duration = size.scale(0., 1., time, self.fade_time);
     let grain_density = density.scale(0., 1., 1., 15.);
 

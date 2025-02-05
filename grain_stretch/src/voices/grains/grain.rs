@@ -6,7 +6,7 @@ use {
   std::f32::consts::PI,
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Grain {
   phase: f32,
   position: f32,

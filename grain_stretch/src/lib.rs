@@ -1,22 +1,21 @@
 mod filter;
-mod grains;
 mod params;
 mod stereo_delay_line;
+mod voices;
 pub mod shared {
   pub mod delta;
   pub mod float_ext;
   pub mod phasor;
   pub mod tuple_ext;
 }
-use std::collections::HashMap;
 
 pub use params::Params;
 use {
   filter::Filter,
-  grains::Grains,
   params::Smoother,
   shared::tuple_ext::TupleExt,
   stereo_delay_line::{Interpolation, StereoDelayLine},
+  voices::Voices,
 };
 
 pub const MIN_DELAY_TIME: f32 = 10.;
@@ -24,7 +23,7 @@ pub const MAX_DELAY_TIME: f32 = 10000.;
 
 pub struct GrainStretch {
   delay_line: StereoDelayLine,
-  grains: Grains,
+  voices: Voices,
   filter: Filter,
 }
 
@@ -37,12 +36,12 @@ impl GrainStretch {
         (sample_rate * (MAX_DELAY_TIME + Self::FADE_TIME) / 1000.) as usize,
         sample_rate,
       ),
-      grains: Grains::new(sample_rate, Self::FADE_TIME),
+      voices: Voices::new(sample_rate, Self::FADE_TIME),
       filter: Filter::new(sample_rate),
     }
   }
 
-  pub fn process(&mut self, input: (f32, f32), params: &mut Params, note: Option<u8>) -> (f32, f32) {
+  pub fn process(&mut self, input: (f32, f32), params: &mut Params) -> (f32, f32) {
     let Params {
       scan,
       spray,
@@ -53,6 +52,7 @@ impl GrainStretch {
       midi_enabled,
       ..
     } = *params;
+
     let recording_gain = params.recording_gain.next();
     let time = params.time.next();
     let highpass = params.highpass.next();
@@ -62,18 +62,17 @@ impl GrainStretch {
     let dry = params.dry.next();
     let wet = params.wet.next();
 
-    let grains_out = self.grains.process(
-        &self.delay_line,
-        size,
-        time,
-        density,
-        speed,
-        stretch,
-        scan,
-        spray,
-        midi_enabled,
-        note,
-      );
+    let grains_out = self.voices.process(
+      &self.delay_line,
+      size,
+      time,
+      density,
+      speed,
+      stretch,
+      scan,
+      spray,
+      midi_enabled,
+    );
 
     self.write_to_delay(
       input,
@@ -86,6 +85,18 @@ impl GrainStretch {
       lowpass,
     );
     input.multiply(dry).add(grains_out.multiply(wet))
+  }
+
+  pub fn note_on(&mut self, note: u8, velocity: f32) {
+    self.voices.note_on(note, velocity);
+  }
+
+  pub fn note_off(&mut self, note: u8) {
+    self.voices.note_off(note);
+  }
+
+  pub fn set_voice_count(&mut self, voice_count: usize) {
+    self.voices.set_voice_count(voice_count);
   }
 
   fn write_to_delay(

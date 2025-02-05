@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Phasor {
   sample_period: f32,
   x: f32,

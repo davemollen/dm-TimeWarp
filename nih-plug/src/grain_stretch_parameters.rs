@@ -4,14 +4,20 @@ use nih_plug::{
     s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
     v2s_f32_rounded,
   },
-  params::BoolParam,
-  prelude::{FloatParam, FloatRange, Params},
+  params::{BoolParam, EnumParam},
+  prelude::{Enum, FloatParam, FloatRange, Params},
 };
 use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
 mod custom_formatters;
 use crate::editor;
 use custom_formatters::{s2v_f32_ms_then_s, v2s_f32_ms_then_s};
+
+#[derive(Enum, PartialEq)]
+pub enum VoiceMode {
+  Mono,
+  Poly,
+}
 
 #[derive(Params)]
 pub struct GrainStretchParameters {
@@ -61,7 +67,10 @@ pub struct GrainStretchParameters {
   pub wet: FloatParam,
 
   #[id = "midi_enabled"]
-  pub midi_enabled: BoolParam
+  pub midi_enabled: BoolParam,
+
+  #[id = "voice_mode"]
+  pub voice_mode: EnumParam<VoiceMode>
 }
 
 impl Default for GrainStretchParameters {
@@ -188,7 +197,9 @@ impl Default for GrainStretchParameters {
         }
       })),
 
-      midi_enabled: BoolParam::new("Midi On/Off", true)
+      midi_enabled: BoolParam::new("Midi on", true),
+
+      voice_mode: EnumParam::new("Voice mode", VoiceMode::Mono)
     }
   }
 }
