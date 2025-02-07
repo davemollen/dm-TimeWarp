@@ -1,5 +1,5 @@
 mod note;
-pub use note::Note;
+pub use note::{Note, NoteState};
 
 pub struct Notes {
   notes: Vec<Note>,
@@ -16,8 +16,8 @@ impl Notes {
     }
   }
 
-  pub fn get_notes(&self) -> &Vec<Note> {
-    &self.notes
+  pub fn get_notes(&mut self) -> &mut Vec<Note> {
+    &mut self.notes
   }
 
   pub fn note_on(&mut self, note: u8, velocity: f32) {
@@ -72,6 +72,10 @@ impl Notes {
         .for_each(|v| v.note_off());
     }
     self.voice_count = voice_count;
+  }
+
+  pub fn remove_note(&mut self, note: &Note) {
+    // remove note from notes vector
   }
 }
 

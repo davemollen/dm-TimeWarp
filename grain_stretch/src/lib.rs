@@ -47,7 +47,7 @@ impl GrainStretch {
     &mut self,
     input: (f32, f32),
     params: &mut Params,
-    notes: &Vec<Note>,
+    notes: &mut Vec<Note>,
   ) -> (f32, f32) {
     let Params {
       scan,

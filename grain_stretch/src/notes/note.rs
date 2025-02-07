@@ -1,7 +1,16 @@
+#[derive(PartialEq)]
+pub enum NoteState {
+  Idle,
+  On,
+  Off,
+  Stolen,
+}
+
 pub struct Note {
   note: u8,
   speed: f32,
   gain: f32,
+  state: NoteState,
 }
 
 impl Note {
@@ -9,11 +18,16 @@ impl Note {
     let speed = Self::calculate_speed(note);
     let gain = velocity;
 
-    Self { note, speed, gain }
+    Self {
+      note,
+      speed,
+      gain,
+      state: NoteState::On,
+    }
   }
 
   pub fn note_off(&mut self) {
-    self.gain = 0.;
+    self.state = NoteState::Off;
   }
 
   pub fn steal_note(&mut self, note: u8, velocity: f32) {
@@ -23,6 +37,14 @@ impl Note {
     self.note = note;
     self.speed = speed;
     self.gain = gain;
+    self.state = match self.state {
+      NoteState::Idle => NoteState::On,
+      _ => NoteState::Stolen,
+    };
+  }
+
+  pub fn set_state(&mut self, state: NoteState) {
+    self.state = state;
   }
 
   pub fn get_note(&self) -> u8 {
@@ -35,6 +57,10 @@ impl Note {
 
   pub fn get_gain(&self) -> f32 {
     self.gain
+  }
+
+  pub fn get_state(&self) -> &NoteState {
+    &self.state
   }
 
   fn calculate_speed(note: u8) -> f32 {

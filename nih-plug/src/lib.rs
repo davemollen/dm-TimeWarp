@@ -119,7 +119,7 @@ impl Plugin for DmGrainStretch {
       (*left_channel, *right_channel) = self.grain_stretch.process(
         (*left_channel, *right_channel),
         &mut self.process_params,
-        self.notes.get_notes(),
+        &mut self.notes.get_notes(),
       );
     });
     ProcessStatus::Normal

@@ -1,8 +1,14 @@
+mod adsr;
 mod grain_trigger;
 mod grains;
 mod start_phasor;
 use {
-  crate::{notes::Note, shared::float_ext::FloatExt, stereo_delay_line::StereoDelayLine},
+  crate::{
+    notes::{Note, NoteState},
+    shared::float_ext::FloatExt,
+    stereo_delay_line::StereoDelayLine,
+  },
+  adsr::ADSR,
   grain_trigger::GrainTrigger,
   grains::Grains,
   start_phasor::StartPhasor,
@@ -10,6 +16,7 @@ use {
 
 pub struct Voices {
   grains: Vec<Grains>,
+  adsr: Vec<ADSR>,
   grain_trigger: GrainTrigger,
   start_phasor: StartPhasor,
   fade_time: f32,
@@ -20,6 +27,7 @@ impl Voices {
   pub fn new(sample_rate: f32, fade_time: f32) -> Self {
     Self {
       grains: vec![Grains::new(sample_rate); 8],
+      adsr: vec![ADSR::new(sample_rate); 8],
       grain_trigger: GrainTrigger::new(sample_rate),
       start_phasor: StartPhasor::new(sample_rate),
       fade_time,
@@ -30,7 +38,7 @@ impl Voices {
   pub fn process(
     &mut self,
     delay_line: &StereoDelayLine,
-    notes: &Vec<Note>,
+    notes: &mut Vec<Note>,
     size: f32,
     time: f32,
     density: f32,
@@ -57,9 +65,12 @@ impl Voices {
 
     if midi_enabled {
       notes
-        .iter()
+        .iter_mut()
+        .filter(|n| *n.get_state() != NoteState::Idle)
         .zip(self.grains.iter_mut())
-        .fold((0., 0.), |result, (voice, grains)| {
+        .zip(self.adsr.iter_mut())
+        .fold((0., 0.), |result, ((note, grains), adsr)| {
+          let gain = adsr.process(note, 100., 200., 0.5, 1000.);
           let grains_out = grains.process(
             delay_line,
             trigger,
@@ -68,14 +79,14 @@ impl Voices {
             time,
             start_phase,
             phase_step_size,
-            speed * voice.get_speed(),
+            speed * adsr.get_speed(),
             window_factor,
             fade_factor,
             fade_offset,
           );
           (
-            result.0 + grains_out.0 * voice.get_gain(),
-            result.1 + grains_out.1 * voice.get_gain(),
+            result.0 + grains_out.0 * gain,
+            result.1 + grains_out.1 * gain,
           )
         })
     } else {
