@@ -1,12 +1,24 @@
+mod grain_trigger;
 mod grains;
+mod start_phasor;
 mod voice;
-use {crate::stereo_delay_line::StereoDelayLine, grains::Grains, voice::Voice};
+use {
+  crate::{shared::float_ext::FloatExt, stereo_delay_line::StereoDelayLine},
+  grain_trigger::GrainTrigger,
+  grains::Grains,
+  start_phasor::StartPhasor,
+  voice::Voice,
+};
 
 pub struct Voices {
   voices: Vec<Voice>,
   note_queue: Vec<(u8, f32)>,
-  grains: Vec<Grains>,
   voice_count: usize,
+  grains: Vec<Grains>,
+  grain_trigger: GrainTrigger,
+  start_phasor: StartPhasor,
+  fade_time: f32,
+  sample_rate: f32,
 }
 
 impl Voices {
@@ -14,8 +26,12 @@ impl Voices {
     Self {
       voices: Vec::with_capacity(8),
       note_queue: Vec::with_capacity(128),
-      grains: vec![Grains::new(sample_rate, fade_time); 8],
       voice_count: 1,
+      grains: vec![Grains::new(sample_rate); 8],
+      grain_trigger: GrainTrigger::new(sample_rate),
+      start_phasor: StartPhasor::new(sample_rate),
+      fade_time,
+      sample_rate,
     }
   }
 
@@ -31,6 +47,21 @@ impl Voices {
     spray: f32,
     midi_enabled: bool,
   ) -> (f32, f32) {
+    let duration = size.scale(0., 1., time, self.fade_time);
+    let grain_density = density.scale(0., 1., 1., 15.);
+
+    let trigger = self.grain_trigger.process(duration, grain_density);
+    let start_phase = self
+      .start_phasor
+      .process(speed, time, size, density, stretch);
+
+    let window_mode = (density - 1.).min(1.);
+    let grain_duration = duration + self.fade_time * (1. - window_mode);
+    let phase_step_size = grain_duration.mstosamps(self.sample_rate).recip();
+    let window_factor = window_mode.scale(0., 1., grain_duration / self.fade_time, 2.);
+    let fade_factor = time / self.fade_time;
+    let fade_offset = fade_factor.recip() + 1.;
+
     if midi_enabled {
       self
         .voices
@@ -39,13 +70,16 @@ impl Voices {
         .fold((0., 0.), |result, (voice, grains)| {
           let grains_out = grains.process(
             delay_line,
-            size,
-            time,
-            density,
-            speed * voice.get_speed(),
-            stretch,
+            trigger,
             scan,
             spray,
+            time,
+            start_phase,
+            phase_step_size,
+            speed * voice.get_speed(),
+            window_factor,
+            fade_factor,
+            fade_offset,
           );
           (
             result.0 + grains_out.0 * voice.get_gain(),
@@ -53,7 +87,19 @@ impl Voices {
           )
         })
     } else {
-      self.grains[0].process(delay_line, size, time, density, speed, stretch, scan, spray)
+      self.grains[0].process(
+        delay_line,
+        trigger,
+        scan,
+        spray,
+        time,
+        start_phase,
+        phase_step_size,
+        speed,
+        window_factor,
+        fade_factor,
+        fade_offset,
+      )
     }
   }
 
