@@ -1,4 +1,4 @@
-use grain_stretch::{GrainStretch, Params as ProcessParams};
+use grain_stretch::{GrainStretch, Notes, Params as ProcessParams};
 mod grain_stretch_parameters;
 use grain_stretch_parameters::{GrainStretchParameters, VoiceMode};
 use nih_plug::prelude::*;
@@ -9,6 +9,7 @@ struct DmGrainStretch {
   params: Arc<GrainStretchParameters>,
   grain_stretch: GrainStretch,
   process_params: ProcessParams,
+  notes: Notes,
 }
 
 impl Default for DmGrainStretch {
@@ -18,6 +19,7 @@ impl Default for DmGrainStretch {
       params: params.clone(),
       grain_stretch: GrainStretch::new(44100.),
       process_params: ProcessParams::new(44100.),
+      notes: Notes::new(),
     }
   }
 }
@@ -27,10 +29,10 @@ impl DmGrainStretch {
     while let Some(event) = context.next_event() {
       match event {
         NoteEvent::NoteOn { note, velocity, .. } => {
-          self.grain_stretch.note_on(note, velocity);
+          self.notes.note_on(note, velocity);
         }
         NoteEvent::NoteOff { note, .. } => {
-          self.grain_stretch.note_off(note);
+          self.notes.note_off(note);
         }
         _ => (),
       }
@@ -40,7 +42,7 @@ impl DmGrainStretch {
       VoiceMode::Mono => 1,
       VoiceMode::Poly => 8,
     };
-    self.grain_stretch.set_voice_count(voice_count);
+    self.notes.set_voice_count(voice_count);
   }
 }
 
@@ -114,9 +116,11 @@ impl Plugin for DmGrainStretch {
       let left_channel = channel_iterator.next().unwrap();
       let right_channel = channel_iterator.next().unwrap();
 
-      (*left_channel, *right_channel) = self
-        .grain_stretch
-        .process((*left_channel, *right_channel), &mut self.process_params);
+      (*left_channel, *right_channel) = self.grain_stretch.process(
+        (*left_channel, *right_channel),
+        &mut self.process_params,
+        self.notes.get_notes(),
+      );
     });
     ProcessStatus::Normal
   }

@@ -1,4 +1,5 @@
 mod filter;
+mod notes;
 mod params;
 mod stereo_delay_line;
 mod voices;
@@ -9,14 +10,15 @@ pub mod shared {
   pub mod tuple_ext;
 }
 
-pub use params::Params;
 use {
   filter::Filter,
+  notes::Note,
   params::Smoother,
   shared::tuple_ext::TupleExt,
   stereo_delay_line::{Interpolation, StereoDelayLine},
   voices::Voices,
 };
+pub use {notes::Notes, params::Params};
 
 pub const MIN_DELAY_TIME: f32 = 10.;
 pub const MAX_DELAY_TIME: f32 = 10000.;
@@ -41,7 +43,12 @@ impl GrainStretch {
     }
   }
 
-  pub fn process(&mut self, input: (f32, f32), params: &mut Params) -> (f32, f32) {
+  pub fn process(
+    &mut self,
+    input: (f32, f32),
+    params: &mut Params,
+    notes: &Vec<Note>,
+  ) -> (f32, f32) {
     let Params {
       scan,
       spray,
@@ -64,6 +71,7 @@ impl GrainStretch {
 
     let grains_out = self.voices.process(
       &self.delay_line,
+      notes,
       size,
       time,
       density,
@@ -85,18 +93,6 @@ impl GrainStretch {
       lowpass,
     );
     input.multiply(dry).add(grains_out.multiply(wet))
-  }
-
-  pub fn note_on(&mut self, note: u8, velocity: f32) {
-    self.voices.note_on(note, velocity);
-  }
-
-  pub fn note_off(&mut self, note: u8) {
-    self.voices.note_off(note);
-  }
-
-  pub fn set_voice_count(&mut self, voice_count: usize) {
-    self.voices.set_voice_count(voice_count);
   }
 
   fn write_to_delay(

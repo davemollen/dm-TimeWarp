@@ -1,10 +1,10 @@
-pub struct Voice {
+pub struct Note {
   note: u8,
   speed: f32,
   gain: f32,
 }
 
-impl Voice {
+impl Note {
   pub fn note_on(note: u8, velocity: f32) -> Self {
     let speed = Self::calculate_speed(note);
     let gain = velocity;
