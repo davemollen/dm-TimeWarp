@@ -21,19 +21,29 @@ impl Notes {
   }
 
   pub fn note_on(&mut self, note: u8, velocity: f32) {
-    let index = self.note_queue.len().checked_sub(self.voice_count);
-    match index {
-      Some(i) => {
-        let note_instance = self
-          .notes
-          .iter_mut()
-          .find(|n| n.get_note() == self.note_queue[i].0);
-        match note_instance {
-          Some(n) => n.steal_note(note, velocity),
-          None => return,
+    match self
+      .notes
+      .iter_mut()
+      .take(self.voice_count)
+      .find(|n| *n.get_state() == NoteState::Idle)
+    {
+      Some(n) => n.note_on(note, velocity),
+      None => {
+        let index = self.note_queue.len().checked_sub(self.voice_count);
+        match index {
+          Some(i) => {
+            let note_instance = self
+              .notes
+              .iter_mut()
+              .find(|n| n.get_note() == self.note_queue[i].0);
+            match note_instance {
+              Some(n) => n.steal_note(note, velocity),
+              None => return,
+            }
+          }
+          None => self.notes[self.note_queue.len()].steal_note(note, velocity),
         }
       }
-      None => self.notes[self.note_queue.len()].steal_note(note, velocity),
     }
 
     self.note_queue.push((note, velocity));
@@ -136,19 +146,22 @@ mod tests {
     notes.note_off(60);
     assert_notes_vector(&notes.notes, vec![(60, NoteState::Off)]);
     notes.note_on(60, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::Stolen)]);
-    notes.note_on(64, 1.);
     assert_notes_vector(
       &notes.notes,
-      vec![(60, NoteState::Stolen), (64, NoteState::On)],
+      vec![(60, NoteState::Off), (60, NoteState::On)],
     );
-    notes.note_on(67, 1.);
+    notes.note_off(60);
+    assert_notes_vector(
+      &notes.notes,
+      vec![(60, NoteState::Off), (60, NoteState::Off)],
+    );
+    notes.note_on(60, 1.);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (60, NoteState::Stolen),
-        (64, NoteState::On),
-        (67, NoteState::On),
+        (60, NoteState::Off),
+        (60, NoteState::Off),
+        (60, NoteState::On),
       ],
     );
     notes.note_off(60);
@@ -156,26 +169,44 @@ mod tests {
       &notes.notes,
       vec![
         (60, NoteState::Off),
-        (64, NoteState::On),
-        (67, NoteState::On),
+        (60, NoteState::Off),
+        (60, NoteState::Off),
+      ],
+    );
+    notes.note_on(64, 1.);
+    assert_notes_vector(
+      &notes.notes,
+      vec![
+        (64, NoteState::Stolen),
+        (60, NoteState::Off),
+        (60, NoteState::Off),
+      ],
+    );
+    notes.note_on(67, 1.);
+    assert_notes_vector(
+      &notes.notes,
+      vec![
+        (64, NoteState::Stolen),
+        (67, NoteState::Stolen),
+        (60, NoteState::Off),
       ],
     );
     notes.note_off(64);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (60, NoteState::Off),
         (64, NoteState::Off),
-        (67, NoteState::On),
+        (67, NoteState::Stolen),
+        (60, NoteState::Off),
       ],
     );
     notes.note_off(67);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (60, NoteState::Off),
         (64, NoteState::Off),
         (67, NoteState::Off),
+        (60, NoteState::Off),
       ],
     );
   }
