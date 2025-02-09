@@ -1,4 +1,4 @@
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum NoteState {
   Idle,
   On,
@@ -6,6 +6,7 @@ pub enum NoteState {
   Stolen,
 }
 
+#[derive(Clone)]
 pub struct Note {
   note: u8,
   speed: f32,
@@ -14,16 +15,20 @@ pub struct Note {
 }
 
 impl Note {
-  pub fn note_on(note: u8, velocity: f32) -> Self {
-    let speed = Self::calculate_speed(note);
-    let gain = velocity;
-
+  pub fn default() -> Self {
     Self {
-      note,
-      speed,
-      gain,
-      state: NoteState::On,
+      note: 0,
+      speed: 0.,
+      gain: 0.,
+      state: NoteState::Idle,
     }
+  }
+
+  pub fn note_on(&mut self, note: u8, velocity: f32) {
+    self.note = note;
+    self.speed = Self::calculate_speed(note);
+    self.gain = velocity;
+    self.state = NoteState::On;
   }
 
   pub fn note_off(&mut self) {
@@ -31,12 +36,9 @@ impl Note {
   }
 
   pub fn steal_note(&mut self, note: u8, velocity: f32) {
-    let speed = Self::calculate_speed(note);
-    let gain = velocity;
-
     self.note = note;
-    self.speed = speed;
-    self.gain = gain;
+    self.speed = Self::calculate_speed(note);
+    self.gain = velocity;
     self.state = match self.state {
       NoteState::Idle => NoteState::On,
       _ => NoteState::Stolen,
