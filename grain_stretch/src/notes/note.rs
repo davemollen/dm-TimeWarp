@@ -1,9 +1,11 @@
-#[derive(Clone, PartialEq)]
-pub enum NoteState {
+#[derive(PartialEq, Clone)]
+pub enum ADSRStage {
+  Attack,
+  Decay,
+  Sustain,
+  Release,
+  Retrigger,
   Idle,
-  On,
-  Off,
-  Stolen,
 }
 
 #[derive(Clone)]
@@ -11,7 +13,7 @@ pub struct Note {
   note: u8,
   speed: f32,
   gain: f32,
-  state: NoteState,
+  adsr_stage: ADSRStage,
 }
 
 impl Note {
@@ -20,7 +22,7 @@ impl Note {
       note: 0,
       speed: 0.,
       gain: 0.,
-      state: NoteState::Idle,
+      adsr_stage: ADSRStage::Idle,
     }
   }
 
@@ -28,25 +30,25 @@ impl Note {
     self.note = note;
     self.speed = Self::calculate_speed(note);
     self.gain = velocity;
-    self.state = NoteState::On;
+    self.adsr_stage = ADSRStage::Attack;
   }
 
   pub fn note_off(&mut self) {
-    self.state = NoteState::Off;
+    self.adsr_stage = ADSRStage::Release;
   }
 
   pub fn steal_note(&mut self, note: u8, velocity: f32) {
     self.note = note;
     self.speed = Self::calculate_speed(note);
     self.gain = velocity;
-    self.state = match self.state {
-      NoteState::Idle => NoteState::On,
-      _ => NoteState::Stolen,
+    self.adsr_stage = match self.adsr_stage {
+      ADSRStage::Idle => ADSRStage::Attack,
+      _ => ADSRStage::Retrigger,
     };
   }
 
-  pub fn set_state(&mut self, state: NoteState) {
-    self.state = state;
+  pub fn set_adsr_stage(&mut self, adsr_stage: ADSRStage) {
+    self.adsr_stage = adsr_stage;
   }
 
   pub fn get_note(&self) -> u8 {
@@ -61,8 +63,8 @@ impl Note {
     self.gain
   }
 
-  pub fn get_state(&self) -> &NoteState {
-    &self.state
+  pub fn get_adsr_stage(&self) -> &ADSRStage {
+    &self.adsr_stage
   }
 
   fn calculate_speed(note: u8) -> f32 {

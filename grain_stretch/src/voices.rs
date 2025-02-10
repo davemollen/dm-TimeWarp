@@ -4,7 +4,7 @@ mod grains;
 mod start_phasor;
 use {
   crate::{
-    notes::{Note, NoteState},
+    notes::{ADSRStage, Note},
     shared::float_ext::FloatExt,
     stereo_delay_line::StereoDelayLine,
   },
@@ -27,7 +27,7 @@ impl Voices {
   pub fn new(sample_rate: f32, fade_time: f32) -> Self {
     Self {
       grains: vec![Grains::new(sample_rate); 8],
-      adsr: vec![ADSR::new(sample_rate); 8],
+      adsr: vec![ADSR::new(sample_rate, 5.); 8],
       grain_trigger: GrainTrigger::new(sample_rate),
       start_phasor: StartPhasor::new(sample_rate),
       fade_time,
@@ -51,7 +51,6 @@ impl Voices {
     let duration = size.scale(0., 1., time, self.fade_time);
     let grain_density = density.scale(0., 1., 1., 15.);
 
-    let trigger = self.grain_trigger.process(duration, grain_density);
     let start_phase = self
       .start_phasor
       .process(speed, time, size, density, stretch);
@@ -66,11 +65,13 @@ impl Voices {
     if midi_enabled {
       notes
         .iter_mut()
-        .filter(|n| *n.get_state() != NoteState::Idle)
+        .filter(|n| *n.get_adsr_stage() != ADSRStage::Idle)
         .zip(self.grains.iter_mut())
         .zip(self.adsr.iter_mut())
         .fold((0., 0.), |result, ((note, grains), adsr)| {
           let gain = adsr.process(note, 100., 200., 0.5, 1000.);
+          let trigger = self.grain_trigger.process(duration, grain_density) || adsr.get_trigger();
+
           let grains_out = grains.process(
             delay_line,
             trigger,
@@ -90,6 +91,7 @@ impl Voices {
           )
         })
     } else {
+      let trigger = self.grain_trigger.process(duration, grain_density);
       self.grains[0].process(
         delay_line,
         trigger,

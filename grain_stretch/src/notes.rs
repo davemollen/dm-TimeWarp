@@ -1,5 +1,5 @@
 mod note;
-pub use note::{Note, NoteState};
+pub use note::{ADSRStage, Note};
 
 pub struct Notes {
   notes: Vec<Note>,
@@ -25,7 +25,7 @@ impl Notes {
       .notes
       .iter_mut()
       .take(self.voice_count)
-      .find(|n| *n.get_state() == NoteState::Idle)
+      .find(|n| *n.get_adsr_stage() == ADSRStage::Idle)
     {
       Some(n) => n.note_on(note, velocity),
       None => {
@@ -54,7 +54,10 @@ impl Notes {
 
     match self.notes.iter_mut().find(|n| {
       n.get_note() == note
-        && (*n.get_state() == NoteState::On || *n.get_state() == NoteState::Stolen)
+        && match n.get_adsr_stage() {
+          ADSRStage::Attack | ADSRStage::Decay | ADSRStage::Sustain | ADSRStage::Retrigger => true,
+          _ => false,
+        }
     }) {
       Some(note_instance) => {
         if self.note_queue.len() < self.voice_count {
@@ -83,15 +86,15 @@ impl Notes {
 
 #[cfg(test)]
 mod tests {
-  use super::{Note, NoteState, Notes};
+  use super::{ADSRStage, Note, Notes};
 
-  fn assert_notes_vector(notes: &Vec<Note>, expected_notes: Vec<(u8, NoteState)>) {
+  fn assert_notes_vector(notes: &Vec<Note>, expected_notes: Vec<(u8, ADSRStage)>) {
     notes
       .iter()
       .zip(expected_notes)
       .for_each(|(note, (expected_note, expected_state))| {
         assert_eq!(note.get_note(), expected_note);
-        assert!(*note.get_state() == expected_state);
+        assert!(*note.get_adsr_stage() == expected_state);
       })
   }
 
@@ -102,10 +105,10 @@ mod tests {
     assert_notes_vector(
       &notes.notes,
       vec![
-        (0, NoteState::Idle),
-        (0, NoteState::Idle),
-        (0, NoteState::Idle),
-        (0, NoteState::Idle),
+        (0, ADSRStage::Idle),
+        (0, ADSRStage::Idle),
+        (0, ADSRStage::Idle),
+        (0, ADSRStage::Idle),
       ],
     );
   }
@@ -115,16 +118,19 @@ mod tests {
     let mut notes = Notes::new();
     notes.set_voice_count(3);
     notes.note_on(60, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::On)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Attack)]);
     notes.note_on(64, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::On), (64, NoteState::On)]);
+    assert_notes_vector(
+      &notes.notes,
+      vec![(60, ADSRStage::Attack), (64, ADSRStage::Attack)],
+    );
     notes.note_on(67, 1.);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (60, NoteState::On),
-        (64, NoteState::On),
-        (67, NoteState::On),
+        (60, ADSRStage::Attack),
+        (64, ADSRStage::Attack),
+        (67, ADSRStage::Attack),
       ],
     );
   }
@@ -134,79 +140,79 @@ mod tests {
     let mut notes = Notes::new();
     notes.set_voice_count(3);
     notes.note_on(60, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::On)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Attack)]);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (60, NoteState::On),
-        (0, NoteState::Idle),
-        (0, NoteState::Idle),
+        (60, ADSRStage::Attack),
+        (0, ADSRStage::Idle),
+        (0, ADSRStage::Idle),
       ],
     );
     notes.note_off(60);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::Off)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Release)]);
     notes.note_on(60, 1.);
     assert_notes_vector(
       &notes.notes,
-      vec![(60, NoteState::Off), (60, NoteState::On)],
+      vec![(60, ADSRStage::Release), (60, ADSRStage::Attack)],
     );
     notes.note_off(60);
     assert_notes_vector(
       &notes.notes,
-      vec![(60, NoteState::Off), (60, NoteState::Off)],
+      vec![(60, ADSRStage::Release), (60, ADSRStage::Release)],
     );
     notes.note_on(60, 1.);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (60, NoteState::Off),
-        (60, NoteState::Off),
-        (60, NoteState::On),
+        (60, ADSRStage::Release),
+        (60, ADSRStage::Release),
+        (60, ADSRStage::Attack),
       ],
     );
     notes.note_off(60);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (60, NoteState::Off),
-        (60, NoteState::Off),
-        (60, NoteState::Off),
+        (60, ADSRStage::Release),
+        (60, ADSRStage::Release),
+        (60, ADSRStage::Release),
       ],
     );
     notes.note_on(64, 1.);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (64, NoteState::Stolen),
-        (60, NoteState::Off),
-        (60, NoteState::Off),
+        (64, ADSRStage::Retrigger),
+        (60, ADSRStage::Release),
+        (60, ADSRStage::Release),
       ],
     );
     notes.note_on(67, 1.);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (64, NoteState::Stolen),
-        (67, NoteState::Stolen),
-        (60, NoteState::Off),
+        (64, ADSRStage::Retrigger),
+        (67, ADSRStage::Retrigger),
+        (60, ADSRStage::Release),
       ],
     );
     notes.note_off(64);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (64, NoteState::Off),
-        (67, NoteState::Stolen),
-        (60, NoteState::Off),
+        (64, ADSRStage::Release),
+        (67, ADSRStage::Retrigger),
+        (60, ADSRStage::Release),
       ],
     );
     notes.note_off(67);
     assert_notes_vector(
       &notes.notes,
       vec![
-        (64, NoteState::Off),
-        (67, NoteState::Off),
-        (60, NoteState::Off),
+        (64, ADSRStage::Release),
+        (67, ADSRStage::Release),
+        (60, ADSRStage::Release),
       ],
     );
   }
@@ -216,48 +222,51 @@ mod tests {
     let mut notes = Notes::new();
     notes.set_voice_count(2);
     notes.note_on(60, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::On)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Attack)]);
     notes.note_on(64, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::On), (64, NoteState::On)]);
+    assert_notes_vector(
+      &notes.notes,
+      vec![(60, ADSRStage::Attack), (64, ADSRStage::Attack)],
+    );
     notes.note_on(65, 0.5);
     assert_notes_vector(
       &notes.notes,
-      vec![(65, NoteState::Stolen), (64, NoteState::On)],
+      vec![(65, ADSRStage::Retrigger), (64, ADSRStage::Attack)],
     );
     notes.note_on(69, 0.75);
     assert_notes_vector(
       &notes.notes,
-      vec![(65, NoteState::Stolen), (69, NoteState::Stolen)],
+      vec![(65, ADSRStage::Retrigger), (69, ADSRStage::Retrigger)],
     );
     notes.note_off(65);
     assert_notes_vector(
       &notes.notes,
-      vec![(64, NoteState::Stolen), (69, NoteState::Stolen)],
+      vec![(64, ADSRStage::Retrigger), (69, ADSRStage::Retrigger)],
     );
     notes.note_off(69);
     assert_notes_vector(
       &notes.notes,
-      vec![(64, NoteState::Stolen), (60, NoteState::Stolen)],
+      vec![(64, ADSRStage::Retrigger), (60, ADSRStage::Retrigger)],
     );
     notes.note_off(60);
     assert_notes_vector(
       &notes.notes,
-      vec![(64, NoteState::Stolen), (60, NoteState::Off)],
+      vec![(64, ADSRStage::Retrigger), (60, ADSRStage::Release)],
     );
     notes.note_off(64);
     assert_notes_vector(
       &notes.notes,
-      vec![(64, NoteState::Off), (60, NoteState::Off)],
+      vec![(64, ADSRStage::Release), (60, ADSRStage::Release)],
     );
     notes.note_on(65, 0.5);
     assert_notes_vector(
       &notes.notes,
-      vec![(65, NoteState::Stolen), (60, NoteState::Off)],
+      vec![(65, ADSRStage::Retrigger), (60, ADSRStage::Release)],
     );
     notes.note_on(69, 0.75);
     assert_notes_vector(
       &notes.notes,
-      vec![(65, NoteState::Stolen), (69, NoteState::Stolen)],
+      vec![(65, ADSRStage::Retrigger), (69, ADSRStage::Retrigger)],
     );
   }
 
@@ -266,22 +275,22 @@ mod tests {
     let mut notes = Notes::new();
     notes.set_voice_count(1);
     notes.note_on(60, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::On)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Attack)]);
     notes.note_off(60);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::Off)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Release)]);
     notes.note_on(60, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::Stolen)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Retrigger)]);
     notes.note_on(59, 0.5);
-    assert_notes_vector(&notes.notes, vec![(59, NoteState::Stolen)]);
+    assert_notes_vector(&notes.notes, vec![(59, ADSRStage::Retrigger)]);
     notes.note_on(72, 0.75);
-    assert_notes_vector(&notes.notes, vec![(72, NoteState::Stolen)]);
+    assert_notes_vector(&notes.notes, vec![(72, ADSRStage::Retrigger)]);
     notes.note_off(59);
-    assert_notes_vector(&notes.notes, vec![(72, NoteState::Stolen)]);
+    assert_notes_vector(&notes.notes, vec![(72, ADSRStage::Retrigger)]);
     notes.note_off(72);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::Stolen)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Retrigger)]);
     notes.note_off(60);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::Off)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Release)]);
     notes.note_on(60, 1.);
-    assert_notes_vector(&notes.notes, vec![(60, NoteState::Stolen)]);
+    assert_notes_vector(&notes.notes, vec![(60, ADSRStage::Retrigger)]);
   }
 }
