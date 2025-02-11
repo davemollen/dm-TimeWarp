@@ -68,6 +68,10 @@ impl GrainStretch {
     let recycle = params.recycle.next();
     let dry = params.dry.next();
     let wet = params.wet.next();
+    let attack = params.attack.next();
+    let decay = params.decay.next();
+    let sustain = params.sustain.next();
+    let release = params.release.next();
 
     let grains_out = self.voices.process(
       &self.delay_line,
@@ -80,6 +84,10 @@ impl GrainStretch {
       scan,
       spray,
       midi_enabled,
+      attack,
+      decay,
+      sustain,
+      release,
     );
 
     self.write_to_delay(

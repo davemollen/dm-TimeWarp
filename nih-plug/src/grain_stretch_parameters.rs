@@ -60,17 +60,29 @@ pub struct GrainStretchParameters {
   #[id = "recycle"]
   pub recycle: FloatParam,
 
+  #[id = "midi_enabled"]
+  pub midi_enabled: BoolParam,
+
+  #[id = "voice_mode"]
+  pub voice_mode: EnumParam<VoiceMode>,
+
+  #[id = "attack"]
+  pub attack: FloatParam,
+
+  #[id = "decay"]
+  pub decay: FloatParam,
+
+  #[id = "sustain"]
+  pub sustain: FloatParam,
+
+  #[id = "release"]
+  pub release: FloatParam,
+
   #[id = "dry"]
   pub dry: FloatParam,
 
   #[id = "wet"]
   pub wet: FloatParam,
-
-  #[id = "midi_enabled"]
-  pub midi_enabled: BoolParam,
-
-  #[id = "voice_mode"]
-  pub voice_mode: EnumParam<VoiceMode>
 }
 
 impl Default for GrainStretchParameters {
@@ -161,6 +173,49 @@ impl Default for GrainStretchParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
+      midi_enabled: BoolParam::new("Midi on", true),
+
+      voice_mode: EnumParam::new("Voice mode", VoiceMode::Mono),
+
+      attack: FloatParam::new(
+        "Attack",
+        10.,
+        FloatRange::Skewed {
+          min: 0.1,
+          max: 5000.,
+          factor: 0.2,
+        },
+      )
+      .with_unit(" ms")
+      .with_value_to_string(v2s_f32_rounded(2)),
+
+      decay: FloatParam::new(
+        "Decay",
+        300.,
+        FloatRange::Skewed {
+          min: 1.,
+          max: 15000.,
+          factor: 0.2,
+        },
+      )
+      .with_unit(" ms")
+      .with_value_to_string(v2s_f32_rounded(2)),
+
+      sustain: FloatParam::new("Sustain", 1., FloatRange::Linear { min: 0., max: 1. })
+        .with_value_to_string(v2s_f32_rounded(2)),
+
+      release: FloatParam::new(
+        "Release",
+        2000.,
+        FloatRange::Skewed {
+          min: 1.,
+          max: 15000.,
+          factor: 0.2,
+        },
+      )
+      .with_unit(" ms")
+      .with_value_to_string(v2s_f32_rounded(2)),
+
       dry: FloatParam::new(
         "Dry",
         0.,
@@ -196,10 +251,6 @@ impl Default for GrainStretchParameters {
           format!("{:.2}", value)
         }
       })),
-
-      midi_enabled: BoolParam::new("Midi on", true),
-
-      voice_mode: EnumParam::new("Voice mode", VoiceMode::Mono)
     }
   }
 }

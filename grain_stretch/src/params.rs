@@ -21,6 +21,10 @@ pub struct Params {
   pub wet: ExponentialSmooth,
   pub midi_enabled: bool,
   is_initialized: bool,
+  pub attack: LinearSmooth,
+  pub decay: LinearSmooth,
+  pub sustain: LinearSmooth,
+  pub release: LinearSmooth,
 }
 
 impl Params {
@@ -42,6 +46,10 @@ impl Params {
       wet: ExponentialSmooth::new(sample_rate, 20.),
       midi_enabled: false,
       is_initialized: false,
+      attack: LinearSmooth::new(sample_rate, 20.),
+      decay: LinearSmooth::new(sample_rate, 20.),
+      sustain: LinearSmooth::new(sample_rate, 20.),
+      release: LinearSmooth::new(sample_rate, 20.),
     }
   }
 
@@ -62,6 +70,10 @@ impl Params {
     dry: f32,
     wet: f32,
     midi_enabled: bool,
+    attack: f32,
+    decay: f32,
+    sustain: f32,
+    release: f32,
   ) {
     self.scan = scan;
     self.spray = spray;
@@ -83,6 +95,10 @@ impl Params {
       self.recycle.set_target(recycle);
       self.dry.set_target(dry);
       self.wet.set_target(wet);
+      self.attack.set_target(attack);
+      self.decay.set_target(decay);
+      self.sustain.set_target(sustain);
+      self.release.set_target(release);
     } else {
       self.recording_gain.reset(recording_gain);
       self.time.reset(time);
@@ -92,6 +108,10 @@ impl Params {
       self.recycle.reset(recycle);
       self.dry.reset(dry);
       self.wet.reset(wet);
+      self.attack.reset(attack);
+      self.decay.reset(decay);
+      self.sustain.reset(sustain);
+      self.release.reset(release);
       self.is_initialized = true;
     }
   }

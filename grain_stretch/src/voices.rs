@@ -47,6 +47,10 @@ impl Voices {
     scan: f32,
     spray: f32,
     midi_enabled: bool,
+    attack: f32,
+    decay: f32,
+    sustain: f32,
+    release: f32,
   ) -> (f32, f32) {
     let duration = size.scale(0., 1., time, self.fade_time);
     let grain_density = density.scale(0., 1., 1., 15.);
@@ -69,7 +73,7 @@ impl Voices {
         .zip(self.grains.iter_mut())
         .zip(self.adsr.iter_mut())
         .fold((0., 0.), |result, ((note, grains), adsr)| {
-          let gain = adsr.process(note, 100., 200., 0.5, 1000.);
+          let gain = adsr.process(note, attack, decay, sustain, release);
           let trigger = self.grain_trigger.process(duration, grain_density) || adsr.get_trigger();
 
           let grains_out = grains.process(
