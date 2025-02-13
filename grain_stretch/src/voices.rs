@@ -1,6 +1,6 @@
-mod adsr;
 mod grain_trigger;
 mod grains;
+mod linear_adsr;
 mod start_phasor;
 use {
   crate::{
@@ -8,9 +8,9 @@ use {
     shared::float_ext::FloatExt,
     stereo_delay_line::StereoDelayLine,
   },
-  adsr::ADSR,
   grain_trigger::GrainTrigger,
   grains::Grains,
+  linear_adsr::ADSR,
   start_phasor::StartPhasor,
 };
 

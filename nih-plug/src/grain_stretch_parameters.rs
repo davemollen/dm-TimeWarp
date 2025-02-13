@@ -4,7 +4,7 @@ use nih_plug::{
     s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
     v2s_f32_rounded,
   },
-  params::{BoolParam, EnumParam},
+  params::{BoolParam, EnumParam, IntParam},
   prelude::{Enum, FloatParam, FloatRange, Params},
 };
 use nih_plug_vizia::ViziaState;
@@ -63,8 +63,8 @@ pub struct GrainStretchParameters {
   #[id = "midi_enabled"]
   pub midi_enabled: BoolParam,
 
-  #[id = "voice_mode"]
-  pub voice_mode: EnumParam<VoiceMode>,
+  #[id = "voices"]
+  pub voices: IntParam,
 
   #[id = "attack"]
   pub attack: FloatParam,
@@ -175,7 +175,11 @@ impl Default for GrainStretchParameters {
 
       midi_enabled: BoolParam::new("Midi on", true),
 
-      voice_mode: EnumParam::new("Voice mode", VoiceMode::Mono),
+      voices: IntParam::new(
+        "Voices",
+        1,
+        nih_plug::prelude::IntRange::Linear { min: 1, max: 8 },
+      ),
 
       attack: FloatParam::new(
         "Attack",

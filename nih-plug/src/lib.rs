@@ -38,11 +38,9 @@ impl DmGrainStretch {
       }
     }
 
-    let voice_count = match self.params.voice_mode.value() {
-      VoiceMode::Mono => 1,
-      VoiceMode::Poly => 8,
-    };
-    self.notes.set_voice_count(voice_count);
+    self
+      .notes
+      .set_voice_count(self.params.voices.value() as usize);
   }
 }
 
