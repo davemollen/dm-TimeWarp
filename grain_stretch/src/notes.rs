@@ -76,13 +76,10 @@ impl Notes {
   }
 
   pub fn set_voice_count(&mut self, voice_count: usize) {
-    if self.voice_count > voice_count {
-      self
-        .notes
-        .iter_mut()
-        .skip(voice_count)
-        .for_each(|v| v.note_off());
+    if voice_count == self.voice_count {
+      return;
     }
+    self.notes.iter_mut().for_each(|v| v.note_off());
     self.voice_count = voice_count;
   }
 }

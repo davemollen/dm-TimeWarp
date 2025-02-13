@@ -1,6 +1,6 @@
 use grain_stretch::{GrainStretch, Notes, Params as ProcessParams};
 mod grain_stretch_parameters;
-use grain_stretch_parameters::{GrainStretchParameters, VoiceMode};
+use grain_stretch_parameters::GrainStretchParameters;
 use nih_plug::prelude::*;
 use std::sync::Arc;
 mod editor;
