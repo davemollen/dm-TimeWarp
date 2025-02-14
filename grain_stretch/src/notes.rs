@@ -58,7 +58,11 @@ impl Notes {
     match self.notes.iter_mut().find(|n| {
       n.get_note() == note
         && match n.get_adsr_stage() {
-          ADSRStage::Attack | ADSRStage::Decay | ADSRStage::Sustain | ADSRStage::Retrigger => true,
+          ADSRStage::Attack
+          | ADSRStage::Decay
+          | ADSRStage::Sustain
+          | ADSRStage::Release
+          | ADSRStage::Retrigger => true,
           _ => false,
         }
     }) {
