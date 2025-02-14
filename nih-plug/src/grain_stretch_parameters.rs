@@ -4,11 +4,11 @@ use nih_plug::{
     s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
     v2s_f32_rounded,
   },
-  params::{BoolParam, EnumParam, IntParam},
+  params::{BoolParam, IntParam},
   prelude::{Enum, FloatParam, FloatRange, Params},
 };
 use nih_plug_vizia::ViziaState;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 mod custom_formatters;
 use crate::editor;
 use custom_formatters::{s2v_f32_ms_then_s, v2s_f32_ms_then_s};
@@ -23,6 +23,9 @@ pub enum VoiceMode {
 pub struct GrainStretchParameters {
   #[persist = "editor-state"]
   pub editor_state: Arc<ViziaState>,
+
+  #[persist = "file_path"]
+  pub file_path: Arc<Mutex<String>>,
 
   #[id = "scan"]
   pub scan: FloatParam,
@@ -125,7 +128,7 @@ impl Default for GrainStretchParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      record: BoolParam::new("Record", true),
+      record: BoolParam::new("Record", false),
 
       time: FloatParam::new(
         "Time",
@@ -173,7 +176,7 @@ impl Default for GrainStretchParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      midi_enabled: BoolParam::new("Midi on", true),
+      midi_enabled: BoolParam::new("Midi on", false),
 
       voices: IntParam::new(
         "Voices",
@@ -270,6 +273,10 @@ impl Default for GrainStretchParameters {
           format!("{:.2}", value)
         }
       })),
+
+      file_path: Arc::new(Mutex::new(
+        "/Users/davemollen/Desktop/sample.wav".to_string(),
+      )),
     }
   }
 }

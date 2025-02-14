@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 nih_plug = { git = "https://github.com/robbert-vdh/nih-plug", features = ["assert_process_allocs"] }
 nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
 grain_stretch = { path = "../grain_stretch" }
+rfd = "0.15.2"
 
 [workspace]
 members = ["xtask"]

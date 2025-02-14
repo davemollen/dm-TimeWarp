@@ -44,6 +44,20 @@ impl StereoDelayLine {
     self.write_pointer = self.write_pointer + 1 & self.wrap;
   }
 
+  pub fn set_values(&mut self, values: Vec<(f32, f32)>) {
+    let buffer_len = self.buffer.len();
+    let values_len = values.len();
+
+    if values_len >= buffer_len {
+      self.buffer.copy_from_slice(&values[..buffer_len]);
+    } else {
+      self.buffer[..values_len].copy_from_slice(&values);
+      self.buffer[values_len..].fill((0.0, 0.0));
+    }
+
+    self.write_pointer = values_len;
+  }
+
   fn step_interp(&self, time: f32) -> (f32, f32) {
     let read_pointer =
       (self.write_pointer + self.buffer.len()) as f32 - (self.mstosamps(time) - 0.5).max(1.);
@@ -137,5 +151,27 @@ impl StereoDelayLine {
 
   fn mstosamps(&self, time: f32) -> f32 {
     time * 0.001 * self.sample_rate
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::StereoDelayLine;
+
+  #[test]
+  fn should_set_values() {
+    let mut delay_line = StereoDelayLine::new(2, 1000.);
+    let values = vec![(0.4, 0.4), (0.2, 0.2), (-0.2, -0.2), (-0.4, -0.4)];
+    delay_line.set_values(values.clone());
+    assert_eq!(values.len(), 4);
+    assert_eq!(delay_line.buffer.len(), 2);
+    delay_line
+      .buffer
+      .iter()
+      .zip(values)
+      .for_each(|(actual, expected)| {
+        assert_eq!(actual.0, expected.0);
+        assert_eq!(actual.1, expected.1);
+      });
   }
 }

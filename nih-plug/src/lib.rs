@@ -1,4 +1,4 @@
-use grain_stretch::{GrainStretch, Notes, Params as ProcessParams};
+use grain_stretch::{GrainStretch, Notes, Params as ProcessParams, WavProcessor};
 mod grain_stretch_parameters;
 use grain_stretch_parameters::GrainStretchParameters;
 use nih_plug::prelude::*;
@@ -10,86 +10,27 @@ struct DmGrainStretch {
   grain_stretch: GrainStretch,
   process_params: ProcessParams,
   notes: Notes,
+  wav_processor: WavProcessor,
+  loaded_file_path: String,
 }
 
 impl Default for DmGrainStretch {
   fn default() -> Self {
+    let sample_rate = 44100_f32;
     let params = Arc::new(GrainStretchParameters::default());
     Self {
       params: params.clone(),
-      grain_stretch: GrainStretch::new(44100.),
-      process_params: ProcessParams::new(44100.),
+      grain_stretch: GrainStretch::new(sample_rate),
+      process_params: ProcessParams::new(sample_rate),
       notes: Notes::new(),
+      wav_processor: WavProcessor::new(sample_rate),
+      loaded_file_path: String::new(),
     }
   }
 }
 
 impl DmGrainStretch {
-  pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
-    while let Some(event) = context.next_event() {
-      match event {
-        NoteEvent::NoteOn { note, velocity, .. } => {
-          self.notes.note_on(note, velocity);
-        }
-        NoteEvent::NoteOff { note, .. } => {
-          self.notes.note_off(note);
-        }
-        _ => (),
-      }
-    }
-
-    self
-      .notes
-      .set_voice_count(self.params.voices.value() as usize);
-  }
-}
-
-impl Plugin for DmGrainStretch {
-  const NAME: &'static str = "dm-GrainStretch";
-  const VENDOR: &'static str = "DM";
-  const URL: &'static str = "https://github.com/davemollen/dm-GrainStretch";
-  const EMAIL: &'static str = "davemollen@gmail.com";
-  const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-
-  const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[AudioIOLayout {
-    main_input_channels: NonZeroU32::new(2),
-    main_output_channels: NonZeroU32::new(2),
-    ..AudioIOLayout::const_default()
-  }];
-  const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
-  const SAMPLE_ACCURATE_AUTOMATION: bool = true;
-
-  // More advanced plugins can use this to run expensive background tasks. See the field's
-  // documentation for more information. `()` means that the plugin does not have any background
-  // tasks.
-  type BackgroundTask = ();
-  type SysExMessage = ();
-
-  fn params(&self) -> Arc<dyn Params> {
-    self.params.clone()
-  }
-
-  fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
-    editor::create(self.params.clone(), self.params.editor_state.clone())
-  }
-
-  fn initialize(
-    &mut self,
-    _audio_io_layout: &AudioIOLayout,
-    buffer_config: &BufferConfig,
-    _context: &mut impl InitContext<Self>,
-  ) -> bool {
-    self.grain_stretch = GrainStretch::new(buffer_config.sample_rate);
-    self.process_params = ProcessParams::new(buffer_config.sample_rate);
-    true
-  }
-
-  fn process(
-    &mut self,
-    buffer: &mut Buffer,
-    _aux: &mut AuxiliaryBuffers,
-    context: &mut impl ProcessContext<Self>,
-  ) -> ProcessStatus {
+  pub fn set_param_values(&mut self) {
     self.process_params.set(
       self.params.scan.value(),
       self.params.spray.value(),
@@ -111,7 +52,96 @@ impl Plugin for DmGrainStretch {
       self.params.sustain.value(),
       self.params.release.value(),
     );
+  }
+
+  pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
+    while let Some(event) = context.next_event() {
+      match event {
+        NoteEvent::NoteOn { note, velocity, .. } => {
+          self.notes.note_on(note, velocity);
+        }
+        NoteEvent::NoteOff { note, .. } => {
+          self.notes.note_off(note);
+        }
+        _ => (),
+      }
+    }
+
+    self
+      .notes
+      .set_voice_count(self.params.voices.value() as usize);
+  }
+
+  pub fn load_wav_file(&mut self, is_initializing: bool) {
+    let path = self.params.file_path.lock().unwrap().clone();
+    if path.is_empty()
+      || if is_initializing {
+        false
+      } else {
+        self.loaded_file_path == path
+      }
+    {
+      return;
+    }
+    match self.wav_processor.read_wav(&path) {
+      Ok(samples) => {
+        self.grain_stretch.load_wav_file(samples);
+      }
+      Err(err) => nih_log!("Failed to load WAV file: {:?}", err),
+    };
+    self.loaded_file_path = path;
+  }
+}
+
+impl Plugin for DmGrainStretch {
+  const NAME: &'static str = "dm-GrainStretch";
+  const VENDOR: &'static str = "DM";
+  const URL: &'static str = "https://github.com/davemollen/dm-GrainStretch";
+  const EMAIL: &'static str = "davemollen@gmail.com";
+  const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
+  const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[AudioIOLayout {
+    main_input_channels: NonZeroU32::new(2),
+    main_output_channels: NonZeroU32::new(2),
+    ..AudioIOLayout::const_default()
+  }];
+  const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
+  const SAMPLE_ACCURATE_AUTOMATION: bool = true;
+
+  type BackgroundTask = ();
+  type SysExMessage = ();
+
+  fn params(&self) -> Arc<dyn Params> {
+    self.params.clone()
+  }
+
+  fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
+    editor::create(self.params.clone(), self.params.editor_state.clone())
+  }
+
+  fn initialize(
+    &mut self,
+    _audio_io_layout: &AudioIOLayout,
+    buffer_config: &BufferConfig,
+    _context: &mut impl InitContext<Self>,
+  ) -> bool {
+    self.grain_stretch = GrainStretch::new(buffer_config.sample_rate);
+    self.process_params = ProcessParams::new(buffer_config.sample_rate);
+    self.wav_processor = WavProcessor::new(buffer_config.sample_rate);
+    self.load_wav_file(true);
+
+    true
+  }
+
+  fn process(
+    &mut self,
+    buffer: &mut Buffer,
+    _aux: &mut AuxiliaryBuffers,
+    context: &mut impl ProcessContext<Self>,
+  ) -> ProcessStatus {
+    self.set_param_values();
     self.process_midi_events(context);
+    self.load_wav_file(false);
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();

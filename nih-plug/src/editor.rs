@@ -8,12 +8,14 @@ mod ui_data;
 use crate::grain_stretch_parameters::GrainStretchParameters;
 use nih_plug::{params::Param, prelude::Editor};
 use nih_plug_vizia::vizia::{
+  binding::LensExt,
+  context::EmitContext,
   layout::Units::Auto,
   model::Model,
   modifiers::{LayoutModifiers, StyleModifiers, TextModifiers},
   prelude::Units::{Pixels, Stretch},
   style::FontWeightKeyword,
-  views::{Element, HStack, Label, VStack},
+  views::{Button, Element, HStack, Label, VStack},
 };
 use nih_plug_vizia::{create_vizia_editor, ViziaState, ViziaTheming};
 use std::sync::Arc;
@@ -44,6 +46,20 @@ pub(crate) fn create(
 
       VStack::new(cx, |cx| {
         HStack::new(cx, |cx| {
+          VStack::new(cx, |cx| {
+            Button::new(
+              cx,
+              |cx| {
+                cx.emit(ParamChangeEvent::PickFile);
+              },
+              |cx| Label::new(cx, "Open file"),
+            );
+            Label::new(
+              cx,
+              UiData::params.map(|p| p.file_path.lock().unwrap().clone()),
+            );
+          });
+
           VStack::new(cx, |cx| {
             HStack::new(cx, |cx| {
               ParamKnob::new(

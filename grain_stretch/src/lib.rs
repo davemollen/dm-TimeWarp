@@ -3,6 +3,7 @@ mod notes;
 mod params;
 mod stereo_delay_line;
 mod voices;
+mod wav_processor;
 pub mod shared {
   pub mod delta;
   pub mod float_ext;
@@ -18,7 +19,7 @@ use {
   stereo_delay_line::{Interpolation, StereoDelayLine},
   voices::Voices,
 };
-pub use {notes::Notes, params::Params};
+pub use {notes::Notes, params::Params, wav_processor::WavProcessor};
 
 pub const MIN_DELAY_TIME: f32 = 10.;
 pub const MAX_DELAY_TIME: f32 = 10000.;
@@ -100,7 +101,12 @@ impl GrainStretch {
       highpass,
       lowpass,
     );
+
     input.multiply(dry).add(grains_out.multiply(wet))
+  }
+
+  pub fn load_wav_file(&mut self, values: Vec<(f32, f32)>) {
+    self.delay_line.set_values(values);
   }
 
   fn write_to_delay(
@@ -120,6 +126,14 @@ impl GrainStretch {
     let delay_in =
       (input.add(feedback).multiply(recording_gain)).add(delay_out.multiply(1. - recording_gain));
     self.delay_line.write(delay_in);
+
+    // // TODO: no need for extra granular fades either when recording is off
+    // if recording_gain > 0. {
+    //   let delay_out = self.delay_line.read(time, Interpolation::Linear);
+    //   let feedback = self.get_feedback(delay_out, grains_out, recycle, overdub, highpass, lowpass);
+    //   let delay_in = input.add(feedback).multiply(recording_gain);
+    //   self.delay_line.write(delay_in);
+    // }
   }
 
   fn get_feedback(
