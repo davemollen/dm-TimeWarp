@@ -205,8 +205,23 @@ impl Default for GrainStretchParameters {
       .with_unit(" ms")
       .with_value_to_string(v2s_f32_rounded(2)),
 
-      sustain: FloatParam::new("Sustain", 1., FloatRange::Linear { min: 0., max: 1. })
-        .with_value_to_string(v2s_f32_rounded(2)),
+      sustain: FloatParam::new(
+        "Sustain",
+        0.,
+        FloatRange::Skewed {
+          min: -70.,
+          max: 0.,
+          factor: 2.,
+        },
+      )
+      .with_unit(" dB")
+      .with_value_to_string(Arc::new(move |value| {
+        if value == -70. {
+          "-inf".to_string()
+        } else {
+          format!("{:.2}", value)
+        }
+      })),
 
       release: FloatParam::new(
         "Release",
@@ -214,7 +229,7 @@ impl Default for GrainStretchParameters {
         FloatRange::Skewed {
           min: 1.,
           max: 15000.,
-          factor: 0.2,
+          factor: 0.3,
         },
       )
       .with_unit(" ms")

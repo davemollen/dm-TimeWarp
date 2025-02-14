@@ -83,6 +83,7 @@ impl Params {
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
+    let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
