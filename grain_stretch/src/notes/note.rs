@@ -47,6 +47,13 @@ impl Note {
     };
   }
 
+  pub fn reset_note(&mut self) {
+    self.note = 0;
+    self.speed = 0.;
+    self.gain = 0.;
+    self.adsr_stage = ADSRStage::Idle;
+  }
+
   pub fn set_adsr_stage(&mut self, adsr_stage: ADSRStage) {
     self.adsr_stage = adsr_stage;
   }

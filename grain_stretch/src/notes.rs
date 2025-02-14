@@ -58,12 +58,8 @@ impl Notes {
     match self.notes.iter_mut().find(|n| {
       n.get_note() == note
         && match n.get_adsr_stage() {
-          ADSRStage::Attack
-          | ADSRStage::Decay
-          | ADSRStage::Sustain
-          | ADSRStage::Release
-          | ADSRStage::Retrigger => true,
-          _ => false,
+          ADSRStage::Idle | ADSRStage::Release => false,
+          _ => true,
         }
     }) {
       Some(note_instance) => {
@@ -83,7 +79,7 @@ impl Notes {
     if voice_count == self.voice_count {
       return;
     }
-    self.notes.iter_mut().for_each(|v| v.note_off());
+    self.notes.iter_mut().for_each(|v| v.reset_note());
     self.voice_count = voice_count;
   }
 }
