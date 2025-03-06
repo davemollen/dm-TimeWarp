@@ -12,6 +12,7 @@ struct DmGrainStretch {
   notes: Notes,
   wav_processor: WavProcessor,
   loaded_file_path: String,
+  sample_rate: f32,
 }
 
 impl Default for DmGrainStretch {
@@ -25,6 +26,7 @@ impl Default for DmGrainStretch {
       notes: Notes::new(),
       wav_processor: WavProcessor::new(sample_rate),
       loaded_file_path: String::new(),
+      sample_rate,
     }
   }
 }
@@ -128,6 +130,7 @@ impl Plugin for DmGrainStretch {
     self.grain_stretch = GrainStretch::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
     self.wav_processor = WavProcessor::new(buffer_config.sample_rate);
+    self.sample_rate = buffer_config.sample_rate;
     self.load_wav_file(true);
 
     true

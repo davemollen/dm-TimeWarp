@@ -44,7 +44,7 @@ impl StereoDelayLine {
     self.write_pointer = self.write_pointer + 1 & self.wrap;
   }
 
-  pub fn set_values(&mut self, values: Vec<(f32, f32)>) {
+  pub fn set_values(&mut self, values: &Vec<(f32, f32)>) {
     let buffer_len = self.buffer.len();
     let values_len = values.len();
 
@@ -162,7 +162,7 @@ mod tests {
   fn should_set_values() {
     let mut delay_line = StereoDelayLine::new(2, 1000.);
     let values = vec![(0.4, 0.4), (0.2, 0.2), (-0.2, -0.2), (-0.4, -0.4)];
-    delay_line.set_values(values.clone());
+    delay_line.set_values(&values);
     assert_eq!(values.len(), 4);
     assert_eq!(delay_line.buffer.len(), 2);
     delay_line

@@ -1,3 +1,4 @@
+use crate::editor;
 use grain_stretch::{MAX_DELAY_TIME, MIN_DELAY_TIME};
 use nih_plug::{
   formatters::{
@@ -9,9 +10,6 @@ use nih_plug::{
 };
 use nih_plug_vizia::ViziaState;
 use std::sync::{Arc, Mutex};
-mod custom_formatters;
-use crate::editor;
-use custom_formatters::{s2v_f32_ms_then_s, v2s_f32_ms_then_s};
 
 #[derive(Enum, PartialEq)]
 pub enum VoiceMode {
@@ -132,15 +130,16 @@ impl Default for GrainStretchParameters {
 
       time: FloatParam::new(
         "Time",
-        2000.,
+        0.2,
         FloatRange::Skewed {
-          min: MIN_DELAY_TIME,
-          max: MAX_DELAY_TIME,
+          min: 0.,
+          max: 1.,
           factor: 0.3,
         },
       )
-      .with_value_to_string(v2s_f32_ms_then_s())
-      .with_string_to_value(s2v_f32_ms_then_s()),
+      .with_unit(" %")
+      .with_value_to_string(v2s_f32_percentage(2))
+      .with_string_to_value(s2v_f32_percentage()),
 
       highpass: FloatParam::new(
         "Highpass",

@@ -20,18 +20,20 @@ impl Model for UiData {
     event.map(|app_event, _| match app_event {
       ParamChangeEvent::SetParam(param_ptr, value) => {
         unsafe {
+          self.gui_context.raw_begin_set_parameter(*param_ptr);
           self
             .gui_context
-            .raw_set_parameter_normalized(*param_ptr, *value)
+            .raw_set_parameter_normalized(*param_ptr, *value);
+          self.gui_context.raw_end_set_parameter(*param_ptr);
         };
       }
       ParamChangeEvent::PickFile => {
-        let param = self.params.file_path.clone();
+        let file_path_param = self.params.file_path.clone();
 
         cx.spawn(move |_cx_proxy| {
           if let Some(file) = FileDialog::new().add_filter("wav", &["wav"]).pick_file() {
             if let Some(file_path) = file.to_str() {
-              *param.lock().unwrap() = file_path.to_string();
+              *file_path_param.lock().unwrap() = file_path.to_string();
             }
           }
         });

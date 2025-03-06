@@ -43,7 +43,16 @@ impl WavProcessor {
     let samples: Vec<f32> = match spec.bits_per_sample {
       16 => reader
         .samples::<i16>()
-        .map(|s| s.map(|v| v as f32 / i16::MAX as f32))
+        .map(|s| s.map(|v| v as f32 / -(i16::MIN as f32)))
+        .collect::<Result<_, _>>()?,
+      24 => reader
+        .samples::<i32>()
+        .map(|s| {
+          s.map(|v| {
+            let v = (v << 8) >> 8;
+            v as f32 / 8_388_608.0 // divided by 2^23
+          })
+        })
         .collect::<Result<_, _>>()?,
       32 => reader.samples::<f32>().collect::<Result<_, _>>()?,
       _ => {
@@ -87,12 +96,6 @@ impl WavProcessor {
     writer.finalize()?;
     Ok(())
   }
-
-  pub fn get_duration<P: AsRef<Path>>(&self, file_path: P) -> Result<f32, WavProcessingError> {
-    let reader = WavReader::open(file_path)?;
-    let duration = reader.duration() as f32 / self.sample_rate * 1000.;
-    Ok(duration)
-  }
 }
 
 #[cfg(test)]
@@ -110,7 +113,7 @@ mod tests {
     match result {
       Ok(r) => r
         .iter()
-        .zip([(-0.61003447, -0.61003447), (0.04998932, 0.04998932)])
+        .zip([(-0.61001587, -0.61001587), (0.049987793, 0.049987793)])
         .for_each(|(actual, expected)| {
           assert_eq!(actual.0, expected.0);
           assert_eq!(actual.1, expected.1);

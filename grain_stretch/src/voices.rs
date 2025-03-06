@@ -52,8 +52,8 @@ impl Voices {
     sustain: f32,
     release: f32,
   ) -> (f32, f32) {
-    let duration = size.scale(0., 1., time, self.fade_time);
-    let grain_density = density.scale(0., 1., 1., 15.);
+    let duration = (1. - size) * (time - self.fade_time) + self.fade_time; // range from time to fade_time
+    let grain_density = density * 14. + 1.; // range from 1 to 15
 
     let start_phase = self
       .start_phasor

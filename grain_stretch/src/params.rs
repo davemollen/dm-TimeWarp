@@ -77,7 +77,7 @@ impl Params {
   ) {
     self.scan = scan;
     self.spray = spray;
-    self.size = size.powf(0.25);
+    self.size = size.powf(0.333);
     self.speed = speed;
     self.density = density * density;
     self.stretch = stretch;
