@@ -28,8 +28,6 @@ pub struct GrainStretch {
   delay_line: StereoDelayLine,
   voices: Voices,
   filter: Filter,
-  max_time: f32,
-  sample_rate: f32,
 }
 
 impl GrainStretch {
@@ -43,8 +41,6 @@ impl GrainStretch {
       ),
       voices: Voices::new(sample_rate, Self::FADE_TIME),
       filter: Filter::new(sample_rate),
-      max_time: MAX_DELAY_TIME - MIN_DELAY_TIME,
-      sample_rate,
     }
   }
 
@@ -66,7 +62,7 @@ impl GrainStretch {
     } = *params;
 
     let recording_gain = params.recording_gain.next();
-    let time = params.time.next() * self.max_time;
+    let time = params.time.next();
     let highpass = params.highpass.next();
     let lowpass = params.lowpass.next();
     let overdub = params.overdub.next();
@@ -111,7 +107,6 @@ impl GrainStretch {
 
   pub fn load_wav_file(&mut self, values: Vec<(f32, f32)>) {
     self.delay_line.set_values(&values);
-    self.max_time = values.len() as f32 / self.sample_rate * 1000.;
   }
 
   fn write_to_delay(

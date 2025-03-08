@@ -1,4 +1,6 @@
+mod custom_formatters;
 use crate::editor;
+use custom_formatters::{s2v_f32_ms_then_s, v2s_f32_ms_then_s};
 use grain_stretch::{MAX_DELAY_TIME, MIN_DELAY_TIME};
 use nih_plug::{
   formatters::{
@@ -130,16 +132,15 @@ impl Default for GrainStretchParameters {
 
       time: FloatParam::new(
         "Time",
-        0.2,
+        2000.,
         FloatRange::Skewed {
-          min: 0.,
-          max: 1.,
+          min: MIN_DELAY_TIME,
+          max: MAX_DELAY_TIME,
           factor: 0.3,
         },
       )
-      .with_unit(" %")
-      .with_value_to_string(v2s_f32_percentage(2))
-      .with_string_to_value(s2v_f32_percentage()),
+      .with_value_to_string(v2s_f32_ms_then_s())
+      .with_string_to_value(s2v_f32_ms_then_s()),
 
       highpass: FloatParam::new(
         "Highpass",
