@@ -36,8 +36,9 @@ impl Grain {
   ) -> (f32, f32, f32) {
     let position_a = Self::wrap(self.position) * 2.;
     let position_b = Self::wrap(self.position + 0.5) * 2.;
+    // TODO: investigate if there's double windowing going on
     let grain_fade = self.get_grain_fade(window_factor);
-    let position_a_fade = self.get_read_head_fade(position_a, fade_factor, fade_offset);
+    let position_a_fade = self.get_xfade(position_a, fade_factor, fade_offset);
     let position_b_fade = 1. - position_a_fade;
 
     let next_phase = self.phase + phase_step_size;
@@ -79,7 +80,7 @@ impl Grain {
     Self::apply_curve(fade)
   }
 
-  fn get_read_head_fade(&self, position: f32, fade_factor: f32, fade_offset: f32) -> f32 {
+  fn get_xfade(&self, position: f32, fade_factor: f32, fade_offset: f32) -> f32 {
     let mut fade = (position * fade_factor).clamp(0., 1.);
     fade *= ((fade_offset - position) * fade_factor).clamp(0., 1.);
     Self::apply_curve(fade)

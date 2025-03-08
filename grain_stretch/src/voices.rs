@@ -51,13 +51,14 @@ impl Voices {
     decay: f32,
     sustain: f32,
     release: f32,
+    is_recording: bool,
   ) -> (f32, f32) {
     let duration = (1. - size) * (time - self.fade_time) + self.fade_time; // range from time to fade_time
     let grain_density = density * 14. + 1.; // range from 1 to 15
 
     let start_phase = self
       .start_phasor
-      .process(speed, time, size, density, stretch);
+      .process(speed, time, size, density, stretch, is_recording);
 
     let window_mode = (density - 1.).min(1.);
     let grain_duration = duration + self.fade_time * (1. - window_mode);
@@ -88,6 +89,7 @@ impl Voices {
             window_factor,
             fade_factor,
             fade_offset,
+            is_recording,
           );
           (
             result.0 + grains_out.0 * gain,
@@ -108,6 +110,7 @@ impl Voices {
         window_factor,
         fade_factor,
         fade_offset,
+        is_recording,
       )
     }
   }

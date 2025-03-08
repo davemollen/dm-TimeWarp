@@ -73,6 +73,7 @@ impl GrainStretch {
     let decay = params.decay.next();
     let sustain = params.sustain.next();
     let release = params.release.next();
+    let is_recording = recording_gain > 0.;
 
     let grains_out = self.voices.process(
       &self.delay_line,
@@ -89,6 +90,7 @@ impl GrainStretch {
       decay,
       sustain,
       release,
+      is_recording,
     );
 
     self.write_to_delay(
@@ -100,6 +102,7 @@ impl GrainStretch {
       recording_gain,
       highpass,
       lowpass,
+      is_recording,
     );
 
     input.multiply(dry).add(grains_out.multiply(wet))
@@ -119,21 +122,14 @@ impl GrainStretch {
     recording_gain: f32,
     highpass: f32,
     lowpass: f32,
+    is_recording: bool,
   ) {
-    // Maybe instead of reading from the delay line to preserve buffer content, just stop continuously writing to the buffer
-    let delay_out = self.delay_line.read(time, Interpolation::Linear);
-    let feedback = self.get_feedback(delay_out, grains_out, recycle, overdub, highpass, lowpass);
-    let delay_in =
-      (input.add(feedback).multiply(recording_gain)).add(delay_out.multiply(1. - recording_gain));
-    self.delay_line.write(delay_in);
-
-    // // TODO: no need for extra granular fades either when recording is off
-    // if recording_gain > 0. {
-    //   let delay_out = self.delay_line.read(time, Interpolation::Linear);
-    //   let feedback = self.get_feedback(delay_out, grains_out, recycle, overdub, highpass, lowpass);
-    //   let delay_in = input.add(feedback).multiply(recording_gain);
-    //   self.delay_line.write(delay_in);
-    // }
+    if is_recording {
+      let delay_out = self.delay_line.read(time, Interpolation::Linear);
+      let feedback = self.get_feedback(delay_out, grains_out, recycle, overdub, highpass, lowpass);
+      let delay_in = input.add(feedback).multiply(recording_gain);
+      self.delay_line.write(delay_in);
+    }
   }
 
   fn get_feedback(

@@ -29,8 +29,13 @@ impl Grains {
     window_factor: f32,
     fade_factor: f32,
     fade_offset: f32,
+    is_recording: bool,
   ) -> (f32, f32) {
-    let speed = (1. - speed) * 0.5;
+    let speed = if is_recording {
+      (1. - speed) * 0.5
+    } else {
+      speed * -0.5
+    };
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
       match inactive_grain {

@@ -14,12 +14,21 @@ impl StartPhasor {
     }
   }
 
-  pub fn process(&mut self, speed: f32, time: f32, size: f32, density: f32, stretch: f32) -> f32 {
+  pub fn process(
+    &mut self,
+    speed: f32,
+    time: f32,
+    size: f32,
+    density: f32,
+    stretch: f32,
+    is_recording: bool,
+  ) -> f32 {
+    let recording_speed = if is_recording { 1. } else { 0. };
     let freq = if size > 0. || density > 0. {
-      1000. / time * (stretch * speed.signum() - 1.)
+      1000. / time * (stretch * speed.signum() - recording_speed)
     } else {
       self.maybe_reset_phasor(speed);
-      1000. / time * (speed - 1.)
+      1000. / time * (speed - recording_speed)
     };
 
     self.phasor.process(freq)
