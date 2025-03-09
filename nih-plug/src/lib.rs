@@ -76,13 +76,10 @@ impl DmGrainStretch {
 
   pub fn load_wav_file(&mut self, is_initializing: bool) {
     let path = self.params.file_path.lock().unwrap().clone();
-    if path.is_empty()
-      || if is_initializing {
-        false
-      } else {
-        self.loaded_file_path == path
-      }
-    {
+    if path.is_empty() {
+      return;
+    }
+    if !is_initializing && self.loaded_file_path == path {
       return;
     }
     match self.wav_processor.read_wav(&path) {
@@ -118,7 +115,11 @@ impl Plugin for DmGrainStretch {
   }
 
   fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
-    editor::create(self.params.clone(), self.params.editor_state.clone())
+    editor::create(
+      self.params.clone(),
+      self.params.editor_state.clone(),
+      self.wav_processor.clone(),
+    )
   }
 
   fn initialize(

@@ -13,6 +13,7 @@ pub enum WavProcessingError {
   FormatError(String),
 }
 
+#[derive(Clone)]
 pub struct WavProcessor {
   sample_rate: f32,
 }
@@ -95,6 +96,11 @@ impl WavProcessor {
 
     writer.finalize()?;
     Ok(())
+  }
+
+  pub fn get_duration<P: AsRef<Path>>(&self, file_path: P) -> Result<f32, WavProcessingError> {
+    let reader = WavReader::open(file_path)?;
+    Ok(reader.duration() as f32 / self.sample_rate * 1000.)
   }
 }
 
