@@ -11,8 +11,7 @@ struct DmGrainStretch {
   process_params: ProcessParams,
   notes: Notes,
   wav_processor: WavProcessor,
-  loaded_file_path: String,
-  sample_rate: f32,
+  loaded_file_path: Option<String>,
 }
 
 impl Default for DmGrainStretch {
@@ -25,8 +24,7 @@ impl Default for DmGrainStretch {
       process_params: ProcessParams::new(sample_rate),
       notes: Notes::new(),
       wav_processor: WavProcessor::new(sample_rate),
-      loaded_file_path: String::new(),
-      sample_rate,
+      loaded_file_path: None,
     }
   }
 }
@@ -74,12 +72,9 @@ impl DmGrainStretch {
       .set_voice_count(self.params.voices.value() as usize);
   }
 
-  pub fn load_wav_file(&mut self, is_initializing: bool) {
+  pub fn process_audio_file(&mut self) {
     let path = self.params.file_path.lock().unwrap().clone();
-    if path.is_empty() {
-      return;
-    }
-    if !is_initializing && self.loaded_file_path == path {
+    if path.is_empty() || self.loaded_file_path.as_ref().is_some_and(|x| *x == path) {
       return;
     }
     match self.wav_processor.read_wav(&path) {
@@ -88,7 +83,7 @@ impl DmGrainStretch {
       }
       Err(err) => nih_log!("Failed to load WAV file: {:?}", err),
     };
-    self.loaded_file_path = path;
+    self.loaded_file_path = Some(path);
   }
 }
 
@@ -131,8 +126,6 @@ impl Plugin for DmGrainStretch {
     self.grain_stretch = GrainStretch::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
     self.wav_processor = WavProcessor::new(buffer_config.sample_rate);
-    self.sample_rate = buffer_config.sample_rate;
-    self.load_wav_file(true);
 
     true
   }
@@ -145,7 +138,7 @@ impl Plugin for DmGrainStretch {
   ) -> ProcessStatus {
     self.set_param_values();
     self.process_midi_events(context);
-    self.load_wav_file(false);
+    self.process_audio_file();
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();

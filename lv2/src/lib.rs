@@ -1,8 +1,8 @@
 extern crate grain_stretch;
 extern crate lv2;
-use std::collections::HashMap;
-use grain_stretch::{GrainStretch, Params, Note};
+use grain_stretch::{GrainStretch, Notes, Params, WavProcessor};
 use lv2::prelude::*;
+use std::string::String;
 use wmidi::MidiMessage;
 
 #[derive(PortCollection)]
@@ -21,23 +21,29 @@ struct Ports {
   recycle: InputPort<Control>,
   dry: InputPort<Control>,
   wet: InputPort<Control>,
+  midi_enabled: InputPort<Control>,
+  attack: InputPort<Control>,
+  decay: InputPort<Control>,
+  sustain: InputPort<Control>,
+  release: InputPort<Control>,
+  midi_in: InputPort<AtomPort>,
+  audio_file: InputPort<AtomPort>,
   input_left: InputPort<Audio>,
   input_right: InputPort<Audio>,
   output_left: OutputPort<Audio>,
   output_right: OutputPort<Audio>,
-  control: InputPort<AtomPort>
 }
 
 #[derive(FeatureCollection)]
 pub struct Features<'a> {
-    map: LV2Map<'a>,
+  map: LV2Map<'a>,
 }
 
 #[derive(URIDCollection)]
 pub struct URIDs {
-    atom: AtomURIDCollection,
-    midi: MidiURIDCollection,
-    unit: UnitURIDCollection,
+  atom: AtomURIDCollection,
+  midi: MidiURIDCollection,
+  unit: UnitURIDCollection,
 }
 
 #[uri("https://github.com/davemollen/dm-GrainStretch")]
@@ -45,20 +51,22 @@ struct DmGrainStretch {
   grain_stretch: GrainStretch,
   params: Params,
   urids: URIDs,
-  notes: HashMap<u8, Note>
+  notes: Notes,
+  wav_processor: WavProcessor,
+  loaded_file_path: Option<String>,
 }
 
 impl DmGrainStretch {
   pub fn process_midi_events(&mut self, ports: &mut Ports) {
-    let sequence_header_reader = match ports.control.read(self.urids.atom.sequence) {
+    let sequence_header_reader = match ports.midi_in.read(self.urids.atom.sequence) {
       Ok(sequence_header_reader) => sequence_header_reader,
       Err(_) => return,
     };
     let sequence_iter = match sequence_header_reader.with_unit(self.urids.unit.beat) {
       Ok(sequence_iter) => sequence_iter,
       Err(_) => return,
-    };  
-      
+    };
+
     for (_, message) in sequence_iter {
       let midi_message = match message.read(self.urids.midi.wmidi) {
         Ok(midi_message) => midi_message,
@@ -67,19 +75,48 @@ impl DmGrainStretch {
 
       match midi_message {
         MidiMessage::NoteOn(_, note, velocity) => {
-          let note: u8 = note.into();
-          let velocity: f32 =  (u8::from(velocity) / 127).into();
-          self.notes.insert(note, Note::new(note, velocity));
-        },
+          self
+            .notes
+            .note_on(note.into(), (u8::from(velocity) / 127).into());
+        }
         MidiMessage::NoteOff(_, note, _) => {
-          let note: u8 = note.into();
-          if self.notes.contains_key(&note) {
-            self.notes.remove(&note);
-          }
-        },
+          self.notes.note_off(note.into());
+        }
         _ => (),
       }
     }
+  }
+
+  pub fn process_audio_file(&mut self, ports: &mut Ports) {
+    let sequence_header_reader = match ports.audio_file.read(self.urids.atom.sequence) {
+      Ok(sequence_header_reader) => sequence_header_reader,
+      Err(_) => return,
+    };
+    let sequence_iter = match sequence_header_reader.with_unit(self.urids.unit.beat) {
+      Ok(sequence_iter) => sequence_iter,
+      Err(_) => return,
+    };
+
+    for (_, message) in sequence_iter {
+      let path: String = match message.read(self.urids.atom.string) {
+        Ok(path) => path.to_string(),
+        Err(_) => return,
+      };
+      self.load_wav_file(path);
+    }
+  }
+
+  fn load_wav_file(&mut self, path: String) {
+    if path.is_empty() || self.loaded_file_path.as_ref().is_some_and(|x| *x == path) {
+      return;
+    }
+    match self.wav_processor.read_wav(&path) {
+      Ok(samples) => {
+        self.grain_stretch.load_wav_file(samples);
+      }
+      Err(_) => (),
+    };
+    self.loaded_file_path = Some(path);
   }
 }
 
@@ -99,7 +136,9 @@ impl Plugin for DmGrainStretch {
       grain_stretch: GrainStretch::new(sample_rate),
       params: Params::new(sample_rate),
       urids: features.map.populate_collection()?,
-      notes: HashMap::new(),
+      notes: Notes::new(),
+      wav_processor: WavProcessor::new(sample_rate),
+      loaded_file_path: None,
     })
   }
 
@@ -121,8 +160,15 @@ impl Plugin for DmGrainStretch {
       *ports.recycle,
       *ports.dry,
       *ports.wet,
+      *ports.midi_enabled == 1.,
+      *ports.attack,
+      *ports.decay,
+      *ports.sustain,
+      *ports.release,
     );
+
     self.process_midi_events(ports);
+    self.process_audio_file(ports);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
@@ -133,9 +179,11 @@ impl Plugin for DmGrainStretch {
     for ((input_left, input_right), (output_left, output_right)) in
       input_channels.zip(output_channels)
     {
-      (*output_left, *output_right) = self
-        .grain_stretch
-        .process((*input_left, *input_right), &mut self.params, &self.notes);
+      (*output_left, *output_right) = self.grain_stretch.process(
+        (*input_left, *input_right),
+        &mut self.params,
+        &mut self.notes.get_notes(),
+      );
     }
   }
 }
