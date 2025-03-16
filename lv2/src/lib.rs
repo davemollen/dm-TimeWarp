@@ -1,9 +1,7 @@
-extern crate grain_stretch;
-extern crate lv2;
 use grain_stretch::{GrainStretch, Notes, Params, WavProcessor};
 use lv2::prelude::*;
 use std::string::String;
-use wmidi::MidiMessage;
+use wmidi::*;
 
 #[derive(PortCollection)]
 struct Ports {
@@ -22,6 +20,7 @@ struct Ports {
   dry: InputPort<Control>,
   wet: InputPort<Control>,
   midi_enabled: InputPort<Control>,
+  voices: InputPort<Control>,
   attack: InputPort<Control>,
   decay: InputPort<Control>,
   sustain: InputPort<Control>,
@@ -56,6 +55,36 @@ struct DmGrainStretch {
   loaded_file_path: Option<String>,
 }
 
+impl State for DmGrainStretch {
+  type StateFeatures = Features<'static>;
+
+  fn save(&self, mut store: StoreHandle, features: Self::StateFeatures) -> Result<(), StateErr> {
+    let path = self.loaded_file_path.as_ref().ok_or(StateErr::Unknown)?;
+    let property_key = features.map.map_str("sample").ok_or(StateErr::Unknown)?;
+    let mut state_property_writer = store.draft(property_key);
+    state_property_writer
+      .init(self.urids.atom.string)?
+      .append(path)
+      .or(Err(StateErr::Unknown))?;
+    store.commit(property_key);
+
+    Ok(())
+  }
+
+  fn restore(
+    &mut self,
+    store: RetrieveHandle,
+    features: Self::StateFeatures,
+  ) -> Result<(), StateErr> {
+    let property_key = features.map.map_str("sample").ok_or(StateErr::Unknown)?;
+    let reader = store.retrieve(property_key)?;
+    let path = reader.read(self.urids.atom.string)?;
+    self.loaded_file_path = Some(path.to_string());
+
+    Ok(())
+  }
+}
+
 impl DmGrainStretch {
   pub fn process_midi_events(&mut self, ports: &mut Ports) {
     let sequence_header_reader = match ports.midi_in.read(self.urids.atom.sequence) {
@@ -85,6 +114,8 @@ impl DmGrainStretch {
         _ => (),
       }
     }
+
+    self.notes.set_voice_count(*ports.voices as usize);
   }
 
   pub fn process_audio_file(&mut self, ports: &mut Ports) {

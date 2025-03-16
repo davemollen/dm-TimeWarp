@@ -1,13 +1,18 @@
-@prefix doap:  <http://usefulinc.com/ns/doap#> .
-@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
-@prefix lv2:   <http://lv2plug.in/ns/lv2core#> .
-@prefix param: <http://lv2plug.in/ns/ext/parameters#> .
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix units: <http://lv2plug.in/ns/extensions/units#> .
-@prefix patch: <http://lv2plug.in/ns/ext/patch#> .
-@prefix pprops:   <http://lv2plug.in/ns/ext/port-props#> .
-@prefix mod:   <http://moddevices.com/ns/mod#> .
+@prefix atom:  	<http://lv2plug.in/ns/ext/atom#> .
+@prefix doap:  	<http://usefulinc.com/ns/doap#> .
+@prefix foaf:  	<http://xmlns.com/foaf/0.1/> .
+@prefix lv2:   	<http://lv2plug.in/ns/lv2core#> .
+@prefix midi:  	<http://lv2plug.in/ns/ext/midi#> .
+@prefix mod:   	<http://moddevices.com/ns/mod#> .
+@prefix opts:  	<http://lv2plug.in/ns/ext/options#> .
+@prefix patch: 	<http://lv2plug.in/ns/ext/patch#> .
+@prefix pprops:	<http://lv2plug.in/ns/ext/port-props#> .
+@prefix rdf:   	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  	<http://www.w3.org/2000/01/rdf-schema#> .
+@prefix state: 	<http://lv2plug.in/ns/ext/state#> .
+@prefix units: 	<http://lv2plug.in/ns/extensions/units#> .
+@prefix urid: 	<http://lv2plug.in/ns/ext/urid#> .
+@prefix worker:	<http://lv2plug.in/ns/ext/worker#> .
 
 <https://github.com/davemollen/dm-GrainStretch#sample>
 	a lv2:Parameter ;
@@ -29,10 +34,18 @@
 	rdfs:comment """
 A granular delay effect with time stretch capabilities.
 """ ;
-	lv2:requiredFeature lv2:inPlaceBroken ;
-	lv2:optionalFeature lv2:hardRTCapable ;
-	patch:writable <https://github.com/davemollen/dm-GrainStretch#sample> ,
-		param:gain ;
+	lv2:extensionData opts:interface ,
+		state:interface ,
+		worker:interface ;
+	lv2:requiredFeature urid:map, lv2:inPlaceBroken ;
+	lv2:optionalFeature 
+		lv2:hardRTCapable ,
+		worker:schedule,
+		state:freePath ,
+		state:loadDefaultState ,
+		state:mapPath ,
+		state:threadSafeRestore ;
+	patch:writable <https://github.com/davemollen/dm-GrainStretch#sample> ;
 	lv2:port [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 0 ;
@@ -50,6 +63,7 @@ A granular delay effect with time stretch capabilities.
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 250.0 ;
+		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 2 ;
@@ -167,6 +181,15 @@ A granular delay effect with time stretch capabilities.
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 15 ;
+		lv2:symbol "voices" ;
+		lv2:name "Voices" ;
+		lv2:portProperty lv2:integer;
+		lv2:default 1 ;
+		lv2:minimum 1 ;
+		lv2:maximum 8 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 16 ;
 		lv2:symbol "attack" ;
 		lv2:name "Attack" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -176,7 +199,7 @@ A granular delay effect with time stretch capabilities.
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 16 ;
+		lv2:index 17 ;
 		lv2:symbol "decay" ;
 		lv2:name "Decay" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -186,7 +209,7 @@ A granular delay effect with time stretch capabilities.
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 17 ;
+		lv2:index 18 ;
 		lv2:symbol "sustain" ;
 		lv2:name "Sustain" ;
 		lv2:default 0.0 ;
@@ -195,7 +218,7 @@ A granular delay effect with time stretch capabilities.
 		units:unit units:db
 	], [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 18 ;
+		lv2:index 19 ;
 		lv2:symbol "release" ;
 		lv2:name "Release" ;
 		lv2:default 2000.0 ;
@@ -208,7 +231,7 @@ A granular delay effect with time stretch capabilities.
 		atom:bufferType atom:Sequence ;
 		atom:supports midi:MidiEvent ;
 		lv2:designation lv2:control ;
-		lv2:index 19 ;
+		lv2:index 20 ;
 		lv2:symbol "midi_in" ;
 		lv2:name "Midi In"
 	] , [
@@ -217,27 +240,30 @@ A granular delay effect with time stretch capabilities.
 		atom:bufferType atom:Sequence ;
 		atom:supports atom:Path ;
 		lv2:designation lv2:control ;
-		lv2:index 20 ;
+		lv2:index 21 ;
 		lv2:symbol "audio_file" ;
 		lv2:name "Audio File"
 	] , [
 		a lv2:AudioPort, lv2:InputPort ;
-		lv2:index 21 ;
+		lv2:index 22 ;
 		lv2:symbol "input_left" ;
 		lv2:name "In left"
 	] , [
 		a lv2:AudioPort, lv2:InputPort ;
-		lv2:index 22 ;
+		lv2:index 23 ;
 		lv2:symbol "input_right" ;
 		lv2:name "In right"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 23 ;
+		lv2:index 24 ;
 		lv2:symbol "output_left" ;
 		lv2:name "Out left"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 24 ;
+		lv2:index 25 ;
 		lv2:symbol "output_right" ;
 		lv2:name "Out right"
-	] .
+	] ;
+    state:state [
+        <https://github.com/davemollen/dm-GrainStretch#sample> <sample.wav>;
+    ] .
