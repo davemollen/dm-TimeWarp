@@ -25,8 +25,7 @@ struct Ports {
   decay: InputPort<Control>,
   sustain: InputPort<Control>,
   release: InputPort<Control>,
-  midi_in: InputPort<AtomPort>,
-  audio_file: InputPort<AtomPort>,
+  control: InputPort<AtomPort>,
   input_left: InputPort<Audio>,
   input_right: InputPort<Audio>,
   output_left: OutputPort<Audio>,
@@ -87,19 +86,19 @@ impl State for DmGrainStretch {
 
 impl DmGrainStretch {
   pub fn process_midi_events(&mut self, ports: &mut Ports) {
-    let sequence_header_reader = match ports.midi_in.read(self.urids.atom.sequence) {
-      Ok(sequence_header_reader) => sequence_header_reader,
-      Err(_) => return,
-    };
-    let sequence_iter = match sequence_header_reader.with_unit(self.urids.unit.beat) {
+    let control_sequence = match ports
+      .control
+      .read(self.urids.atom.sequence)
+      .and_then(|s| s.with_unit(self.urids.unit.frame))
+    {
       Ok(sequence_iter) => sequence_iter,
       Err(_) => return,
     };
 
-    for (_, message) in sequence_iter {
-      let midi_message = match message.read(self.urids.midi.wmidi) {
-        Ok(midi_message) => midi_message,
-        Err(_) => return,
+    for (_, atom) in control_sequence {
+      let midi_message = match atom.read(self.urids.midi.wmidi) {
+        Ok(message) => message,
+        _ => continue,
       };
 
       match midi_message {
@@ -119,19 +118,19 @@ impl DmGrainStretch {
   }
 
   pub fn process_audio_file(&mut self, ports: &mut Ports) {
-    let sequence_header_reader = match ports.audio_file.read(self.urids.atom.sequence) {
-      Ok(sequence_header_reader) => sequence_header_reader,
-      Err(_) => return,
-    };
-    let sequence_iter = match sequence_header_reader.with_unit(self.urids.unit.beat) {
+    let control_sequence = match ports
+      .control
+      .read(self.urids.atom.sequence)
+      .and_then(|s| s.with_unit(self.urids.unit.frame))
+    {
       Ok(sequence_iter) => sequence_iter,
       Err(_) => return,
     };
 
-    for (_, message) in sequence_iter {
-      let path: String = match message.read(self.urids.atom.string) {
+    for (_, atom) in control_sequence {
+      let path: String = match atom.read(self.urids.atom.string) {
         Ok(path) => path.to_string(),
-        Err(_) => return,
+        Err(_) => continue,
       };
       self.load_wav_file(path);
     }
