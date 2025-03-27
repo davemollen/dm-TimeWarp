@@ -4,7 +4,6 @@
 @prefix lv2:   	<http://lv2plug.in/ns/lv2core#> .
 @prefix midi:  	<http://lv2plug.in/ns/ext/midi#> .
 @prefix mod:   	<http://moddevices.com/ns/mod#> .
-@prefix opts:  	<http://lv2plug.in/ns/ext/options#> .
 @prefix patch: 	<http://lv2plug.in/ns/ext/patch#> .
 @prefix pprops:	<http://lv2plug.in/ns/ext/port-props#> .
 @prefix rdf:   	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -34,17 +33,14 @@
 	rdfs:comment """
 A granular delay effect with time stretch capabilities.
 """ ;
-	lv2:extensionData opts:interface ,
-		state:interface ,
-		worker:interface ;
-	lv2:requiredFeature urid:map, lv2:inPlaceBroken ;
-	lv2:optionalFeature 
-		lv2:hardRTCapable ,
-		worker:schedule,
-		state:freePath ,
+	lv2:requiredFeature lv2:inPlaceBroken ,
 		state:loadDefaultState ,
-		state:mapPath ,
+		urid:map ,
+		worker:schedule ;
+	lv2:optionalFeature lv2:hardRTCapable ,
 		state:threadSafeRestore ;
+	lv2:extensionData state:interface ,
+		worker:interface ;
 	patch:writable <https://github.com/davemollen/dm-GrainStretch#sample> ;
 	lv2:port [
 		a lv2:InputPort, lv2:ControlPort ;

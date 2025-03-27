@@ -23,3 +23,7 @@ fi
 
 # replace <binary_name>.so with <binary_name>.dylib in manifest.ttl
 sed -i '' "s/$binary_name_to_replace/$binary_name/g" $lv2_folder/manifest.ttl
+
+# move lv2 plugin
+cp -R $lv2_folder "/Applications/MOD Desktop.app/Contents/LV2"
+echo "Copied lv2 plugin to MOD Desktop"

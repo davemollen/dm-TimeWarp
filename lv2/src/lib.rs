@@ -1,6 +1,6 @@
 use grain_stretch::{GrainStretch, Notes, Params, WavProcessor};
 use lv2::prelude::*;
-use std::string::String;
+use std::{ffi::CStr, string::String};
 use wmidi::*;
 
 #[derive(PortCollection)]
@@ -35,13 +35,26 @@ struct Ports {
 #[derive(FeatureCollection)]
 pub struct Features<'a> {
   map: LV2Map<'a>,
+  unmap: LV2Unmap<'a>,
+  log: Log<'a>,
 }
+
+#[derive(FeatureCollection)]
+pub struct AudioFeatures<'a> {
+  log: Log<'a>,
+}
+
+#[uri("https://github.com/davemollen/dm-GrainStretch#sample")]
+struct Sample;
 
 #[derive(URIDCollection)]
 pub struct URIDs {
   atom: AtomURIDCollection,
   midi: MidiURIDCollection,
   unit: UnitURIDCollection,
+  patch: PatchURIDCollection,
+  log: LogURIDCollection,
+  sample: URID<Sample>,
 }
 
 #[uri("https://github.com/davemollen/dm-GrainStretch")]
@@ -52,21 +65,18 @@ struct DmGrainStretch {
   notes: Notes,
   wav_processor: WavProcessor,
   loaded_file_path: Option<String>,
+  activated: bool,
 }
 
 impl State for DmGrainStretch {
   type StateFeatures = Features<'static>;
 
   fn save(&self, mut store: StoreHandle, features: Self::StateFeatures) -> Result<(), StateErr> {
-    let path = self.loaded_file_path.as_ref().ok_or(StateErr::Unknown)?;
-    let property_key = features.map.map_str("sample").ok_or(StateErr::Unknown)?;
-    let mut state_property_writer = store.draft(property_key);
-    state_property_writer
-      .init(self.urids.atom.string)?
-      .append(path)
-      .or(Err(StateErr::Unknown))?;
-    store.commit(property_key);
-
+    let message = "saving state: {}\n\0".to_string();
+    let _ = features.log.print_cstr(
+      self.urids.log.note,
+      CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
+    );
     Ok(())
   }
 
@@ -75,10 +85,11 @@ impl State for DmGrainStretch {
     store: RetrieveHandle,
     features: Self::StateFeatures,
   ) -> Result<(), StateErr> {
-    let property_key = features.map.map_str("sample").ok_or(StateErr::Unknown)?;
-    let reader = store.retrieve(property_key)?;
-    let path = reader.read(self.urids.atom.string)?;
-    self.loaded_file_path = Some(path.to_string());
+    if !self.activated {
+      let property = store.retrieve(self.urids.sample)?;
+      let path = property.read(self.urids.atom.path)?.to_string();
+      self.load_file(path, features.log);
+    }
 
     Ok(())
   }
@@ -117,7 +128,7 @@ impl DmGrainStretch {
     self.notes.set_voice_count(*ports.voices as usize);
   }
 
-  pub fn process_audio_file(&mut self, ports: &mut Ports) {
+  pub fn process_audio_file(&self, ports: &mut Ports, features: &mut AudioFeatures) {
     let control_sequence = match ports
       .control
       .read(self.urids.atom.sequence)
@@ -128,15 +139,25 @@ impl DmGrainStretch {
     };
 
     for (_, atom) in control_sequence {
-      let path: String = match atom.read(self.urids.atom.string) {
-        Ok(path) => path.to_string(),
-        Err(_) => continue,
+      let (object_header, object_reader) = match atom
+        .read(self.urids.atom.object)
+        .or_else(|_| atom.read(self.urids.atom.blank))
+      {
+        Ok(x) => x,
+        Err(_) => {
+          continue;
+        }
       };
-      self.load_wav_file(path);
+      if object_header.otype == self.urids.patch.message_class {
+        let _ = features.log.print_cstr(
+          self.urids.log.note,
+          CStr::from_bytes_with_nul(b"Found message class\n\0").unwrap(),
+        );
+      }
     }
   }
 
-  fn load_wav_file(&mut self, path: String) {
+  fn load_file(&mut self, path: String, log: Log<'static>) {
     if path.is_empty() || self.loaded_file_path.as_ref().is_some_and(|x| *x == path) {
       return;
     }
@@ -144,7 +165,14 @@ impl DmGrainStretch {
       Ok(samples) => {
         self.grain_stretch.load_wav_file(samples);
       }
-      Err(_) => (),
+      Err(e) => {
+        let error = e.to_string();
+        let message = format!("failed to load the samples: {}\n\0", error);
+        let _ = log.print_cstr(
+          self.urids.log.note,
+          CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
+        );
+      }
     };
     self.loaded_file_path = Some(path);
   }
@@ -156,10 +184,10 @@ impl Plugin for DmGrainStretch {
 
   // We don't need any special host features; We can leave them out.
   type InitFeatures = Features<'static>;
-  type AudioFeatures = ();
+  type AudioFeatures = AudioFeatures<'static>;
 
   // Create a new instance of the plugin; Trivial in this case.
-  fn new(plugin_info: &PluginInfo, features: &mut Features<'static>) -> Option<Self> {
+  fn new(plugin_info: &PluginInfo, features: &mut Self::InitFeatures) -> Option<Self> {
     let sample_rate = plugin_info.sample_rate() as f32;
 
     Some(Self {
@@ -169,12 +197,13 @@ impl Plugin for DmGrainStretch {
       notes: Notes::new(),
       wav_processor: WavProcessor::new(sample_rate),
       loaded_file_path: None,
+      activated: false,
     })
   }
 
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
-  fn run(&mut self, ports: &mut Ports, _features: &mut (), _sample_count: u32) {
+  fn run(&mut self, ports: &mut Ports, _features: &mut Self::AudioFeatures, _sample_count: u32) {
     self.params.set(
       *ports.scan,
       *ports.spray,
@@ -198,7 +227,7 @@ impl Plugin for DmGrainStretch {
     );
 
     self.process_midi_events(ports);
-    self.process_audio_file(ports);
+    // self.process_audio_file(ports, features);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
@@ -215,6 +244,18 @@ impl Plugin for DmGrainStretch {
         &mut self.notes.get_notes(),
       );
     }
+  }
+
+  fn extension_data(uri: &Uri) -> Option<&'static dyn std::any::Any> {
+    match_extensions!(uri, StateDescriptor<Self>)
+  }
+
+  fn activate(&mut self, _features: &mut Self::InitFeatures) {
+    self.activated = true;
+  }
+
+  fn deactivate(&mut self, _features: &mut Self::InitFeatures) {
+    self.activated = false;
   }
 }
 
