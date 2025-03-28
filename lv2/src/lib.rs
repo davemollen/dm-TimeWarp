@@ -64,6 +64,7 @@ struct DmGrainStretch {
   urids: URIDs,
   notes: Notes,
   wav_processor: WavProcessor,
+  file_path: String,
   loaded_file_path: Option<String>,
   activated: bool,
 }
@@ -88,7 +89,7 @@ impl State for DmGrainStretch {
     if !self.activated {
       let property = store.retrieve(self.urids.sample)?;
       let path = property.read(self.urids.atom.path)?.to_string();
-      self.load_file(path, features.log);
+      self.file_path = path;
     }
 
     Ok(())
@@ -128,53 +129,48 @@ impl DmGrainStretch {
     self.notes.set_voice_count(*ports.voices as usize);
   }
 
-  pub fn process_audio_file(&self, ports: &mut Ports, features: &mut AudioFeatures) {
-    let control_sequence = match ports
-      .control
-      .read(self.urids.atom.sequence)
-      .and_then(|s| s.with_unit(self.urids.unit.frame))
+  // pub fn process_patch_events(&self, ports: &mut Ports, features: &mut AudioFeatures) {
+  //   let control_sequence = match ports
+  //     .control
+  //     .read(self.urids.atom.sequence)
+  //     .and_then(|s| s.with_unit(self.urids.unit.frame))
+  //   {
+  //     Ok(sequence_iter) => sequence_iter,
+  //     Err(_) => return,
+  //   };
+
+  //   for (_, atom) in control_sequence {
+  //     let (object_header, object_reader) = match atom
+  //       .read(self.urids.atom.object)
+  //       .or_else(|_| atom.read(self.urids.atom.blank))
+  //     {
+  //       Ok(x) => x,
+  //       Err(_) => {
+  //         continue;
+  //       }
+  //     };
+  //     if object_header.otype == self.urids.patch.message_class {
+  //       let _ = features.log.print_cstr(
+  //         self.urids.log.note,
+  //         CStr::from_bytes_with_nul(b"Found message class\n\0").unwrap(),
+  //       );
+  //     }
+  //   }
+  // }
+
+  fn process_audio_file(&mut self, ports: &mut Ports) {
+    if self.file_path.is_empty()
+      || self
+        .loaded_file_path
+        .as_ref()
+        .is_some_and(|x| *x == self.file_path)
     {
-      Ok(sequence_iter) => sequence_iter,
-      Err(_) => return,
-    };
-
-    for (_, atom) in control_sequence {
-      let (object_header, object_reader) = match atom
-        .read(self.urids.atom.object)
-        .or_else(|_| atom.read(self.urids.atom.blank))
-      {
-        Ok(x) => x,
-        Err(_) => {
-          continue;
-        }
-      };
-      if object_header.otype == self.urids.patch.message_class {
-        let _ = features.log.print_cstr(
-          self.urids.log.note,
-          CStr::from_bytes_with_nul(b"Found message class\n\0").unwrap(),
-        );
-      }
-    }
-  }
-
-  fn load_file(&mut self, path: String, log: Log<'static>) {
-    if path.is_empty() || self.loaded_file_path.as_ref().is_some_and(|x| *x == path) {
       return;
     }
-    match self.wav_processor.read_wav(&path) {
-      Ok(samples) => {
-        self.grain_stretch.load_wav_file(samples);
-      }
-      Err(e) => {
-        let error = e.to_string();
-        let message = format!("failed to load the samples: {}\n\0", error);
-        let _ = log.print_cstr(
-          self.urids.log.note,
-          CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
-        );
-      }
+    if let Ok(samples) = self.wav_processor.read_wav(&self.file_path) {
+      self.grain_stretch.load_wav_file(samples);
     };
-    self.loaded_file_path = Some(path);
+    self.loaded_file_path = Some(self.file_path.clone());
   }
 }
 
@@ -196,6 +192,7 @@ impl Plugin for DmGrainStretch {
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
       wav_processor: WavProcessor::new(sample_rate),
+      file_path: "".to_string(),
       loaded_file_path: None,
       activated: false,
     })
@@ -225,9 +222,8 @@ impl Plugin for DmGrainStretch {
       *ports.sustain,
       *ports.release,
     );
-
     self.process_midi_events(ports);
-    // self.process_audio_file(ports, features);
+    self.process_audio_file(ports);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
