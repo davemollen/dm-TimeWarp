@@ -68,6 +68,6 @@ impl Grains {
         },
       );
 
-    (grains_left, grain_right).multiply(if gain == 0. { 0. } else { gain.recip() })
+    (grains_left, grain_right).multiply(if gain == 0. { 0. } else { gain.recip().sqrt() })
   }
 }
