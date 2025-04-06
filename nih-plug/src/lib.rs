@@ -79,7 +79,7 @@ impl DmGrainStretch {
     }
     match self.wav_processor.read_wav(&path) {
       Ok(samples) => {
-        self.grain_stretch.load_wav_file(samples);
+        self.grain_stretch.set_buffer(samples);
       }
       Err(err) => nih_log!("Failed to load WAV file: {:?}", err),
     };

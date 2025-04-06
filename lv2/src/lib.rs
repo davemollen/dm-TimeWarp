@@ -25,6 +25,7 @@ struct Ports {
   decay: InputPort<Control>,
   sustain: InputPort<Control>,
   release: InputPort<Control>,
+  clear: InputPort<Control>,
   control: InputPort<AtomPort>,
   input_left: InputPort<Audio>,
   input_right: InputPort<Audio>,
@@ -84,7 +85,7 @@ impl State for DmGrainStretch {
   fn restore(
     &mut self,
     store: RetrieveHandle,
-    features: Self::StateFeatures,
+    _features: Self::StateFeatures,
   ) -> Result<(), StateErr> {
     if !self.activated {
       let property = store.retrieve(self.urids.sample)?;
@@ -129,36 +130,57 @@ impl DmGrainStretch {
     self.notes.set_voice_count(*ports.voices as usize);
   }
 
-  // pub fn process_patch_events(&self, ports: &mut Ports, features: &mut AudioFeatures) {
-  //   let control_sequence = match ports
-  //     .control
-  //     .read(self.urids.atom.sequence)
-  //     .and_then(|s| s.with_unit(self.urids.unit.frame))
-  //   {
-  //     Ok(sequence_iter) => sequence_iter,
-  //     Err(_) => return,
-  //   };
+  pub fn process_patch_events(&mut self, ports: &mut Ports) {
+    let control_sequence = match ports
+      .control
+      .read(self.urids.atom.sequence)
+      .and_then(|s| s.with_unit(self.urids.unit.frame))
+    {
+      Ok(sequence_iter) => sequence_iter,
+      Err(_) => return,
+    };
 
-  //   for (_, atom) in control_sequence {
-  //     let (object_header, object_reader) = match atom
-  //       .read(self.urids.atom.object)
-  //       .or_else(|_| atom.read(self.urids.atom.blank))
-  //     {
-  //       Ok(x) => x,
-  //       Err(_) => {
-  //         continue;
-  //       }
-  //     };
-  //     if object_header.otype == self.urids.patch.message_class {
-  //       let _ = features.log.print_cstr(
-  //         self.urids.log.note,
-  //         CStr::from_bytes_with_nul(b"Found message class\n\0").unwrap(),
-  //       );
-  //     }
-  //   }
-  // }
+    let mut should_read_patch_value = false;
+    for (_, atom) in control_sequence {
+      let (object_header, object_reader) = match atom
+        .read(self.urids.atom.object)
+        .or_else(|_| atom.read(self.urids.atom.blank))
+      {
+        Ok(x) => x,
+        Err(_) => {
+          continue;
+        }
+      };
+
+      if object_header.otype == self.urids.patch.set_class {
+        for (property_header, property) in object_reader {
+          if property_header.key == self.urids.patch.property {
+            match property.read(self.urids.atom.urid) {
+              Ok(patch_property) => {
+                should_read_patch_value = self.urids.sample.get() == patch_property.get()
+              }
+              Err(_) => continue,
+            }
+          }
+          if should_read_patch_value && property_header.key == self.urids.patch.value {
+            self.file_path = match property.read(self.urids.atom.path) {
+              Ok(f) => f.to_string(),
+              Err(_) => continue,
+            };
+          }
+        }
+      }
+    }
+  }
 
   fn process_audio_file(&mut self, ports: &mut Ports) {
+    if *ports.clear == 1. {
+      self.grain_stretch.clear_buffer();
+      self.loaded_file_path = None;
+      self.file_path = "".to_string();
+      return;
+    }
+
     if self.file_path.is_empty()
       || self
         .loaded_file_path
@@ -168,7 +190,7 @@ impl DmGrainStretch {
       return;
     }
     if let Ok(samples) = self.wav_processor.read_wav(&self.file_path) {
-      self.grain_stretch.load_wav_file(samples);
+      self.grain_stretch.set_buffer(samples);
     };
     self.loaded_file_path = Some(self.file_path.clone());
   }
@@ -200,7 +222,7 @@ impl Plugin for DmGrainStretch {
 
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
-  fn run(&mut self, ports: &mut Ports, _features: &mut Self::AudioFeatures, _sample_count: u32) {
+  fn run(&mut self, ports: &mut Ports, features: &mut Self::AudioFeatures, _sample_count: u32) {
     self.params.set(
       *ports.scan,
       *ports.spray,
@@ -224,6 +246,7 @@ impl Plugin for DmGrainStretch {
     );
     self.process_midi_events(ports);
     self.process_audio_file(ports);
+    self.process_patch_events(ports);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports

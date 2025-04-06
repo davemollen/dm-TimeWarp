@@ -108,8 +108,12 @@ impl GrainStretch {
     input.multiply(dry).add(grains_out.multiply(wet))
   }
 
-  pub fn load_wav_file(&mut self, values: Vec<(f32, f32)>) {
+  pub fn set_buffer(&mut self, values: Vec<(f32, f32)>) {
     self.delay_line.set_values(&values);
+  }
+
+  pub fn clear_buffer(&mut self) {
+    self.delay_line.reset();
   }
 
   fn write_to_delay(

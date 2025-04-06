@@ -5,3 +5,4 @@
     a lv2:Plugin ;
     lv2:binary <libdm_grain_stretch.dylib> ;
     rdfs:seeAlso <dm-GrainStretch.ttl>  .
+<https://github.com/davemollen/dm-GrainStretch> rdfs:seeAlso <modgui.ttl> .
