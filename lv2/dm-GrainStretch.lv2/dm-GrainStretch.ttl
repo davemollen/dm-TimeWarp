@@ -31,7 +31,7 @@
 	mod:brand "DM" ;
 	mod:label "GrainStretch" ;
 	rdfs:comment """
-A granular delay effect with time stretch capabilities.
+A granular delay, sampler, looper with time stretch capabilities.
 """ ;
 	lv2:requiredFeature lv2:inPlaceBroken ,
 		state:loadDefaultState ,
