@@ -19,7 +19,11 @@ use {
   stereo_delay_line::{Interpolation, StereoDelayLine},
   voices::Voices,
 };
-pub use {notes::Notes, params::Params, wav_processor::WavProcessor};
+pub use {
+  notes::Notes,
+  params::{Params, TimeMode},
+  wav_processor::WavProcessor,
+};
 
 pub const MIN_DELAY_TIME: f32 = 10.;
 pub const MAX_DELAY_TIME: f32 = 10000.;

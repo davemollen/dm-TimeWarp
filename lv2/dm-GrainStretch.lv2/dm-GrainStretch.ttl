@@ -104,6 +104,18 @@ A granular delay, sampler, looper with time stretch capabilities.
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 7 ;
+		lv2:symbol "time_mode" ;
+		lv2:name "Time Mode" ;
+		lv2:portProperty lv2:integer;
+		lv2:portProperty lv2:enumeration ;
+		lv2:default 1 ;
+		lv2:minimum 1 ;
+		lv2:maximum 2 ;
+		lv2:scalePoint [rdfs:label "delay"; rdf:value 1];
+		lv2:scalePoint [rdfs:label "looper"; rdf:value 2];
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 8 ;
 		lv2:symbol "time" ;
 		lv2:name "Time" ;
 		lv2:portProperty pprops:logarithmic, mod:tempoRelatedDynamicScalePoints ;
@@ -113,7 +125,15 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 8 ;
+		lv2:index 9 ;
+		lv2:symbol "time_multiply" ;
+		lv2:name "Time multiply" ;
+		lv2:default 1.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 10 ;
 		lv2:symbol "highpass" ;
 		lv2:name "Highpass" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -123,7 +143,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:hz
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 9 ;
+		lv2:index 11 ;
 		lv2:symbol "lowpass" ;
 		lv2:name "Lowpass" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -133,7 +153,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:hz
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 10 ;
+		lv2:index 12 ;
 		lv2:symbol "overdub" ;
 		lv2:name "Overdub" ;
 		lv2:default 0.0 ;
@@ -141,7 +161,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 11 ;
+		lv2:index 13 ;
 		lv2:symbol "recycle" ;
 		lv2:name "Recycle" ;
 		lv2:default 0.0 ;
@@ -149,7 +169,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 12 ;
+		lv2:index 14 ;
 		lv2:symbol "dry" ;
 		lv2:name "Dry" ;
 		lv2:default 0.0 ;
@@ -158,7 +178,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:db
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 13 ;
+		lv2:index 15 ;
 		lv2:symbol "wet" ;
 		lv2:name "Wet" ;
 		lv2:default 0.0 ;
@@ -167,7 +187,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:db
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 14 ;
+		lv2:index 16 ;
 		lv2:symbol "midi_enabled" ;
 		lv2:name "Midi Enabled" ;
 		lv2:portProperty lv2:integer, lv2:toggled;
@@ -176,7 +196,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:maximum 1 ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 15 ;
+		lv2:index 17 ;
 		lv2:symbol "voices" ;
 		lv2:name "Voices" ;
 		lv2:portProperty lv2:integer;
@@ -185,7 +205,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:maximum 8 ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 16 ;
+		lv2:index 18 ;
 		lv2:symbol "attack" ;
 		lv2:name "Attack" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -195,7 +215,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 17 ;
+		lv2:index 19 ;
 		lv2:symbol "decay" ;
 		lv2:name "Decay" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -205,7 +225,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 18 ;
+		lv2:index 20 ;
 		lv2:symbol "sustain" ;
 		lv2:name "Sustain" ;
 		lv2:default 0.0 ;
@@ -214,7 +234,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:db
 	], [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 19 ;
+		lv2:index 21 ;
 		lv2:symbol "release" ;
 		lv2:name "Release" ;
 		lv2:default 2000.0 ;
@@ -223,7 +243,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		units:unit units:ms
 	], [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 20 ;
+		lv2:index 22 ;
 		lv2:symbol "clear" ;
 		lv2:name "Clear" ;
 		lv2:portProperty lv2:integer, lv2:toggled, pprops:trigger;
@@ -236,27 +256,27 @@ A granular delay, sampler, looper with time stretch capabilities.
 		atom:bufferType atom:Sequence ;
 		atom:supports midi:MidiEvent , patch:Message ;
 		lv2:designation lv2:control ;
-		lv2:index 21 ;
+		lv2:index 23 ;
 		lv2:symbol "control" ;
 		lv2:name "Control"
 	] , [
 		a lv2:AudioPort, lv2:InputPort ;
-		lv2:index 22 ;
+		lv2:index 24 ;
 		lv2:symbol "input_left" ;
 		lv2:name "In left"
 	] , [
 		a lv2:AudioPort, lv2:InputPort ;
-		lv2:index 23 ;
+		lv2:index 25 ;
 		lv2:symbol "input_right" ;
 		lv2:name "In right"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 24 ;
+		lv2:index 26 ;
 		lv2:symbol "output_left" ;
 		lv2:name "Out left"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 25 ;
+		lv2:index 27 ;
 		lv2:symbol "output_right" ;
 		lv2:name "Out right"
 	] ;

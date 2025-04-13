@@ -1,8 +1,17 @@
 mod smooth;
+mod stopwatch;
 pub use smooth::Smoother;
-use smooth::{ExponentialSmooth, LinearSmooth, LogarithmicSmooth};
+use {
+  crate::shared::float_ext::FloatExt,
+  smooth::{ExponentialSmooth, LinearSmooth, LogarithmicSmooth},
+  stopwatch::Stopwatch,
+};
 
-use crate::shared::float_ext::FloatExt;
+#[derive(PartialEq)]
+pub enum TimeMode {
+  Delay,
+  Looper,
+}
 
 pub struct Params {
   pub recording_gain: ExponentialSmooth,
@@ -25,6 +34,9 @@ pub struct Params {
   pub decay: LinearSmooth,
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
+  file_duration: Option<f32>,
+  loop_duration: Option<f32>,
+  stopwatch: Stopwatch,
 }
 
 impl Params {
@@ -50,6 +62,9 @@ impl Params {
       decay: LinearSmooth::new(sample_rate, 20.),
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
+      file_duration: None,
+      loop_duration: None,
+      stopwatch: Stopwatch::new(sample_rate),
     }
   }
 
@@ -61,8 +76,10 @@ impl Params {
     speed: f32,
     density: f32,
     stretch: f32,
-    recording_gain: f32,
+    record: bool,
+    time_mode: TimeMode,
     time: f32,
+    time_multiply: f32,
     highpass: f32,
     lowpass: f32,
     overdub: f32,
@@ -74,6 +91,8 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
+    file_duration: Option<f32>,
+    clear: bool,
   ) {
     self.scan = scan;
     self.spray = spray;
@@ -83,13 +102,19 @@ impl Params {
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
+    let recording_gain = if record { 1. } else { 0. };
     let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
+    if clear {
+      self.stopwatch.reset();
+      self.loop_duration = None;
+    }
+
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
-      self.time.set_target(time);
+      self.set_time(file_duration, time_mode, record, time, time_multiply);
       self.highpass.set_target(highpass);
       self.lowpass.set_target(lowpass);
       self.overdub.set_target(overdub);
@@ -102,7 +127,7 @@ impl Params {
       self.release.set_target(release);
     } else {
       self.recording_gain.reset(recording_gain);
-      self.time.reset(time);
+      self.reset_time(file_duration, time, time_multiply);
       self.highpass.reset(highpass);
       self.lowpass.reset(lowpass);
       self.overdub.reset(overdub);
@@ -114,6 +139,57 @@ impl Params {
       self.sustain.reset(sustain);
       self.release.reset(release);
       self.is_initialized = true;
+    }
+
+    self.file_duration = file_duration;
+  }
+
+  fn set_time(
+    &mut self,
+    file_duration: Option<f32>,
+    time_mode: TimeMode,
+    record: bool,
+    time: f32,
+    time_multiply: f32,
+  ) {
+    match (
+      file_duration,
+      self.file_duration,
+      self.loop_duration,
+      time_mode,
+    ) {
+      (Some(file_duration), Some(prev_file_duration), _, _) => {
+        if file_duration == prev_file_duration {
+          self.time.set_target(file_duration * time_multiply);
+        } else {
+          self.time.reset(file_duration * time_multiply);
+        }
+      }
+      (Some(file_duration), None, _, _) => {
+        self.time.reset(file_duration * time_multiply);
+      }
+      (_, _, None, TimeMode::Looper) => {
+        if let Some(loop_duration) = self.stopwatch.process(record) {
+          self.time.reset(loop_duration * time_multiply);
+          self.loop_duration = Some(loop_duration);
+        }
+      }
+      (_, _, Some(loop_duration), TimeMode::Looper) => {
+        self.time.set_target(loop_duration * time_multiply);
+      }
+      (_, _, _, _) => {
+        self.time.set_target(time);
+      }
+    }
+  }
+
+  fn reset_time(&mut self, file_duration: Option<f32>, time: f32, time_multiply: f32) {
+    match (file_duration, self.loop_duration) {
+      (Some(dur), _) => self.time.reset(dur * time_multiply),
+      (None, Some(dur)) => self.time.reset(dur * time_multiply),
+      (None, None) => {
+        self.time.reset(time);
+      }
     }
   }
 }

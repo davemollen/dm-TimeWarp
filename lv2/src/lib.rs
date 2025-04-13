@@ -1,4 +1,4 @@
-use grain_stretch::{GrainStretch, Notes, Params, WavProcessor};
+use grain_stretch::{GrainStretch, Notes, Params, TimeMode, WavProcessor};
 use lv2::prelude::*;
 use std::{ffi::CStr, string::String};
 use wmidi::*;
@@ -12,7 +12,9 @@ struct Ports {
   density: InputPort<Control>,
   stretch: InputPort<Control>,
   record: InputPort<Control>,
+  time_mode: InputPort<Control>,
   time: InputPort<Control>,
+  time_multiply: InputPort<Control>,
   highpass: InputPort<Control>,
   lowpass: InputPort<Control>,
   overdub: InputPort<Control>,
@@ -67,6 +69,7 @@ struct DmGrainStretch {
   wav_processor: WavProcessor,
   file_path: String,
   loaded_file_path: Option<String>,
+  file_duration: Option<f32>,
   activated: bool,
 }
 
@@ -178,6 +181,7 @@ impl DmGrainStretch {
       self.grain_stretch.clear_buffer();
       self.loaded_file_path = None;
       self.file_path = "".to_string();
+      self.file_duration = None;
       return;
     }
 
@@ -191,6 +195,9 @@ impl DmGrainStretch {
     }
     if let Ok(samples) = self.wav_processor.read_wav(&self.file_path) {
       self.grain_stretch.set_buffer(samples);
+    };
+    if let Ok(duration) = self.wav_processor.get_duration(&self.file_path) {
+      self.file_duration = Some(duration);
     };
     self.loaded_file_path = Some(self.file_path.clone());
   }
@@ -216,13 +223,14 @@ impl Plugin for DmGrainStretch {
       wav_processor: WavProcessor::new(sample_rate),
       file_path: "".to_string(),
       loaded_file_path: None,
+      file_duration: None,
       activated: false,
     })
   }
 
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
-  fn run(&mut self, ports: &mut Ports, features: &mut Self::AudioFeatures, _sample_count: u32) {
+  fn run(&mut self, ports: &mut Ports, _features: &mut Self::AudioFeatures, _sample_count: u32) {
     self.params.set(
       *ports.scan,
       *ports.spray,
@@ -230,8 +238,13 @@ impl Plugin for DmGrainStretch {
       *ports.speed,
       *ports.density,
       *ports.stretch,
-      *ports.record,
+      *ports.record == 1.,
+      match *ports.time_mode {
+        1. => TimeMode::Delay,
+        _ => TimeMode::Looper,
+      },
       *ports.time,
+      *ports.time_multiply,
       *ports.highpass,
       *ports.lowpass,
       *ports.overdub,
@@ -243,6 +256,8 @@ impl Plugin for DmGrainStretch {
       *ports.decay,
       *ports.sustain,
       *ports.release,
+      self.file_duration,
+      *ports.clear == 1.,
     );
     self.process_midi_events(ports);
     self.process_audio_file(ports);
