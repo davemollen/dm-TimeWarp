@@ -106,7 +106,7 @@ impl WavProcessor {
 
 #[cfg(test)]
 mod tests {
-  use crate::wav_processor::WavProcessor;
+  use crate::params::wav_processor::WavProcessor;
   use std::path::Path;
 
   #[test]

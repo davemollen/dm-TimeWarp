@@ -1,6 +1,10 @@
 mod smooth;
 mod stopwatch;
+mod wav_processor;
+use crate::stereo_delay_line::StereoDelayLine;
 pub use smooth::Smoother;
+use wav_processor::WavProcessor;
+
 use {
   crate::shared::float_ext::FloatExt,
   smooth::{ExponentialSmooth, LinearSmooth, LogarithmicSmooth},
@@ -34,7 +38,11 @@ pub struct Params {
   pub decay: LinearSmooth,
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
+  pub file_path: String,
+  wav_processor: WavProcessor,
+  loaded_file_path: Option<String>,
   file_duration: Option<f32>,
+  prev_file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
 }
@@ -62,7 +70,11 @@ impl Params {
       decay: LinearSmooth::new(sample_rate, 20.),
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
+      file_path: "".to_string(),
+      wav_processor: WavProcessor::new(sample_rate),
+      loaded_file_path: None,
       file_duration: None,
+      prev_file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
     }
@@ -91,8 +103,9 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
-    file_duration: Option<f32>,
+    file_path: String,
     clear: bool,
+    delay_line: &mut StereoDelayLine,
   ) {
     self.scan = scan;
     self.spray = spray;
@@ -101,20 +114,27 @@ impl Params {
     self.density = density * density;
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
+    self.file_path = file_path;
 
     let recording_gain = if record { 1. } else { 0. };
     let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
+    self.load_file(delay_line);
+
     if clear {
+      self.loaded_file_path = None;
+      self.file_path = "".to_string();
+      self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
+      delay_line.reset();
     }
 
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
-      self.set_time(file_duration, time_mode, record, time, time_multiply);
+      self.set_time(time_mode, record, time, time_multiply);
       self.highpass.set_target(highpass);
       self.lowpass.set_target(lowpass);
       self.overdub.set_target(overdub);
@@ -127,7 +147,7 @@ impl Params {
       self.release.set_target(release);
     } else {
       self.recording_gain.reset(recording_gain);
-      self.reset_time(file_duration, time, time_multiply);
+      self.reset_time(time, time_multiply);
       self.highpass.reset(highpass);
       self.lowpass.reset(lowpass);
       self.overdub.reset(overdub);
@@ -140,21 +160,34 @@ impl Params {
       self.release.reset(release);
       self.is_initialized = true;
     }
-
-    self.file_duration = file_duration;
   }
 
-  fn set_time(
-    &mut self,
-    file_duration: Option<f32>,
-    time_mode: TimeMode,
-    record: bool,
-    time: f32,
-    time_multiply: f32,
-  ) {
+  pub fn set_file_path(&mut self, file_path: String) {
+    self.file_path = file_path;
+  }
+
+  fn load_file(&mut self, delay_line: &mut StereoDelayLine) {
+    if self.file_path.is_empty()
+      || self
+        .loaded_file_path
+        .as_ref()
+        .is_some_and(|x| *x == self.file_path)
+    {
+      return;
+    }
+    if let Ok(samples) = self.wav_processor.read_wav(&self.file_path) {
+      delay_line.set_values(&samples);
+    };
+    if let Ok(duration) = self.wav_processor.get_duration(&self.file_path) {
+      self.file_duration = Some(duration);
+    };
+    self.loaded_file_path = Some(self.file_path.clone());
+  }
+
+  fn set_time(&mut self, time_mode: TimeMode, record: bool, time: f32, time_multiply: f32) {
     match (
-      file_duration,
       self.file_duration,
+      self.prev_file_duration,
       self.loop_duration,
       time_mode,
     ) {
@@ -183,8 +216,8 @@ impl Params {
     }
   }
 
-  fn reset_time(&mut self, file_duration: Option<f32>, time: f32, time_multiply: f32) {
-    match (file_duration, self.loop_duration) {
+  fn reset_time(&mut self, time: f32, time_multiply: f32) {
+    match (self.file_duration, self.loop_duration) {
       (Some(dur), _) => self.time.reset(dur * time_multiply),
       (None, Some(dur)) => self.time.reset(dur * time_multiply),
       (None, None) => {

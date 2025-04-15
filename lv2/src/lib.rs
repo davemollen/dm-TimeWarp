@@ -1,4 +1,4 @@
-use grain_stretch::{GrainStretch, Notes, Params, TimeMode, WavProcessor};
+use grain_stretch::{GrainStretch, Notes, Params, TimeMode};
 use lv2::prelude::*;
 use std::{ffi::CStr, string::String};
 use wmidi::*;
@@ -66,10 +66,7 @@ struct DmGrainStretch {
   params: Params,
   urids: URIDs,
   notes: Notes,
-  wav_processor: WavProcessor,
   file_path: String,
-  loaded_file_path: Option<String>,
-  file_duration: Option<f32>,
   activated: bool,
 }
 
@@ -175,32 +172,6 @@ impl DmGrainStretch {
       }
     }
   }
-
-  fn process_audio_file(&mut self, ports: &mut Ports) {
-    if *ports.clear == 1. {
-      self.grain_stretch.clear_buffer();
-      self.loaded_file_path = None;
-      self.file_path = "".to_string();
-      self.file_duration = None;
-      return;
-    }
-
-    if self.file_path.is_empty()
-      || self
-        .loaded_file_path
-        .as_ref()
-        .is_some_and(|x| *x == self.file_path)
-    {
-      return;
-    }
-    if let Ok(samples) = self.wav_processor.read_wav(&self.file_path) {
-      self.grain_stretch.set_buffer(samples);
-    };
-    if let Ok(duration) = self.wav_processor.get_duration(&self.file_path) {
-      self.file_duration = Some(duration);
-    };
-    self.loaded_file_path = Some(self.file_path.clone());
-  }
 }
 
 impl Plugin for DmGrainStretch {
@@ -220,10 +191,7 @@ impl Plugin for DmGrainStretch {
       params: Params::new(sample_rate),
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
-      wav_processor: WavProcessor::new(sample_rate),
       file_path: "".to_string(),
-      loaded_file_path: None,
-      file_duration: None,
       activated: false,
     })
   }
@@ -256,11 +224,11 @@ impl Plugin for DmGrainStretch {
       *ports.decay,
       *ports.sustain,
       *ports.release,
-      self.file_duration,
+      self.file_path.clone(),
       *ports.clear == 1.,
+      self.grain_stretch.get_delay_line(),
     );
     self.process_midi_events(ports);
-    self.process_audio_file(ports);
     self.process_patch_events(ports);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());

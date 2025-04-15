@@ -3,7 +3,6 @@ mod notes;
 mod params;
 mod stereo_delay_line;
 mod voices;
-mod wav_processor;
 pub mod shared {
   pub mod delta;
   pub mod float_ext;
@@ -22,7 +21,6 @@ use {
 pub use {
   notes::Notes,
   params::{Params, TimeMode},
-  wav_processor::WavProcessor,
 };
 
 pub const MIN_DELAY_TIME: f32 = 10.;
@@ -112,12 +110,8 @@ impl GrainStretch {
     input.multiply(dry).add(grains_out.multiply(wet))
   }
 
-  pub fn set_buffer(&mut self, values: Vec<(f32, f32)>) {
-    self.delay_line.set_values(&values);
-  }
-
-  pub fn clear_buffer(&mut self) {
-    self.delay_line.reset();
+  pub fn get_delay_line(&mut self) -> &mut StereoDelayLine {
+    &mut self.delay_line
   }
 
   fn write_to_delay(

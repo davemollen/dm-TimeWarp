@@ -27,17 +27,13 @@ impl StartPhasor {
     let freq = if size > 0. || density > 0. {
       1000. / time * (stretch * speed.signum() - recording_speed)
     } else {
-      self.maybe_reset_phasor(speed);
+      if speed != self.prev_speed && speed == 1. {
+        self.phasor.reset();
+      }
+      self.prev_speed = speed;
       1000. / time * (speed - recording_speed)
     };
 
     self.phasor.process(freq)
-  }
-
-  fn maybe_reset_phasor(&mut self, speed: f32) {
-    if speed != self.prev_speed && speed == 1. {
-      self.phasor.reset();
-    }
-    self.prev_speed = speed;
   }
 }
