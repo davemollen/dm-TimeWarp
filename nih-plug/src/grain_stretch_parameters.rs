@@ -7,25 +7,22 @@ use nih_plug::{
     s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
     v2s_f32_rounded,
   },
-  params::{BoolParam, IntParam},
-  prelude::{Enum, FloatParam, FloatRange, Params},
+  params::{BoolParam, EnumParam, IntParam},
+  prelude::{Enum, FloatParam, FloatRange, IntRange, Params},
 };
 use nih_plug_vizia::ViziaState;
 use std::sync::{Arc, Mutex};
 
 #[derive(Enum, PartialEq)]
-pub enum VoiceMode {
-  Mono,
-  Poly,
+pub enum TimeMode {
+  Delay,
+  Looper,
 }
 
 #[derive(Params)]
 pub struct GrainStretchParameters {
   #[persist = "editor-state"]
   pub editor_state: Arc<ViziaState>,
-
-  #[persist = "file_path"]
-  pub file_path: Arc<Mutex<String>>,
 
   #[id = "scan"]
   pub scan: FloatParam,
@@ -48,8 +45,14 @@ pub struct GrainStretchParameters {
   #[id = "record"]
   pub record: BoolParam,
 
+  #[id = "time_mode"]
+  pub time_mode: EnumParam<TimeMode>,
+
   #[id = "time"]
   pub time: FloatParam,
+
+  #[id = "time_multiply"]
+  pub time_multiply: FloatParam,
 
   #[id = "highpass"]
   pub highpass: FloatParam,
@@ -86,6 +89,12 @@ pub struct GrainStretchParameters {
 
   #[id = "wet"]
   pub wet: FloatParam,
+
+  #[id = "clear"]
+  pub clear: BoolParam,
+
+  #[persist = "file_path"]
+  pub file_path: Arc<Mutex<String>>,
 }
 
 impl Default for GrainStretchParameters {
@@ -130,6 +139,8 @@ impl Default for GrainStretchParameters {
 
       record: BoolParam::new("Record", false),
 
+      time_mode: EnumParam::new("Time Mode", TimeMode::Delay),
+
       time: FloatParam::new(
         "Time",
         2000.,
@@ -141,6 +152,11 @@ impl Default for GrainStretchParameters {
       )
       .with_value_to_string(v2s_f32_ms_then_s())
       .with_string_to_value(s2v_f32_ms_then_s()),
+
+      time_multiply: FloatParam::new("Time Multiply", 1., FloatRange::Linear { min: 0., max: 1. })
+        .with_unit(" %")
+        .with_value_to_string(v2s_f32_percentage(2))
+        .with_string_to_value(s2v_f32_percentage()),
 
       highpass: FloatParam::new(
         "Highpass",
@@ -178,11 +194,7 @@ impl Default for GrainStretchParameters {
 
       midi_enabled: BoolParam::new("Midi on", false),
 
-      voices: IntParam::new(
-        "Voices",
-        1,
-        nih_plug::prelude::IntRange::Linear { min: 1, max: 8 },
-      ),
+      voices: IntParam::new("Voices", 1, IntRange::Linear { min: 1, max: 8 }),
 
       attack: FloatParam::new(
         "Attack",
@@ -273,6 +285,8 @@ impl Default for GrainStretchParameters {
           format!("{:.2}", value)
         }
       })),
+
+      clear: BoolParam::new("Clear", false),
 
       file_path: Arc::new(Mutex::new(
         "/Users/davemollen/Desktop/sample.wav".to_string(),

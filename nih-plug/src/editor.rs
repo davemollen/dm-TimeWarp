@@ -1,6 +1,5 @@
 #[path = "./editor/components/param_checkbox.rs"]
 mod param_checkbox;
-use grain_stretch::WavProcessor;
 use param_checkbox::ParamCheckbox;
 #[path = "./editor/components/param_knob.rs"]
 mod param_knob;
@@ -32,7 +31,6 @@ pub(crate) fn default_state() -> Arc<ViziaState> {
 pub(crate) fn create(
   params: Arc<GrainStretchParameters>,
   editor_state: Arc<ViziaState>,
-  wav_processor: WavProcessor,
 ) -> Option<Box<dyn Editor>> {
   create_vizia_editor(
     editor_state,
@@ -43,13 +41,8 @@ pub(crate) fn create(
       UiData {
         params: params.clone(),
         gui_context: gui_context.clone(),
-        wav_processor: wav_processor.clone(),
       }
       .build(cx);
-
-      cx.spawn(move |cx_proxy| {
-        cx_proxy.emit(ParamChangeEvent::SetTimeToFileDuration).ok();
-      });
 
       VStack::new(cx, |cx| {
         HStack::new(cx, |cx| {

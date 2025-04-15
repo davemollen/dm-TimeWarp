@@ -1,6 +1,6 @@
-use grain_stretch::{GrainStretch, Notes, Params as ProcessParams, WavProcessor};
+use grain_stretch::{GrainStretch, Notes, Params as ProcessParams, TimeMode};
 mod grain_stretch_parameters;
-use grain_stretch_parameters::GrainStretchParameters;
+use grain_stretch_parameters::{GrainStretchParameters, TimeMode as ParamTimeMode};
 use nih_plug::prelude::*;
 use std::sync::Arc;
 mod editor;
@@ -10,8 +10,6 @@ struct DmGrainStretch {
   grain_stretch: GrainStretch,
   process_params: ProcessParams,
   notes: Notes,
-  wav_processor: WavProcessor,
-  loaded_file_path: Option<String>,
 }
 
 impl Default for DmGrainStretch {
@@ -23,8 +21,6 @@ impl Default for DmGrainStretch {
       grain_stretch: GrainStretch::new(sample_rate),
       process_params: ProcessParams::new(sample_rate),
       notes: Notes::new(),
-      wav_processor: WavProcessor::new(sample_rate),
-      loaded_file_path: None,
     }
   }
 }
@@ -38,8 +34,13 @@ impl DmGrainStretch {
       self.params.speed.value(),
       self.params.density.value(),
       self.params.stretch.value(),
-      if self.params.record.value() { 1. } else { 0. },
+      self.params.record.value(),
+      match self.params.time_mode.value() {
+        ParamTimeMode::Delay => TimeMode::Delay,
+        ParamTimeMode::Looper => TimeMode::Looper,
+      },
       self.params.time.value(),
+      self.params.time_multiply.value(),
       self.params.highpass.value(),
       self.params.lowpass.value(),
       self.params.overdub.value(),
@@ -51,6 +52,9 @@ impl DmGrainStretch {
       self.params.decay.value(),
       self.params.sustain.value(),
       self.params.release.value(),
+      self.params.file_path.lock().unwrap().to_string(),
+      self.params.clear.value(),
+      self.grain_stretch.get_delay_line(),
     );
   }
 
@@ -70,20 +74,6 @@ impl DmGrainStretch {
     self
       .notes
       .set_voice_count(self.params.voices.value() as usize);
-  }
-
-  pub fn process_audio_file(&mut self) {
-    let path = self.params.file_path.lock().unwrap().clone();
-    if path.is_empty() || self.loaded_file_path.as_ref().is_some_and(|x| *x == path) {
-      return;
-    }
-    match self.wav_processor.read_wav(&path) {
-      Ok(samples) => {
-        self.grain_stretch.set_buffer(samples);
-      }
-      Err(err) => nih_log!("Failed to load WAV file: {:?}", err),
-    };
-    self.loaded_file_path = Some(path);
   }
 }
 
@@ -110,11 +100,7 @@ impl Plugin for DmGrainStretch {
   }
 
   fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
-    editor::create(
-      self.params.clone(),
-      self.params.editor_state.clone(),
-      self.wav_processor.clone(),
-    )
+    editor::create(self.params.clone(), self.params.editor_state.clone())
   }
 
   fn initialize(
@@ -125,7 +111,6 @@ impl Plugin for DmGrainStretch {
   ) -> bool {
     self.grain_stretch = GrainStretch::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
-    self.wav_processor = WavProcessor::new(buffer_config.sample_rate);
 
     true
   }
@@ -138,7 +123,6 @@ impl Plugin for DmGrainStretch {
   ) -> ProcessStatus {
     self.set_param_values();
     self.process_midi_events(context);
-    self.process_audio_file();
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();
