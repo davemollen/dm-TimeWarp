@@ -35,6 +35,7 @@ impl DmGrainStretch {
       self.params.density.value(),
       self.params.stretch.value(),
       self.params.record.value(),
+      self.params.play.value(),
       match self.params.time_mode.value() {
         ParamTimeMode::Delay => TimeMode::Delay,
         ParamTimeMode::Looper => TimeMode::Looper,
@@ -43,7 +44,7 @@ impl DmGrainStretch {
       self.params.time_multiply.value(),
       self.params.highpass.value(),
       self.params.lowpass.value(),
-      self.params.overdub.value(),
+      self.params.feedback.value(),
       self.params.recycle.value(),
       self.params.dry.value(),
       self.params.wet.value(),

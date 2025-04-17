@@ -160,10 +160,10 @@ pub(crate) fn create(
               );
               ParamKnob::new(
                 cx,
-                params.overdub.name(),
+                params.feedback.name(),
                 UiData::params,
-                params.overdub.as_ptr(),
-                |params| &params.overdub,
+                params.feedback.as_ptr(),
+                |params| &params.feedback,
                 |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
                 ParamKnobSize::Large,
               );

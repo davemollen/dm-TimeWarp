@@ -7,7 +7,7 @@ use wav_processor::WavProcessor;
 
 use {
   crate::shared::float_ext::FloatExt,
-  smooth::{ExponentialSmooth, LinearSmooth, LogarithmicSmooth},
+  smooth::{LinearSmooth, LogarithmicSmooth},
   stopwatch::Stopwatch,
 };
 
@@ -18,20 +18,21 @@ pub enum TimeMode {
 }
 
 pub struct Params {
-  pub recording_gain: ExponentialSmooth,
   pub scan: f32,
   pub spray: f32,
   pub size: f32,
   pub speed: f32,
   pub density: f32,
   pub stretch: f32,
+  pub recording_gain: LinearSmooth,
+  pub playback_gain: LinearSmooth,
   pub time: LogarithmicSmooth,
   pub highpass: LinearSmooth,
   pub lowpass: LinearSmooth,
-  pub overdub: LinearSmooth,
+  pub feedback: LinearSmooth,
   pub recycle: LinearSmooth,
-  pub dry: ExponentialSmooth,
-  pub wet: ExponentialSmooth,
+  pub dry: LinearSmooth,
+  pub wet: LinearSmooth,
   pub midi_enabled: bool,
   is_initialized: bool,
   pub attack: LinearSmooth,
@@ -39,13 +40,13 @@ pub struct Params {
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
   pub file_path: String,
+  pub reset_playback: bool,
   wav_processor: WavProcessor,
   loaded_file_path: Option<String>,
   file_duration: Option<f32>,
   prev_file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
-  pub reset_playback: bool,
 }
 
 impl Params {
@@ -57,14 +58,15 @@ impl Params {
       speed: 0.,
       density: 0.,
       stretch: 0.,
-      recording_gain: ExponentialSmooth::new(sample_rate, 20.),
+      recording_gain: LinearSmooth::new(sample_rate, 20.),
+      playback_gain: LinearSmooth::new(sample_rate, 20.),
       time: LogarithmicSmooth::new(sample_rate, 0.3),
       highpass: LinearSmooth::new(sample_rate, 20.),
       lowpass: LinearSmooth::new(sample_rate, 20.),
-      overdub: LinearSmooth::new(sample_rate, 20.),
+      feedback: LinearSmooth::new(sample_rate, 20.),
       recycle: LinearSmooth::new(sample_rate, 20.),
-      dry: ExponentialSmooth::new(sample_rate, 20.),
-      wet: ExponentialSmooth::new(sample_rate, 20.),
+      dry: LinearSmooth::new(sample_rate, 20.),
+      wet: LinearSmooth::new(sample_rate, 20.),
       midi_enabled: false,
       is_initialized: false,
       attack: LinearSmooth::new(sample_rate, 20.),
@@ -72,13 +74,13 @@ impl Params {
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
       file_path: "".to_string(),
+      reset_playback: false,
       wav_processor: WavProcessor::new(sample_rate),
       loaded_file_path: None,
       file_duration: None,
       prev_file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
-      reset_playback: false,
     }
   }
 
@@ -91,12 +93,13 @@ impl Params {
     density: f32,
     stretch: f32,
     record: bool,
+    play: bool,
     time_mode: TimeMode,
     time: f32,
     time_multiply: f32,
     highpass: f32,
     lowpass: f32,
-    overdub: f32,
+    feedback: f32,
     recycle: f32,
     dry: f32,
     wet: f32,
@@ -119,6 +122,7 @@ impl Params {
     self.file_path = file_path;
 
     let recording_gain = if record { 1. } else { 0. };
+    let playback_gain = if play { 1. } else { 0. };
     let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
@@ -137,10 +141,11 @@ impl Params {
 
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
+      self.playback_gain.set_target(playback_gain);
       self.set_time(time_mode, record, time, time_multiply);
       self.highpass.set_target(highpass);
       self.lowpass.set_target(lowpass);
-      self.overdub.set_target(overdub);
+      self.feedback.set_target(feedback);
       self.recycle.set_target(recycle);
       self.dry.set_target(dry);
       self.wet.set_target(wet);
@@ -150,10 +155,11 @@ impl Params {
       self.release.set_target(release);
     } else {
       self.recording_gain.reset(recording_gain);
+      self.playback_gain.reset(playback_gain);
       self.reset_time(time, time_multiply);
       self.highpass.reset(highpass);
       self.lowpass.reset(lowpass);
-      self.overdub.reset(overdub);
+      self.feedback.reset(feedback);
       self.recycle.reset(recycle);
       self.dry.reset(dry);
       self.wet.reset(wet);

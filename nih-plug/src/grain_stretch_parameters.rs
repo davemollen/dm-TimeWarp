@@ -45,6 +45,9 @@ pub struct GrainStretchParameters {
   #[id = "record"]
   pub record: BoolParam,
 
+  #[id = "play"]
+  pub play: BoolParam,
+
   #[id = "time_mode"]
   pub time_mode: EnumParam<TimeMode>,
 
@@ -60,8 +63,8 @@ pub struct GrainStretchParameters {
   #[id = "lowpass"]
   pub lowpass: FloatParam,
 
-  #[id = "overdub"]
-  pub overdub: FloatParam,
+  #[id = "feedback"]
+  pub feedback: FloatParam,
 
   #[id = "recycle"]
   pub recycle: FloatParam,
@@ -137,7 +140,9 @@ impl Default for GrainStretchParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      record: BoolParam::new("Record", false),
+      record: BoolParam::new("Rec / Dub", false),
+
+      play: BoolParam::new("Play / Stop", false),
 
       time_mode: EnumParam::new("Time Mode", TimeMode::Delay),
 
@@ -182,7 +187,7 @@ impl Default for GrainStretchParameters {
       .with_value_to_string(v2s_f32_hz_then_khz(2))
       .with_string_to_value(s2v_f32_hz_then_khz()),
 
-      overdub: FloatParam::new("Overdub", 0., FloatRange::Linear { min: 0., max: 1. })
+      feedback: FloatParam::new("Feedback", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),

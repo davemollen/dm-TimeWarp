@@ -67,7 +67,7 @@ impl GrainStretch {
     let time = params.time.next();
     let highpass = params.highpass.next();
     let lowpass = params.lowpass.next();
-    let overdub = params.overdub.next();
+    let feedback = params.feedback.next();
     let recycle = params.recycle.next();
     let dry = params.dry.next();
     let wet = params.wet.next();
@@ -101,7 +101,7 @@ impl GrainStretch {
       input,
       time,
       grains_out,
-      overdub,
+      feedback,
       recycle,
       recording_gain,
       highpass,
@@ -121,7 +121,7 @@ impl GrainStretch {
     input: (f32, f32),
     time: f32,
     grains_out: (f32, f32),
-    overdub: f32,
+    feedback: f32,
     recycle: f32,
     recording_gain: f32,
     highpass: f32,
@@ -130,7 +130,7 @@ impl GrainStretch {
   ) {
     if is_recording {
       let delay_out = self.delay_line.read(time, Interpolation::Linear);
-      let feedback = self.get_feedback(delay_out, grains_out, recycle, overdub, highpass, lowpass);
+      let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback, highpass, lowpass);
       let delay_in = input.add(feedback).multiply(recording_gain);
       self.delay_line.write(delay_in);
     }
@@ -141,13 +141,13 @@ impl GrainStretch {
     delay_out: (f32, f32),
     grains_out: (f32, f32),
     recycle: f32,
-    overdub: f32,
+    feedback: f32,
     highpass: f32,
     lowpass: f32,
   ) -> (f32, f32) {
     let feedback = delay_out
-      .multiply((1. - recycle) * overdub)
-      .add(grains_out.multiply(recycle * overdub));
+      .multiply((1. - recycle) * feedback)
+      .add(grains_out.multiply(recycle * feedback));
     let feedback = Self::clip(feedback);
     self.filter.process(feedback, highpass, lowpass)
   }
