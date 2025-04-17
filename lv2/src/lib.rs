@@ -1,6 +1,9 @@
 use grain_stretch::{GrainStretch, Notes, Params, TimeMode};
-use lv2::prelude::*;
-use std::{ffi::CStr, string::String};
+use lv2::prelude::{
+  path::{FreePath, MakePath, MapPath, PathManager},
+  *,
+};
+use std::{path::Path, string::String};
 use wmidi::*;
 
 #[derive(PortCollection)]
@@ -38,13 +41,9 @@ struct Ports {
 #[derive(FeatureCollection)]
 pub struct Features<'a> {
   map: LV2Map<'a>,
-  unmap: LV2Unmap<'a>,
-  log: Log<'a>,
-}
-
-#[derive(FeatureCollection)]
-pub struct AudioFeatures<'a> {
-  log: Log<'a>,
+  make_path: Option<MakePath<'a>>,
+  map_path: Option<MapPath<'a>>,
+  free_path: Option<FreePath<'a>>,
 }
 
 #[uri("https://github.com/davemollen/dm-GrainStretch#sample")]
@@ -56,7 +55,6 @@ pub struct URIDs {
   midi: MidiURIDCollection,
   unit: UnitURIDCollection,
   patch: PatchURIDCollection,
-  log: LogURIDCollection,
   sample: URID<Sample>,
 }
 
@@ -74,26 +72,49 @@ impl State for DmGrainStretch {
   type StateFeatures = Features<'static>;
 
   fn save(&self, mut store: StoreHandle, features: Self::StateFeatures) -> Result<(), StateErr> {
-    let message = "saving state: {}\n\0".to_string();
-    let _ = features.log.print_cstr(
-      self.urids.log.note,
-      CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
-    );
-    Ok(())
-  }
+    match (features.make_path, features.map_path, features.free_path) {
+      (Some(make_path), Some(map_path), Some(free_path)) => {
+        let mut manager = PathManager::new(make_path, map_path, free_path);
 
+        let (_, abstract_path) = manager.allocate_path(Path::new(&self.file_path))?;
+
+        let _ = store
+          .draft(self.urids.sample)
+          .init(self.urids.atom.path)?
+          .append(&*abstract_path);
+
+        store.commit_all()
+      }
+      (_, _, _) => Ok(()),
+    }
+  }
   fn restore(
     &mut self,
     store: RetrieveHandle,
-    _features: Self::StateFeatures,
+    features: Self::StateFeatures,
   ) -> Result<(), StateErr> {
-    if !self.activated {
-      let property = store.retrieve(self.urids.sample)?;
-      let path = property.read(self.urids.atom.path)?.to_string();
-      self.file_path = path;
-    }
+    match (
+      features.make_path,
+      features.map_path,
+      features.free_path,
+      self.activated,
+    ) {
+      (Some(make_path), Some(map_path), Some(free_path), true) => {
+        let mut manager = PathManager::new(make_path, map_path, free_path);
 
-    Ok(())
+        let abstract_path = store
+          .retrieve(self.urids.sample)?
+          .read(self.urids.atom.path)?;
+
+        self.file_path = manager
+          .deabstract_path(abstract_path)?
+          .to_string_lossy()
+          .to_string();
+
+        Ok(())
+      }
+      (_, _, _, _) => Ok(()),
+    }
   }
 }
 
@@ -180,7 +201,7 @@ impl Plugin for DmGrainStretch {
 
   // We don't need any special host features; We can leave them out.
   type InitFeatures = Features<'static>;
-  type AudioFeatures = AudioFeatures<'static>;
+  type AudioFeatures = ();
 
   // Create a new instance of the plugin; Trivial in this case.
   fn new(plugin_info: &PluginInfo, features: &mut Self::InitFeatures) -> Option<Self> {
