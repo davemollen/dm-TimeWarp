@@ -70,4 +70,8 @@ impl Grains {
 
     (grains_left, grain_right).multiply(if gain == 0. { 0. } else { gain.recip().sqrt() })
   }
+
+  pub fn reset(&mut self) {
+    self.grains.iter_mut().for_each(|grain| grain.reset());
+  }
 }

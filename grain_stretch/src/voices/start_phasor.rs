@@ -36,4 +36,8 @@ impl StartPhasor {
 
     self.phasor.process(freq)
   }
+
+  pub fn reset(&mut self) {
+    self.phasor.reset();
+  }
 }

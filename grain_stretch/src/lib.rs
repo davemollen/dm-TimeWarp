@@ -76,6 +76,7 @@ impl GrainStretch {
     let sustain = params.sustain.next();
     let release = params.release.next();
     let is_recording = recording_gain > 0.;
+    let reset_playback = params.reset_playback;
 
     let grains_out = self.voices.process(
       &self.delay_line,
@@ -93,6 +94,7 @@ impl GrainStretch {
       sustain,
       release,
       is_recording,
+      reset_playback,
     );
 
     self.write_to_delay(

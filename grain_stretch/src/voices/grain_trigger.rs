@@ -18,4 +18,8 @@ impl GrainTrigger {
     let phase = self.phasor.process(1000. / duration * density);
     self.delta.process(phase) < 0.
   }
+
+  pub fn reset(&mut self) {
+    self.phasor.reset();
+  }
 }

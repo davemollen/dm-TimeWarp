@@ -52,10 +52,14 @@ impl Voices {
     sustain: f32,
     release: f32,
     is_recording: bool,
+    reset_playback: bool,
   ) -> (f32, f32) {
     let duration = (1. - size) * (time - self.fade_time) + self.fade_time; // range from time to fade_time
     let grain_density = density * 14. + 1.; // range from 1 to 15
 
+    if reset_playback {
+      self.start_phasor.reset();
+    }
     let start_phase = self
       .start_phasor
       .process(speed, time, size, density, stretch, is_recording);
@@ -75,6 +79,10 @@ impl Voices {
         .zip(self.adsr.iter_mut())
         .fold((0., 0.), |result, ((note, grains), adsr)| {
           let gain = adsr.process(note, attack, decay, sustain, release);
+          if reset_playback {
+            self.grain_trigger.reset();
+            grains.reset();
+          }
           let trigger = self.grain_trigger.process(duration, grain_density) || adsr.get_trigger();
 
           let grains_out = grains.process(
@@ -97,6 +105,10 @@ impl Voices {
           )
         })
     } else {
+      if reset_playback {
+        self.grain_trigger.reset();
+        self.grains[0].reset();
+      }
       let trigger = self.grain_trigger.process(duration, grain_density);
       self.grains[0].process(
         delay_line,

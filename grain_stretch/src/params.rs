@@ -45,6 +45,7 @@ pub struct Params {
   prev_file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
+  pub reset_playback: bool,
 }
 
 impl Params {
@@ -77,6 +78,7 @@ impl Params {
       prev_file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
+      reset_playback: false,
     }
   }
 
@@ -121,6 +123,7 @@ impl Params {
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
+    self.reset_playback = false;
     self.load_file(delay_line);
 
     if clear {
@@ -182,6 +185,7 @@ impl Params {
       self.file_duration = Some(duration);
     };
     self.loaded_file_path = Some(self.file_path.clone());
+    self.reset_playback = true;
   }
 
   fn set_time(&mut self, time_mode: TimeMode, record: bool, time: f32, time_multiply: f32) {
