@@ -65,7 +65,6 @@ struct DmGrainStretch {
   params: Params,
   urids: URIDs,
   notes: Notes,
-  file_path: String,
   activated: bool,
 }
 
@@ -77,7 +76,7 @@ impl State for DmGrainStretch {
       (Some(make_path), Some(map_path), Some(free_path)) => {
         let mut manager = PathManager::new(make_path, map_path, free_path);
 
-        let (_, abstract_path) = manager.allocate_path(Path::new(&self.file_path))?;
+        let (_, abstract_path) = manager.allocate_path(Path::new(&self.params.file_path))?;
 
         let _ = store
           .draft(self.urids.sample)
@@ -107,7 +106,7 @@ impl State for DmGrainStretch {
           .retrieve(self.urids.sample)?
           .read(self.urids.atom.path)?;
 
-        self.file_path = manager
+        self.params.file_path = manager
           .deabstract_path(abstract_path)?
           .to_string_lossy()
           .to_string();
@@ -185,7 +184,7 @@ impl DmGrainStretch {
             }
           }
           if should_read_patch_value && property_header.key == self.urids.patch.value {
-            self.file_path = match property.read(self.urids.atom.path) {
+            self.params.file_path = match property.read(self.urids.atom.path) {
               Ok(f) => f.to_string(),
               Err(_) => continue,
             };
@@ -213,7 +212,6 @@ impl Plugin for DmGrainStretch {
       params: Params::new(sample_rate),
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
-      file_path: "".to_string(),
       activated: false,
     })
   }
@@ -247,7 +245,7 @@ impl Plugin for DmGrainStretch {
       *ports.decay,
       *ports.sustain,
       *ports.release,
-      self.file_path.clone(),
+      None,
       *ports.clear == 1.,
       self.grain_stretch.get_delay_line(),
     );

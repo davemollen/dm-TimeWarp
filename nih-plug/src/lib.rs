@@ -53,7 +53,7 @@ impl DmGrainStretch {
       self.params.decay.value(),
       self.params.sustain.value(),
       self.params.release.value(),
-      self.params.file_path.lock().unwrap().to_string(),
+      Some(self.params.file_path.clone()),
       self.params.clear.value(),
       self.grain_stretch.get_delay_line(),
     );

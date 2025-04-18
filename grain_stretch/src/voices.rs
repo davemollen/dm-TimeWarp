@@ -80,10 +80,13 @@ impl Voices {
         .fold((0., 0.), |result, ((note, grains), adsr)| {
           let gain = adsr.process(note, attack, decay, sustain, release);
           if reset_playback {
-            self.grain_trigger.reset();
             grains.reset();
           }
-          let trigger = self.grain_trigger.process(duration, grain_density) || adsr.get_trigger();
+          let trigger = self.grain_trigger.process(
+            duration,
+            grain_density,
+            adsr.get_trigger() || reset_playback,
+          );
 
           let grains_out = grains.process(
             delay_line,
@@ -106,10 +109,11 @@ impl Voices {
         })
     } else {
       if reset_playback {
-        self.grain_trigger.reset();
         self.grains[0].reset();
       }
-      let trigger = self.grain_trigger.process(duration, grain_density);
+      let trigger = self
+        .grain_trigger
+        .process(duration, grain_density, reset_playback);
       self.grains[0].process(
         delay_line,
         trigger,

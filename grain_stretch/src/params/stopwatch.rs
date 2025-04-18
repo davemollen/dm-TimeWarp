@@ -18,7 +18,9 @@ impl Stopwatch {
     } else if self.count == 0. {
       None
     } else {
-      Some(self.count / self.sample_rate * 128. * 1000.)
+      // TODO: make buffer size dynamic
+      let buffer_size = 128.;
+      Some(self.count / self.sample_rate * buffer_size * 1000.)
     }
   }
 

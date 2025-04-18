@@ -1,6 +1,8 @@
 mod smooth;
 mod stopwatch;
 mod wav_processor;
+use std::sync::{Arc, Mutex};
+
 use crate::stereo_delay_line::StereoDelayLine;
 pub use smooth::Smoother;
 use wav_processor::WavProcessor;
@@ -47,6 +49,8 @@ pub struct Params {
   prev_file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
+  play: bool,
+  clear: bool,
 }
 
 impl Params {
@@ -81,6 +85,8 @@ impl Params {
       prev_file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
+      play: true,
+      clear: false,
     }
   }
 
@@ -108,10 +114,11 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
-    file_path: String,
+    file_path: Option<Arc<Mutex<String>>>,
     clear: bool,
     delay_line: &mut StereoDelayLine,
   ) {
+    self.reset_playback = false;
     self.scan = scan;
     self.spray = spray;
     self.size = size.powf(0.333);
@@ -119,24 +126,29 @@ impl Params {
     self.density = density * density;
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
-    self.file_path = file_path;
 
-    let recording_gain = if record { 1. } else { 0. };
-    let playback_gain = if play { 1. } else { 0. };
+    let recording_gain = self.get_recording_gain(record, play, &time_mode);
+    let playback_gain = self.get_playback_gain(play, &time_mode);
     let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
+    if let Some(ref path) = file_path {
+      self.file_path = path.lock().unwrap().to_string();
+    }
 
-    self.reset_playback = false;
     self.load_file(delay_line);
 
     if clear {
       self.loaded_file_path = None;
       self.file_path = "".to_string();
+      if let Some(ref path) = file_path {
+        *path.lock().unwrap() = "".to_string();
+      }
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
       delay_line.reset();
+      self.clear = false;
     }
 
     if self.is_initialized {
@@ -169,10 +181,34 @@ impl Params {
       self.release.reset(release);
       self.is_initialized = true;
     }
+    self.play = play;
+    self.clear = clear;
   }
 
-  pub fn set_file_path(&mut self, file_path: String) {
-    self.file_path = file_path;
+  fn get_recording_gain(&mut self, record: bool, play: bool, time_mode: &TimeMode) -> f32 {
+    match (record, time_mode, self.loop_duration) {
+      (true, TimeMode::Looper, None) => {
+        let start_playback = play && !self.play;
+        if start_playback {
+          0.
+        } else {
+          1.
+        }
+      }
+      (false, _, _) => 0.,
+      (true, _, _) => 1.,
+    }
+  }
+
+  fn get_playback_gain(&mut self, play: bool, time_mode: &TimeMode) -> f32 {
+    match (play, time_mode, self.loop_duration) {
+      (true, TimeMode::Looper, None) => 0.,
+      (true, _, _) => {
+        self.reset_playback = !self.play;
+        1.
+      }
+      (false, _, _) => 0.,
+    }
   }
 
   fn load_file(&mut self, delay_line: &mut StereoDelayLine) {

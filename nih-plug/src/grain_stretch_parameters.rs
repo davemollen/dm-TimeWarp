@@ -142,7 +142,7 @@ impl Default for GrainStretchParameters {
 
       record: BoolParam::new("Rec / Dub", false),
 
-      play: BoolParam::new("Play / Stop", false),
+      play: BoolParam::new("Play / Stop", true),
 
       time_mode: EnumParam::new("Time Mode", TimeMode::Delay),
 

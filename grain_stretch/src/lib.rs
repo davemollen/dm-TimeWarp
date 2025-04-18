@@ -64,6 +64,7 @@ impl GrainStretch {
     } = *params;
 
     let recording_gain = params.recording_gain.next();
+    let playback_gain = params.playback_gain.next();
     let time = params.time.next();
     let highpass = params.highpass.next();
     let lowpass = params.lowpass.next();
@@ -78,24 +79,27 @@ impl GrainStretch {
     let is_recording = recording_gain > 0.;
     let reset_playback = params.reset_playback;
 
-    let grains_out = self.voices.process(
-      &self.delay_line,
-      notes,
-      size,
-      time,
-      density,
-      speed,
-      stretch,
-      scan,
-      spray,
-      midi_enabled,
-      attack,
-      decay,
-      sustain,
-      release,
-      is_recording,
-      reset_playback,
-    );
+    let grains_out = self
+      .voices
+      .process(
+        &self.delay_line,
+        notes,
+        size,
+        time,
+        density,
+        speed,
+        stretch,
+        scan,
+        spray,
+        midi_enabled,
+        attack,
+        decay,
+        sustain,
+        release,
+        is_recording,
+        reset_playback,
+      )
+      .multiply(playback_gain);
 
     self.write_to_delay(
       input,
