@@ -1,16 +1,14 @@
 mod smooth;
 mod stopwatch;
 mod wav_processor;
-use std::sync::{Arc, Mutex};
-
-use crate::stereo_delay_line::StereoDelayLine;
 pub use smooth::Smoother;
-use wav_processor::WavProcessor;
-
 use {
   crate::shared::float_ext::FloatExt,
+  crate::stereo_delay_line::StereoDelayLine,
   smooth::{LinearSmooth, LogarithmicSmooth},
+  std::sync::{Arc, Mutex},
   stopwatch::Stopwatch,
+  wav_processor::WavProcessor,
 };
 
 #[derive(PartialEq)]
@@ -41,7 +39,6 @@ pub struct Params {
   pub decay: LinearSmooth,
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
-  pub file_path: String,
   pub reset_playback: bool,
   wav_processor: WavProcessor,
   loaded_file_path: Option<String>,
@@ -77,7 +74,6 @@ impl Params {
       decay: LinearSmooth::new(sample_rate, 20.),
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
-      file_path: "".to_string(),
       reset_playback: false,
       wav_processor: WavProcessor::new(sample_rate),
       loaded_file_path: None,
@@ -114,7 +110,7 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
-    file_path: Option<Arc<Mutex<String>>>,
+    file_path: Arc<Mutex<String>>,
     clear: bool,
     delay_line: &mut StereoDelayLine,
   ) {
@@ -132,18 +128,12 @@ impl Params {
     let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
-    if let Some(ref path) = file_path {
-      self.file_path = path.lock().unwrap().to_string();
-    }
 
-    self.load_file(delay_line);
+    self.load_file(file_path.lock().unwrap().as_str(), delay_line);
 
     if clear {
       self.loaded_file_path = None;
-      self.file_path = "".to_string();
-      if let Some(ref path) = file_path {
-        *path.lock().unwrap() = "".to_string();
-      }
+      *file_path.lock().unwrap() = "".to_string();
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
@@ -211,22 +201,22 @@ impl Params {
     }
   }
 
-  fn load_file(&mut self, delay_line: &mut StereoDelayLine) {
-    if self.file_path.is_empty()
+  fn load_file(&mut self, file_path: &str, delay_line: &mut StereoDelayLine) {
+    if file_path.is_empty()
       || self
         .loaded_file_path
         .as_ref()
-        .is_some_and(|x| *x == self.file_path)
+        .is_some_and(|x| *x == file_path)
     {
       return;
     }
-    if let Ok(samples) = self.wav_processor.read_wav(&self.file_path) {
+    if let Ok(samples) = self.wav_processor.read_wav(file_path) {
       delay_line.set_values(&samples);
     };
-    if let Ok(duration) = self.wav_processor.get_duration(&self.file_path) {
+    if let Ok(duration) = self.wav_processor.get_duration(file_path) {
       self.file_duration = Some(duration);
     };
-    self.loaded_file_path = Some(self.file_path.clone());
+    self.loaded_file_path = Some(file_path.to_string());
     self.reset_playback = true;
   }
 
