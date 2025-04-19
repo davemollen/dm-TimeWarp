@@ -225,7 +225,7 @@ impl Plugin for DmGrainStretch {
 
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
-  fn run(&mut self, ports: &mut Ports, _features: &mut Self::AudioFeatures, _sample_count: u32) {
+  fn run(&mut self, ports: &mut Ports, _features: &mut Self::AudioFeatures, sample_count: u32) {
     self.params.set(
       *ports.scan,
       *ports.spray,
@@ -255,6 +255,7 @@ impl Plugin for DmGrainStretch {
       self.file_path.clone(),
       *ports.clear == 1.,
       self.grain_stretch.get_delay_line(),
+      sample_count as usize,
     );
     self.process_midi_events(ports);
     self.process_patch_events(ports);

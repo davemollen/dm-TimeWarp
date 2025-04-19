@@ -26,7 +26,7 @@ impl Default for DmGrainStretch {
 }
 
 impl DmGrainStretch {
-  pub fn set_param_values(&mut self) {
+  pub fn set_param_values(&mut self, buffer_size: usize) {
     self.process_params.set(
       self.params.scan.value(),
       self.params.spray.value(),
@@ -56,6 +56,7 @@ impl DmGrainStretch {
       self.params.file_path.clone(),
       self.params.clear.value(),
       self.grain_stretch.get_delay_line(),
+      buffer_size,
     );
   }
 
@@ -122,7 +123,7 @@ impl Plugin for DmGrainStretch {
     _aux: &mut AuxiliaryBuffers,
     context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
-    self.set_param_values();
+    self.set_param_values(buffer.samples());
     self.process_midi_events(context);
 
     buffer.iter_samples().for_each(|mut channel_samples| {

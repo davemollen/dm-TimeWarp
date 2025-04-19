@@ -135,7 +135,10 @@ impl GrainStretch {
     if is_recording {
       let delay_out = self.delay_line.read(time, Interpolation::Linear);
       let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback, highpass, lowpass);
-      let delay_in = input.add(feedback).multiply(recording_gain);
+      let delay_in = input
+        .add(feedback)
+        .multiply(recording_gain)
+        .add(delay_out.multiply(1. - recording_gain));
       self.delay_line.write(delay_in);
     }
   }

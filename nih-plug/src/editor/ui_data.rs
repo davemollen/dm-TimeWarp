@@ -1,9 +1,5 @@
 use crate::grain_stretch_parameters::GrainStretchParameters;
-use nih_plug::{
-  nih_log,
-  params::Param,
-  prelude::{GuiContext, ParamPtr},
-};
+use nih_plug::prelude::{GuiContext, ParamPtr};
 use nih_plug_vizia::vizia::prelude::*;
 use rfd::FileDialog;
 use std::sync::Arc;
@@ -34,7 +30,7 @@ impl Model for UiData {
       ParamChangeEvent::PickFile => {
         let file_path_param = self.params.file_path.clone();
 
-        cx.spawn(move |cx_proxy| {
+        cx.spawn(move |_cx_proxy| {
           if let Some(file) = FileDialog::new().add_filter("wav", &["wav"]).pick_file() {
             if let Some(file_path) = file.to_str() {
               *file_path_param.lock().unwrap() = file_path.to_string();

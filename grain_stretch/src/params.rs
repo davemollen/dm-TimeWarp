@@ -46,7 +46,7 @@ pub struct Params {
   prev_file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
-  play: bool,
+  prev_play: bool,
   clear: bool,
 }
 
@@ -59,8 +59,8 @@ impl Params {
       speed: 0.,
       density: 0.,
       stretch: 0.,
-      recording_gain: LinearSmooth::new(sample_rate, 20.),
-      playback_gain: LinearSmooth::new(sample_rate, 20.),
+      recording_gain: LinearSmooth::new(sample_rate, 50.),
+      playback_gain: LinearSmooth::new(sample_rate, 50.),
       time: LogarithmicSmooth::new(sample_rate, 0.3),
       highpass: LinearSmooth::new(sample_rate, 20.),
       lowpass: LinearSmooth::new(sample_rate, 20.),
@@ -81,7 +81,7 @@ impl Params {
       prev_file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
-      play: true,
+      prev_play: true,
       clear: false,
     }
   }
@@ -113,6 +113,7 @@ impl Params {
     file_path: Arc<Mutex<String>>,
     clear: bool,
     delay_line: &mut StereoDelayLine,
+    buffer_size: usize,
   ) {
     self.reset_playback = false;
     self.scan = scan;
@@ -123,8 +124,9 @@ impl Params {
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
-    let recording_gain = self.get_recording_gain(record, play, &time_mode);
-    let playback_gain = self.get_playback_gain(play, &time_mode);
+    let overridden_play = self.override_play(play, &time_mode);
+    let recording_gain = if record { 1. } else { 0. };
+    let playback_gain = if overridden_play { 1. } else { 0. };
     let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
@@ -144,7 +146,7 @@ impl Params {
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
       self.playback_gain.set_target(playback_gain);
-      self.set_time(time_mode, record, time, time_multiply);
+      self.set_time(time_mode, record, play, time, time_multiply, buffer_size);
       self.highpass.set_target(highpass);
       self.lowpass.set_target(lowpass);
       self.feedback.set_target(feedback);
@@ -171,33 +173,19 @@ impl Params {
       self.release.reset(release);
       self.is_initialized = true;
     }
-    self.play = play;
+    self.prev_play = play;
     self.clear = clear;
   }
 
-  fn get_recording_gain(&mut self, record: bool, play: bool, time_mode: &TimeMode) -> f32 {
-    match (record, time_mode, self.loop_duration) {
-      (true, TimeMode::Looper, None) => {
-        let start_playback = play && !self.play;
-        if start_playback {
-          0.
-        } else {
-          1.
-        }
-      }
-      (false, _, _) => 0.,
-      (true, _, _) => 1.,
-    }
-  }
-
-  fn get_playback_gain(&mut self, play: bool, time_mode: &TimeMode) -> f32 {
+  fn override_play(&mut self, play: bool, time_mode: &TimeMode) -> bool {
     match (play, time_mode, self.loop_duration) {
-      (true, TimeMode::Looper, None) => 0.,
+      (true, TimeMode::Looper, None) => false,
       (true, _, _) => {
-        self.reset_playback = !self.play;
-        1.
+        // reset playback to beginning if play was off previously
+        self.reset_playback = !self.prev_play;
+        true
       }
-      (false, _, _) => 0.,
+      (false, _, _) => false,
     }
   }
 
@@ -220,7 +208,15 @@ impl Params {
     self.reset_playback = true;
   }
 
-  fn set_time(&mut self, time_mode: TimeMode, record: bool, time: f32, time_multiply: f32) {
+  fn set_time(
+    &mut self,
+    time_mode: TimeMode,
+    record: bool,
+    play: bool,
+    time: f32,
+    time_multiply: f32,
+    buffer_size: usize,
+  ) {
     match (
       self.file_duration,
       self.prev_file_duration,
@@ -238,7 +234,9 @@ impl Params {
         self.time.reset(file_duration * time_multiply);
       }
       (_, _, None, TimeMode::Looper) => {
-        if let Some(loop_duration) = self.stopwatch.process(record) {
+        // stop stopwatch if play changed from false to true
+        let start = record && !(!self.prev_play && play);
+        if let Some(loop_duration) = self.stopwatch.process(start, buffer_size) {
           self.time.reset(loop_duration * time_multiply);
           self.loop_duration = Some(loop_duration);
         }
