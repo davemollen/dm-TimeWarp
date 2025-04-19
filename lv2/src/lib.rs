@@ -1,4 +1,3 @@
-use grain_stretch::{GrainStretch, Notes, Params, TimeMode};
 use lv2::prelude::{
   path::{FreePath, MakePath, MapPath, PathManager},
   *,
@@ -8,6 +7,7 @@ use std::{
   string::String,
   sync::{Arc, Mutex},
 };
+use time_warp::{Notes, Params, TimeMode, TimeWarp};
 use wmidi::*;
 
 #[derive(PortCollection)]
@@ -51,7 +51,7 @@ pub struct Features<'a> {
   free_path: Option<FreePath<'a>>,
 }
 
-#[uri("https://github.com/davemollen/dm-GrainStretch#sample")]
+#[uri("https://github.com/davemollen/dm-TimeWarp#sample")]
 struct Sample;
 
 #[derive(URIDCollection)]
@@ -63,9 +63,9 @@ pub struct URIDs {
   sample: URID<Sample>,
 }
 
-#[uri("https://github.com/davemollen/dm-GrainStretch")]
-struct DmGrainStretch {
-  grain_stretch: GrainStretch,
+#[uri("https://github.com/davemollen/dm-TimeWarp")]
+struct DmTimeWarp {
+  time_warp: TimeWarp,
   params: Params,
   urids: URIDs,
   notes: Notes,
@@ -73,7 +73,7 @@ struct DmGrainStretch {
   activated: bool,
 }
 
-impl State for DmGrainStretch {
+impl State for DmTimeWarp {
   type StateFeatures = Features<'static>;
 
   fn save(&self, mut store: StoreHandle, features: Self::StateFeatures) -> Result<(), StateErr> {
@@ -124,7 +124,7 @@ impl State for DmGrainStretch {
   }
 }
 
-impl DmGrainStretch {
+impl DmTimeWarp {
   pub fn process_midi_events(&mut self, ports: &mut Ports) {
     let control_sequence = match ports
       .control
@@ -201,7 +201,7 @@ impl DmGrainStretch {
   }
 }
 
-impl Plugin for DmGrainStretch {
+impl Plugin for DmTimeWarp {
   // Tell the framework which ports this plugin has.
   type Ports = Ports;
 
@@ -214,7 +214,7 @@ impl Plugin for DmGrainStretch {
     let sample_rate = plugin_info.sample_rate() as f32;
 
     Some(Self {
-      grain_stretch: GrainStretch::new(sample_rate),
+      time_warp: TimeWarp::new(sample_rate),
       params: Params::new(sample_rate),
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
@@ -254,7 +254,7 @@ impl Plugin for DmGrainStretch {
       *ports.release,
       self.file_path.clone(),
       *ports.clear == 1.,
-      self.grain_stretch.get_delay_line(),
+      self.time_warp.get_delay_line(),
       sample_count as usize,
     );
     self.process_midi_events(ports);
@@ -269,7 +269,7 @@ impl Plugin for DmGrainStretch {
     for ((input_left, input_right), (output_left, output_right)) in
       input_channels.zip(output_channels)
     {
-      (*output_left, *output_right) = self.grain_stretch.process(
+      (*output_left, *output_right) = self.time_warp.process(
         (*input_left, *input_right),
         &mut self.params,
         &mut self.notes.get_notes(),
@@ -291,4 +291,4 @@ impl Plugin for DmGrainStretch {
 }
 
 // Generate the plugin descriptor function which exports the plugin to the outside world.
-lv2_descriptors!(DmGrainStretch);
+lv2_descriptors!(DmTimeWarp);

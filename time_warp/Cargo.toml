@@ -1,5 +1,5 @@
 [package]
-name = "grain_stretch"
+name = "time_warp"
 version = "0.1.0"
 authors = ["davemollen <davemollen@gmail.com>"]
 edition = "2021"

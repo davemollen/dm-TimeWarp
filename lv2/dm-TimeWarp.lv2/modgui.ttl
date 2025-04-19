@@ -1,16 +1,16 @@
 @prefix modgui: <http://moddevices.com/ns/modgui#> .
 @prefix lv2:    <http://lv2plug.in/ns/lv2core#> .
 
-<https://github.com/davemollen/dm-GrainStretch>
+<https://github.com/davemollen/dm-TimeWarp>
     modgui:gui [
         modgui:resourcesDirectory <modgui> ;
-        modgui:iconTemplate <modgui/icon-dm-grainstretch.html> ;
-        modgui:stylesheet <modgui/stylesheet-dm-grainstretch.css> ;
-        modgui:screenshot <modgui/screenshot-dm-grainstretch.png> ;
-        modgui:thumbnail <modgui/thumbnail-dm-grainstretch.png> ;
+        modgui:iconTemplate <modgui/icon-dm-timewarp.html> ;
+        modgui:stylesheet <modgui/stylesheet-dm-timewarp.css> ;
+        modgui:screenshot <modgui/screenshot-dm-timewarp.png> ;
+        modgui:thumbnail <modgui/thumbnail-dm-timewarp.png> ;
         modgui:javascript <modgui/javascript.js> ;
         modgui:brand "DM" ;
-        modgui:label "GrainStretch" ;
+        modgui:label "TimeWarp" ;
         modgui:model "boxy" ;
         modgui:panel "1-select-3-knobs" ;
         modgui:color "gray" ;

@@ -1,31 +1,31 @@
-use grain_stretch::{GrainStretch, Notes, Params as ProcessParams, TimeMode};
-mod grain_stretch_parameters;
-use grain_stretch_parameters::{GrainStretchParameters, TimeMode as ParamTimeMode};
+use time_warp::{Notes, Params as ProcessParams, TimeMode, TimeWarp};
+mod time_warp_parameters;
 use nih_plug::prelude::*;
 use std::sync::Arc;
+use time_warp_parameters::{TimeMode as ParamTimeMode, TimeWarpParameters};
 mod editor;
 
-struct DmGrainStretch {
-  params: Arc<GrainStretchParameters>,
-  grain_stretch: GrainStretch,
+struct DmTimeWarp {
+  params: Arc<TimeWarpParameters>,
+  time_warp: TimeWarp,
   process_params: ProcessParams,
   notes: Notes,
 }
 
-impl Default for DmGrainStretch {
+impl Default for DmTimeWarp {
   fn default() -> Self {
     let sample_rate = 44100_f32;
-    let params = Arc::new(GrainStretchParameters::default());
+    let params = Arc::new(TimeWarpParameters::default());
     Self {
       params: params.clone(),
-      grain_stretch: GrainStretch::new(sample_rate),
+      time_warp: TimeWarp::new(sample_rate),
       process_params: ProcessParams::new(sample_rate),
       notes: Notes::new(),
     }
   }
 }
 
-impl DmGrainStretch {
+impl DmTimeWarp {
   pub fn set_param_values(&mut self, buffer_size: usize) {
     self.process_params.set(
       self.params.scan.value(),
@@ -55,7 +55,7 @@ impl DmGrainStretch {
       self.params.release.value(),
       self.params.file_path.clone(),
       self.params.clear.value(),
-      self.grain_stretch.get_delay_line(),
+      self.time_warp.get_delay_line(),
       buffer_size,
     );
   }
@@ -79,10 +79,10 @@ impl DmGrainStretch {
   }
 }
 
-impl Plugin for DmGrainStretch {
-  const NAME: &'static str = "dm-GrainStretch";
+impl Plugin for DmTimeWarp {
+  const NAME: &'static str = "dm-TimeWarp";
   const VENDOR: &'static str = "DM";
-  const URL: &'static str = "https://github.com/davemollen/dm-GrainStretch";
+  const URL: &'static str = "https://github.com/davemollen/dm-TimeWarp";
   const EMAIL: &'static str = "davemollen@gmail.com";
   const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -111,7 +111,7 @@ impl Plugin for DmGrainStretch {
     buffer_config: &BufferConfig,
     _context: &mut impl InitContext<Self>,
   ) -> bool {
-    self.grain_stretch = GrainStretch::new(buffer_config.sample_rate);
+    self.time_warp = TimeWarp::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
 
     true
@@ -131,7 +131,7 @@ impl Plugin for DmGrainStretch {
       let left_channel = channel_iterator.next().unwrap();
       let right_channel = channel_iterator.next().unwrap();
 
-      (*left_channel, *right_channel) = self.grain_stretch.process(
+      (*left_channel, *right_channel) = self.time_warp.process(
         (*left_channel, *right_channel),
         &mut self.process_params,
         &mut self.notes.get_notes(),
@@ -145,8 +145,8 @@ impl Plugin for DmGrainStretch {
   fn deactivate(&mut self) {}
 }
 
-impl ClapPlugin for DmGrainStretch {
-  const CLAP_ID: &'static str = "dm-GrainStretch";
+impl ClapPlugin for DmTimeWarp {
+  const CLAP_ID: &'static str = "dm-TimeWarp";
   const CLAP_DESCRIPTION: Option<&'static str> = Some("A granular plugin");
   const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
   const CLAP_SUPPORT_URL: Option<&'static str> = None;
@@ -160,8 +160,8 @@ impl ClapPlugin for DmGrainStretch {
   ];
 }
 
-impl Vst3Plugin for DmGrainStretch {
-  const VST3_CLASS_ID: [u8; 16] = *b"dm-GrainStretch.";
+impl Vst3Plugin for DmTimeWarp {
+  const VST3_CLASS_ID: [u8; 16] = *b"dm-TimeWarp.....";
   const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[
     Vst3SubCategory::Fx,
     Vst3SubCategory::Delay,
@@ -169,5 +169,5 @@ impl Vst3Plugin for DmGrainStretch {
   ];
 }
 
-nih_export_clap!(DmGrainStretch);
-nih_export_vst3!(DmGrainStretch);
+nih_export_clap!(DmTimeWarp);
+nih_export_vst3!(DmTimeWarp);

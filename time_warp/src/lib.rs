@@ -26,13 +26,13 @@ pub use {
 pub const MIN_DELAY_TIME: f32 = 10.;
 pub const MAX_DELAY_TIME: f32 = 10000.;
 
-pub struct GrainStretch {
+pub struct TimeWarp {
   delay_line: StereoDelayLine,
   voices: Voices,
   filter: Filter,
 }
 
-impl GrainStretch {
+impl TimeWarp {
   const FADE_TIME: f32 = MIN_DELAY_TIME * 2.;
 
   pub fn new(sample_rate: f32) -> Self {

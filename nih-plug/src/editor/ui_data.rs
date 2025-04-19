@@ -1,4 +1,4 @@
-use crate::grain_stretch_parameters::GrainStretchParameters;
+use crate::time_warp_parameters::TimeWarpParameters;
 use nih_plug::prelude::{GuiContext, ParamPtr};
 use nih_plug_vizia::vizia::prelude::*;
 use rfd::FileDialog;
@@ -11,7 +11,7 @@ pub enum ParamChangeEvent {
 
 #[derive(Lens)]
 pub struct UiData {
-  pub params: Arc<GrainStretchParameters>,
+  pub params: Arc<TimeWarpParameters>,
   pub gui_context: Arc<dyn GuiContext>,
 }
 

@@ -1,7 +1,7 @@
 #!/bin/bash
-binary_name_to_replace="libdm_grain_stretch.so"
-binary_name="libdm_grain_stretch.dylib"
-lv2_folder="dm-GrainStretch.lv2"
+binary_name_to_replace="libdm_time_warp.so"
+binary_name="libdm_time_warp.dylib"
+lv2_folder="dm-TimeWarp.lv2"
 move_to="$lv2_folder/$binary_name"
 
 # compile binary

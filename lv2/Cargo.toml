@@ -1,5 +1,5 @@
 [package]
-name = "dm_grain_stretch"
+name = "dm_time_warp"
 version = "0.1.0"
 authors = ["davemollen <davemollen@gmail.com>"]
 edition = "2021"
@@ -10,7 +10,7 @@ edition = "2021"
 lv2 = { path = "../../rust-lv2", features = [
     "full", "wmidi"
 ] }
-grain_stretch = { path = "../grain_stretch" }
+time_warp = { path = "../time_warp" }
 wmidi = "3.1.0"
 
 [lib]

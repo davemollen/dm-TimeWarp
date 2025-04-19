@@ -1,7 +1,6 @@
 mod custom_formatters;
 use crate::editor;
 use custom_formatters::{s2v_f32_ms_then_s, v2s_f32_ms_then_s};
-use grain_stretch::{MAX_DELAY_TIME, MIN_DELAY_TIME};
 use nih_plug::{
   formatters::{
     s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
@@ -12,6 +11,7 @@ use nih_plug::{
 };
 use nih_plug_vizia::ViziaState;
 use std::sync::{Arc, Mutex};
+use time_warp::{MAX_DELAY_TIME, MIN_DELAY_TIME};
 
 #[derive(Enum, PartialEq)]
 pub enum TimeMode {
@@ -20,7 +20,7 @@ pub enum TimeMode {
 }
 
 #[derive(Params)]
-pub struct GrainStretchParameters {
+pub struct TimeWarpParameters {
   #[persist = "editor-state"]
   pub editor_state: Arc<ViziaState>,
 
@@ -100,7 +100,7 @@ pub struct GrainStretchParameters {
   pub file_path: Arc<Mutex<String>>,
 }
 
-impl Default for GrainStretchParameters {
+impl Default for TimeWarpParameters {
   fn default() -> Self {
     Self {
       editor_state: editor::default_state(),

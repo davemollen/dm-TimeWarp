@@ -10,9 +10,9 @@ defaults:
     shell: bash
 
 env:
-  binary_name: dm_grain_stretch
-  plugin_name: dm-GrainStretch
-  mod_package_name: dm-grainstretch
+  binary_name: dm_time_warp
+  plugin_name: dm-TimeWarp
+  mod_package_name: dm-timewarp
 
 jobs:
   package-nih-plug:

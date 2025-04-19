@@ -5,7 +5,7 @@ use param_checkbox::ParamCheckbox;
 mod param_knob;
 use param_knob::{ParamKnob, ParamKnobSize};
 mod ui_data;
-use crate::grain_stretch_parameters::GrainStretchParameters;
+use crate::time_warp_parameters::TimeWarpParameters;
 use nih_plug::{params::Param, prelude::Editor};
 use nih_plug_vizia::vizia::{
   binding::LensExt,
@@ -29,7 +29,7 @@ pub(crate) fn default_state() -> Arc<ViziaState> {
 }
 
 pub(crate) fn create(
-  params: Arc<GrainStretchParameters>,
+  params: Arc<TimeWarpParameters>,
   editor_state: Arc<ViziaState>,
 ) -> Option<Box<dyn Editor>> {
   create_vizia_editor(
@@ -209,7 +209,7 @@ pub(crate) fn create(
         })
         .col_between(Pixels(16.0));
 
-        Label::new(cx, "dm-GrainStretch")
+        Label::new(cx, "dm-TimeWarp")
           .font_size(22.0)
           .font_weight(FontWeightKeyword::Bold)
           .border_radius(Pixels(16.0))

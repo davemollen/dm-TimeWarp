@@ -12,23 +12,23 @@
 @prefix units: 	<http://lv2plug.in/ns/extensions/units#> .
 @prefix urid: 	<http://lv2plug.in/ns/ext/urid#> .
 
-<https://github.com/davemollen/dm-GrainStretch#sample>
+<https://github.com/davemollen/dm-TimeWarp#sample>
 	a lv2:Parameter ;
 	mod:fileTypes "audioloop,audiorecording,audiotrack" ;
 	rdfs:label "sample" ;
 	rdfs:range atom:Path .
 
-<https://github.com/davemollen/dm-GrainStretch>
+<https://github.com/davemollen/dm-TimeWarp>
 	a lv2:Plugin , lv2:PitchPlugin , mod:DelayPlugin ;
 	lv2:project <http://lv2plug.in/ns/lv2> ;
-	doap:name "dm-GrainStretch" ;
+	doap:name "dm-TimeWarp" ;
 	doap:license "GPLv3" ;
 	doap:maintainer [
 		foaf:name "Dave Mollen" ;
-		foaf:homepage <https://github.com/davemollen/dm-GrainStretch> ;
+		foaf:homepage <https://github.com/davemollen/dm-TimeWarp> ;
 	] ;
 	mod:brand "DM" ;
-	mod:label "GrainStretch" ;
+	mod:label "TimeWarp" ;
 	rdfs:comment """
 A granular delay, sampler, looper with time stretch capabilities.
 """ ;
@@ -41,7 +41,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		state:freePath,
 		state:threadSafeRestore ;
 	lv2:extensionData state:interface ;
-	patch:writable <https://github.com/davemollen/dm-GrainStretch#sample> ;
+	patch:writable <https://github.com/davemollen/dm-TimeWarp#sample> ;
 	lv2:port [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 0 ;
@@ -290,5 +290,5 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:name "Out right"
 	] ;
     state:state [
-        <https://github.com/davemollen/dm-GrainStretch#sample> <sample.wav>;
+        <https://github.com/davemollen/dm-TimeWarp#sample> <sample.wav>;
     ] .
