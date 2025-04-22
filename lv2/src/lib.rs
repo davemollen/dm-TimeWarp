@@ -2,11 +2,7 @@ use lv2::prelude::{
   path::{FreePath, MakePath, MapPath, PathManager},
   *,
 };
-use std::{
-  path::Path,
-  string::String,
-  sync::{Arc, Mutex},
-};
+use std::{path::Path, string::String};
 use time_warp::{Notes, Params, TimeMode, TimeWarp};
 use wmidi::*;
 
@@ -69,7 +65,7 @@ struct DmTimeWarp {
   params: Params,
   urids: URIDs,
   notes: Notes,
-  file_path: Arc<Mutex<String>>,
+  file_path: String,
   activated: bool,
 }
 
@@ -81,8 +77,7 @@ impl State for DmTimeWarp {
       (Some(make_path), Some(map_path), Some(free_path)) => {
         let mut manager = PathManager::new(make_path, map_path, free_path);
 
-        let (_, abstract_path) =
-          manager.allocate_path(Path::new(&self.file_path.lock().unwrap().to_string()))?;
+        let (_, abstract_path) = manager.allocate_path(Path::new(&self.file_path))?;
 
         let _ = store
           .draft(self.urids.sample)
@@ -112,7 +107,7 @@ impl State for DmTimeWarp {
           .retrieve(self.urids.sample)?
           .read(self.urids.atom.path)?;
 
-        *self.file_path.lock().unwrap() = manager
+        self.file_path = manager
           .deabstract_path(abstract_path)?
           .to_string_lossy()
           .to_string();
@@ -125,6 +120,44 @@ impl State for DmTimeWarp {
 }
 
 impl DmTimeWarp {
+  pub fn set_param_values(&mut self, ports: &mut Ports, sample_count: u32) {
+    self.params.set(
+      *ports.scan,
+      *ports.spray,
+      *ports.size,
+      *ports.speed,
+      *ports.density,
+      *ports.stretch,
+      *ports.record == 1.,
+      *ports.play == 1.,
+      match *ports.time_mode {
+        1. => TimeMode::Delay,
+        _ => TimeMode::Looper,
+      },
+      *ports.time,
+      *ports.time_multiply,
+      *ports.highpass,
+      *ports.lowpass,
+      *ports.feedback,
+      *ports.recycle,
+      *ports.dry,
+      *ports.wet,
+      *ports.midi_enabled == 1.,
+      *ports.attack,
+      *ports.decay,
+      *ports.sustain,
+      *ports.release,
+      &mut self.file_path,
+      *ports.clear == 1.,
+      self.time_warp.get_delay_line(),
+      sample_count as usize,
+    );
+
+    if self.params.should_clear_buffer() {
+      self.file_path = "".to_string();
+    }
+  }
+
   pub fn process_midi_events(&mut self, ports: &mut Ports) {
     let control_sequence = match ports
       .control
@@ -190,7 +223,7 @@ impl DmTimeWarp {
             }
           }
           if should_read_patch_value && property_header.key == self.urids.patch.value {
-            *self.file_path.lock().unwrap() = match property.read(self.urids.atom.path) {
+            self.file_path = match property.read(self.urids.atom.path) {
               Ok(f) => f.to_string(),
               Err(_) => continue,
             };
@@ -218,7 +251,7 @@ impl Plugin for DmTimeWarp {
       params: Params::new(sample_rate),
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
-      file_path: Arc::new(Mutex::new("".to_string())),
+      file_path: "".to_string(),
       activated: false,
     })
   }
@@ -226,37 +259,7 @@ impl Plugin for DmTimeWarp {
   // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
   // iterates over.
   fn run(&mut self, ports: &mut Ports, _features: &mut Self::AudioFeatures, sample_count: u32) {
-    self.params.set(
-      *ports.scan,
-      *ports.spray,
-      *ports.size,
-      *ports.speed,
-      *ports.density,
-      *ports.stretch,
-      *ports.record == 1.,
-      *ports.play == 1.,
-      match *ports.time_mode {
-        1. => TimeMode::Delay,
-        _ => TimeMode::Looper,
-      },
-      *ports.time,
-      *ports.time_multiply,
-      *ports.highpass,
-      *ports.lowpass,
-      *ports.feedback,
-      *ports.recycle,
-      *ports.dry,
-      *ports.wet,
-      *ports.midi_enabled == 1.,
-      *ports.attack,
-      *ports.decay,
-      *ports.sustain,
-      *ports.release,
-      self.file_path.clone(),
-      *ports.clear == 1.,
-      self.time_warp.get_delay_line(),
-      sample_count as usize,
-    );
+    self.set_param_values(ports, sample_count);
     self.process_midi_events(ports);
     self.process_patch_events(ports);
 

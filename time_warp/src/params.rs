@@ -6,7 +6,6 @@ use {
   crate::shared::float_ext::FloatExt,
   crate::stereo_delay_line::StereoDelayLine,
   smooth::{LinearSmooth, LogarithmicSmooth},
-  std::sync::{Arc, Mutex},
   stopwatch::Stopwatch,
   wav_processor::WavProcessor,
 };
@@ -110,7 +109,7 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
-    file_path: Arc<Mutex<String>>,
+    file_path: &str,
     clear: bool,
     delay_line: &mut StereoDelayLine,
     buffer_size: usize,
@@ -131,11 +130,10 @@ impl Params {
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
-    self.load_file(file_path.lock().unwrap().as_str(), delay_line);
+    self.load_file(file_path, delay_line);
 
-    if clear {
+    if clear && !self.clear {
       self.loaded_file_path = None;
-      *file_path.lock().unwrap() = "".to_string();
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
@@ -175,6 +173,10 @@ impl Params {
     }
     self.prev_play = play;
     self.clear = clear;
+  }
+
+  pub fn should_clear_buffer(&mut self) -> bool {
+    self.clear
   }
 
   fn override_play(&mut self, play: bool, time_mode: &TimeMode) -> bool {
@@ -233,7 +235,7 @@ impl Params {
       (Some(file_duration), None, _, _) => {
         self.time.reset(file_duration * time_multiply);
       }
-      (_, _, None, TimeMode::Looper) => {
+      (None, _, None, TimeMode::Looper) => {
         // stop stopwatch if play changed from false to true
         let start = record && !(!self.prev_play && play);
         if let Some(loop_duration) = self.stopwatch.process(start, buffer_size) {
@@ -244,7 +246,7 @@ impl Params {
       (_, _, Some(loop_duration), TimeMode::Looper) => {
         self.time.set_target(loop_duration * time_multiply);
       }
-      (_, _, _, _) => {
+      _ => {
         self.time.set_target(time);
       }
     }
@@ -254,7 +256,7 @@ impl Params {
     match (self.file_duration, self.loop_duration) {
       (Some(dur), _) => self.time.reset(dur * time_multiply),
       (None, Some(dur)) => self.time.reset(dur * time_multiply),
-      (None, None) => {
+      _ => {
         self.time.reset(time);
       }
     }

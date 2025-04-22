@@ -53,11 +53,14 @@ impl DmTimeWarp {
       self.params.decay.value(),
       self.params.sustain.value(),
       self.params.release.value(),
-      self.params.file_path.clone(),
+      self.params.file_path.lock().unwrap().as_str(),
       self.params.clear.value(),
       self.time_warp.get_delay_line(),
       buffer_size,
     );
+    if self.process_params.should_clear_buffer() {
+      *self.params.file_path.lock().unwrap() = "".to_string();
+    }
   }
 
   pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
