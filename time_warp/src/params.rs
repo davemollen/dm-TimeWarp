@@ -180,14 +180,14 @@ impl Params {
   }
 
   fn override_play(&mut self, play: bool, time_mode: &TimeMode) -> bool {
-    match (play, time_mode, self.loop_duration) {
-      (true, TimeMode::Looper, None) => false,
-      (true, _, _) => {
+    match (play, time_mode, self.loop_duration, self.file_duration) {
+      (true, TimeMode::Looper, None, None) => false,
+      (true, _, _, _) => {
         // reset playback to beginning if play was off previously
         self.reset_playback = !self.prev_play;
         true
       }
-      (false, _, _) => false,
+      (false, _, _, _) => false,
     }
   }
 
