@@ -147,7 +147,6 @@ impl DmTimeWarp {
       *ports.decay,
       *ports.sustain,
       *ports.release,
-      &mut self.file_path,
       *ports.clear == 1.,
       self.time_warp.get_delay_line(),
       sample_count as usize,

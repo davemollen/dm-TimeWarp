@@ -1,12 +1,13 @@
-use crate::time_warp_parameters::TimeWarpParameters;
-use nih_plug::prelude::{GuiContext, ParamPtr};
+use crate::DmTimeWarp;
+use crate::{time_warp_parameters::TimeWarpParameters, Task};
+use nih_plug::prelude::{AsyncExecutor, GuiContext, ParamPtr};
 use nih_plug_vizia::vizia::prelude::*;
 use rfd::FileDialog;
 use std::sync::Arc;
 
 pub enum ParamChangeEvent {
   SetParam(ParamPtr, f32),
-  PickFile,
+  PickFile(AsyncExecutor<DmTimeWarp>),
 }
 
 #[derive(Lens)]
@@ -27,14 +28,12 @@ impl Model for UiData {
           self.gui_context.raw_end_set_parameter(*param_ptr);
         };
       }
-      ParamChangeEvent::PickFile => {
-        let file_path_param = self.params.file_path.clone();
+      ParamChangeEvent::PickFile(executor) => {
+        let executor = executor.clone();
 
         cx.spawn(move |_cx_proxy| {
           if let Some(file) = FileDialog::new().add_filter("wav", &["wav"]).pick_file() {
-            if let Some(file_path) = file.to_str() {
-              *file_path_param.lock().unwrap() = file_path.to_string();
-            }
+            executor.execute_background(Task::LoadFile(file.to_string_lossy().into_owned(), true));
           }
         });
       }

@@ -5,8 +5,11 @@ use param_checkbox::ParamCheckbox;
 mod param_knob;
 use param_knob::{ParamKnob, ParamKnobSize};
 mod ui_data;
-use crate::time_warp_parameters::TimeWarpParameters;
-use nih_plug::{params::Param, prelude::Editor};
+use crate::{time_warp_parameters::TimeWarpParameters, DmTimeWarp};
+use nih_plug::{
+  params::Param,
+  prelude::{AsyncExecutor, Editor},
+};
 use nih_plug_vizia::vizia::{
   binding::LensExt,
   context::EmitContext,
@@ -23,7 +26,6 @@ pub use ui_data::{ParamChangeEvent, UiData};
 
 const STYLE: &str = include_str!("./editor/style.css");
 
-// Makes sense to also define this here, makes it a bit easier to keep track of
 pub(crate) fn default_state() -> Arc<ViziaState> {
   ViziaState::new(|| (568, 344))
 }
@@ -31,6 +33,7 @@ pub(crate) fn default_state() -> Arc<ViziaState> {
 pub(crate) fn create(
   params: Arc<TimeWarpParameters>,
   editor_state: Arc<ViziaState>,
+  async_executor: AsyncExecutor<DmTimeWarp>,
 ) -> Option<Box<dyn Editor>> {
   create_vizia_editor(
     editor_state,
@@ -47,10 +50,11 @@ pub(crate) fn create(
       VStack::new(cx, |cx| {
         HStack::new(cx, |cx| {
           VStack::new(cx, |cx| {
+            let executor = async_executor.clone();
             Button::new(
               cx,
-              |cx| {
-                cx.emit(ParamChangeEvent::PickFile);
+              move |cx| {
+                cx.emit(ParamChangeEvent::PickFile(executor.clone()));
               },
               |cx| Label::new(cx, "Open file"),
             );

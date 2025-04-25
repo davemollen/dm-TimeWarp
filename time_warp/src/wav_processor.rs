@@ -13,6 +13,11 @@ pub enum WavProcessingError {
   FormatError(String),
 }
 
+pub struct WavFileData {
+  pub samples: Vec<(f32, f32)>,
+  pub duration: f32,
+}
+
 #[derive(Clone)]
 pub struct WavProcessor {
   sample_rate: f32,
@@ -23,10 +28,10 @@ impl WavProcessor {
     Self { sample_rate }
   }
 
-  pub fn read_wav<P: AsRef<Path>>(
+  pub fn read_wav<'a, P: AsRef<Path>>(
     &self,
     file_path: P,
-  ) -> Result<Vec<(f32, f32)>, WavProcessingError> {
+  ) -> Result<WavFileData, WavProcessingError> {
     let mut reader = WavReader::open(file_path)?;
     let spec = reader.spec();
 
@@ -63,7 +68,7 @@ impl WavProcessor {
       }
     };
 
-    let stereo_samples = if spec.channels == 1 {
+    let stereo_samples: Vec<(f32, f32)> = if spec.channels == 1 {
       samples.iter().map(|sample| (*sample, *sample)).collect()
     } else {
       samples
@@ -71,8 +76,12 @@ impl WavProcessor {
         .map(|chunk| (chunk[0], chunk[1]))
         .collect()
     };
+    let duration = stereo_samples.len() as f32 / self.sample_rate * 1000.;
 
-    Ok(stereo_samples)
+    Ok(WavFileData {
+      samples: stereo_samples,
+      duration,
+    })
   }
 
   pub fn write_wav<P: AsRef<Path>>(
@@ -97,16 +106,11 @@ impl WavProcessor {
     writer.finalize()?;
     Ok(())
   }
-
-  pub fn get_duration<P: AsRef<Path>>(&self, file_path: P) -> Result<f32, WavProcessingError> {
-    let reader = WavReader::open(file_path)?;
-    Ok(reader.duration() as f32 / self.sample_rate * 1000.)
-  }
 }
 
 #[cfg(test)]
 mod tests {
-  use crate::params::wav_processor::WavProcessor;
+  use crate::wav_processor::WavProcessor;
   use std::path::Path;
 
   #[test]
@@ -117,13 +121,16 @@ mod tests {
 
     assert!(result.is_ok());
     match result {
-      Ok(r) => r
-        .iter()
-        .zip([(-0.61001587, -0.61001587), (0.049987793, 0.049987793)])
-        .for_each(|(actual, expected)| {
-          assert_eq!(actual.0, expected.0);
-          assert_eq!(actual.1, expected.1);
-        }),
+      Ok(r) => {
+        r.samples
+          .iter()
+          .zip([(-0.61001587, -0.61001587), (0.049987793, 0.049987793)])
+          .for_each(|(actual, expected)| {
+            assert_eq!(actual.0, expected.0);
+            assert_eq!(actual.1, expected.1);
+          });
+        assert_eq!(r.duration, 0.36281177);
+      }
       _ => (),
     }
   }
@@ -143,13 +150,16 @@ mod tests {
     assert!(result.is_ok());
     let samples = wav_processor.read_wav(file_path);
     match samples {
-      Ok(r) => r
-        .iter()
-        .zip(samples_to_write.iter())
-        .for_each(|(actual, expected)| {
-          assert_eq!(actual.0, expected.0);
-          assert_eq!(actual.1, expected.1);
-        }),
+      Ok(r) => {
+        r.samples
+          .iter()
+          .zip(samples_to_write.iter())
+          .for_each(|(actual, expected)| {
+            assert_eq!(actual.0, expected.0);
+            assert_eq!(actual.1, expected.1);
+          });
+        assert_eq!(r.duration, 0.36281177);
+      }
       Err(e) => {
         println!("{}", e);
       }

@@ -1,26 +1,39 @@
-use time_warp::{Notes, Params as ProcessParams, TimeMode, TimeWarp};
-mod time_warp_parameters;
+use crossbeam_channel::{Receiver, Sender}; // TODO: consider omange, ringbuf or rtrb as an alternative to crossbeam
 use nih_plug::prelude::*;
-use std::sync::Arc;
+use std::sync::{atomic::Ordering, Arc};
+use time_warp::{Notes, Params as ProcessParams, TimeMode, TimeWarp, WavFileData, WavProcessor};
 use time_warp_parameters::{TimeMode as ParamTimeMode, TimeWarpParameters};
 mod editor;
+mod time_warp_parameters;
+
+pub enum Task {
+  LoadFile(String, bool),
+}
 
 struct DmTimeWarp {
   params: Arc<TimeWarpParameters>,
   time_warp: TimeWarp,
   process_params: ProcessParams,
   notes: Notes,
+  sample_rate: Arc<AtomicF32>,
+  file_load_sender: Sender<WavFileData>,
+  file_load_receiver: Receiver<WavFileData>,
 }
 
 impl Default for DmTimeWarp {
   fn default() -> Self {
     let sample_rate = 44100_f32;
     let params = Arc::new(TimeWarpParameters::default());
+    let (sender, receiver) = crossbeam_channel::bounded(16);
+
     Self {
       params: params.clone(),
       time_warp: TimeWarp::new(sample_rate),
       process_params: ProcessParams::new(sample_rate),
       notes: Notes::new(),
+      sample_rate: Arc::new(AtomicF32::new(sample_rate)),
+      file_load_sender: sender,
+      file_load_receiver: receiver,
     }
   }
 }
@@ -53,7 +66,6 @@ impl DmTimeWarp {
       self.params.decay.value(),
       self.params.sustain.value(),
       self.params.release.value(),
-      self.params.file_path.lock().unwrap().as_str(),
       self.params.clear.value(),
       self.time_warp.get_delay_line(),
       buffer_size,
@@ -97,27 +109,70 @@ impl Plugin for DmTimeWarp {
   const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
   const SAMPLE_ACCURATE_AUTOMATION: bool = true;
 
-  type BackgroundTask = ();
+  type BackgroundTask = Task;
   type SysExMessage = ();
 
   fn params(&self) -> Arc<dyn Params> {
     self.params.clone()
   }
 
-  fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
-    editor::create(self.params.clone(), self.params.editor_state.clone())
+  fn editor(&mut self, async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
+    editor::create(
+      self.params.clone(),
+      self.params.editor_state.clone(),
+      async_executor,
+    )
   }
 
   fn initialize(
     &mut self,
     _audio_io_layout: &AudioIOLayout,
     buffer_config: &BufferConfig,
-    _context: &mut impl InitContext<Self>,
+    context: &mut impl InitContext<Self>,
   ) -> bool {
     self.time_warp = TimeWarp::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
+    self
+      .sample_rate
+      .store(buffer_config.sample_rate, Ordering::Relaxed);
+    context.execute(Task::LoadFile(
+      self.params.file_path.lock().unwrap().clone(),
+      false,
+    ));
 
     true
+  }
+
+  fn task_executor(&mut self) -> TaskExecutor<Self> {
+    let sender = self.file_load_sender.clone();
+    let file_path_param = self.params.file_path.clone();
+    let sample_rate = self.sample_rate.clone();
+
+    Box::new(move |task| match task {
+      Task::LoadFile(file_path, should_update_file_path) => {
+        if file_path.is_empty() {
+          return;
+        }
+        let wav_file_data =
+          match WavProcessor::new(sample_rate.load(Ordering::Relaxed)).read_wav(&file_path) {
+            Ok(data) => data,
+            Err(e) => {
+              nih_error!("Failed to read wav file data: {}", e);
+              return;
+            }
+          };
+        match sender.try_send(wav_file_data) {
+          Ok(_) => {
+            if should_update_file_path {
+              *file_path_param.lock().unwrap() = file_path.clone();
+            }
+          }
+          Err(e) => {
+            nih_error!("Failed to send wav file data to audio thread: {}", e)
+          }
+        }
+      }
+    })
   }
 
   fn process(
@@ -128,6 +183,12 @@ impl Plugin for DmTimeWarp {
   ) -> ProcessStatus {
     self.set_param_values(buffer.samples());
     self.process_midi_events(context);
+
+    if let Ok(WavFileData { samples, duration }) = self.file_load_receiver.try_recv() {
+      self.time_warp.get_delay_line().set_values(&samples);
+      self.process_params.set_file_duration(duration);
+      self.process_params.reset_playback = true;
+    }
 
     buffer.iter_samples().for_each(|mut channel_samples| {
       let channel_iterator = &mut channel_samples.iter_mut();

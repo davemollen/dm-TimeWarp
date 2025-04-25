@@ -9,6 +9,7 @@ pub mod shared {
   pub mod phasor;
   pub mod tuple_ext;
 }
+mod wav_processor;
 
 use {
   filter::Filter,
@@ -21,6 +22,7 @@ use {
 pub use {
   notes::Notes,
   params::{Params, TimeMode},
+  wav_processor::{WavFileData, WavProcessor},
 };
 
 pub const MIN_DELAY_TIME: f32 = 10.;

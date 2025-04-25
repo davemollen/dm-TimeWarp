@@ -1,13 +1,11 @@
 mod smooth;
 mod stopwatch;
-mod wav_processor;
 pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,
   crate::stereo_delay_line::StereoDelayLine,
   smooth::{LinearSmooth, LogarithmicSmooth},
   stopwatch::Stopwatch,
-  wav_processor::WavProcessor,
 };
 
 #[derive(PartialEq)]
@@ -39,14 +37,12 @@ pub struct Params {
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
   pub reset_playback: bool,
-  wav_processor: WavProcessor,
-  loaded_file_path: Option<String>,
   file_duration: Option<f32>,
-  prev_file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
+  prev_file_duration: Option<f32>,
   prev_play: bool,
-  clear: bool,
+  prev_clear: bool,
 }
 
 impl Params {
@@ -74,14 +70,12 @@ impl Params {
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
       reset_playback: false,
-      wav_processor: WavProcessor::new(sample_rate),
-      loaded_file_path: None,
       file_duration: None,
-      prev_file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
+      prev_file_duration: None,
       prev_play: true,
-      clear: false,
+      prev_clear: false,
     }
   }
 
@@ -109,7 +103,6 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
-    file_path: &str,
     clear: bool,
     delay_line: &mut StereoDelayLine,
     buffer_size: usize,
@@ -130,15 +123,12 @@ impl Params {
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
-    self.load_file(file_path, delay_line);
-
-    if clear && !self.clear {
-      self.loaded_file_path = None;
+    if clear && !self.prev_clear {
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
       delay_line.reset();
-      self.clear = false;
+      self.prev_clear = false;
     }
 
     if self.is_initialized {
@@ -172,11 +162,16 @@ impl Params {
       self.is_initialized = true;
     }
     self.prev_play = play;
-    self.clear = clear;
+    self.prev_clear = clear;
+    self.prev_file_duration = self.file_duration;
+  }
+
+  pub fn set_file_duration(&mut self, file_duration: f32) {
+    self.file_duration = Some(file_duration);
   }
 
   pub fn should_clear_buffer(&mut self) -> bool {
-    self.clear
+    self.prev_clear
   }
 
   fn override_play(&mut self, play: bool, time_mode: &TimeMode) -> bool {
@@ -189,25 +184,6 @@ impl Params {
       }
       (false, _, _, _) => false,
     }
-  }
-
-  fn load_file(&mut self, file_path: &str, delay_line: &mut StereoDelayLine) {
-    if file_path.is_empty()
-      || self
-        .loaded_file_path
-        .as_ref()
-        .is_some_and(|x| *x == file_path)
-    {
-      return;
-    }
-    if let Ok(samples) = self.wav_processor.read_wav(file_path) {
-      delay_line.set_values(&samples);
-    };
-    if let Ok(duration) = self.wav_processor.get_duration(file_path) {
-      self.file_duration = Some(duration);
-    };
-    self.loaded_file_path = Some(file_path.to_string());
-    self.reset_playback = true;
   }
 
   fn set_time(

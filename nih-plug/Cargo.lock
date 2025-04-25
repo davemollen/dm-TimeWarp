@@ -1033,6 +1033,7 @@ dependencies = [
 name = "dm_time_warp"
 version = "0.1.0"
 dependencies = [
+ "crossbeam-channel",
  "nih_plug",
  "nih_plug_vizia",
  "rfd",

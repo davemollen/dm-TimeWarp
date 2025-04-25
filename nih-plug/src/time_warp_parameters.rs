@@ -293,7 +293,9 @@ impl Default for TimeWarpParameters {
 
       clear: BoolParam::new("Clear", false),
 
-      file_path: Arc::new(Mutex::new("".to_string())),
+      file_path: Arc::new(Mutex::new(
+        "/Users/davemollen/Desktop/rhodes.wav".to_string(),
+      )),
     }
   }
 }
