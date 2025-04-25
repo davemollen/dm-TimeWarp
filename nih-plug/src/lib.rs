@@ -1,39 +1,32 @@
-use crossbeam_channel::{Receiver, Sender}; // TODO: consider omange, ringbuf or rtrb as an alternative to crossbeam
-use nih_plug::prelude::*;
-use std::sync::{atomic::Ordering, Arc};
-use time_warp::{Notes, Params as ProcessParams, TimeMode, TimeWarp, WavFileData, WavProcessor};
-use time_warp_parameters::{TimeMode as ParamTimeMode, TimeWarpParameters};
 mod editor;
+mod file_loader;
 mod time_warp_parameters;
-
-pub enum Task {
-  LoadFile(String, bool),
-}
+use file_loader::{FileLoader, Task};
+use nih_plug::prelude::*;
+use std::sync::Arc;
+use time_warp::{Notes, Params as ProcessParams, TimeMode, TimeWarp, WavFileData};
+use time_warp_parameters::{TimeMode as ParamTimeMode, TimeWarpParameters};
 
 struct DmTimeWarp {
   params: Arc<TimeWarpParameters>,
   time_warp: TimeWarp,
   process_params: ProcessParams,
   notes: Notes,
-  sample_rate: Arc<AtomicF32>,
-  file_load_sender: Sender<WavFileData>,
-  file_load_receiver: Receiver<WavFileData>,
+  file_loader: FileLoader,
 }
 
 impl Default for DmTimeWarp {
   fn default() -> Self {
     let sample_rate = 44100_f32;
     let params = Arc::new(TimeWarpParameters::default());
-    let (sender, receiver) = crossbeam_channel::bounded(16);
+    let file_loader = FileLoader::new(sample_rate, params.file_path.clone());
 
     Self {
       params: params.clone(),
       time_warp: TimeWarp::new(sample_rate),
       process_params: ProcessParams::new(sample_rate),
       notes: Notes::new(),
-      sample_rate: Arc::new(AtomicF32::new(sample_rate)),
-      file_load_sender: sender,
-      file_load_receiver: receiver,
+      file_loader,
     }
   }
 }
@@ -132,9 +125,7 @@ impl Plugin for DmTimeWarp {
   ) -> bool {
     self.time_warp = TimeWarp::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
-    self
-      .sample_rate
-      .store(buffer_config.sample_rate, Ordering::Relaxed);
+    self.file_loader.set_sample_rate(buffer_config.sample_rate);
     context.execute(Task::LoadFile(
       self.params.file_path.lock().unwrap().clone(),
       false,
@@ -144,34 +135,10 @@ impl Plugin for DmTimeWarp {
   }
 
   fn task_executor(&mut self) -> TaskExecutor<Self> {
-    let sender = self.file_load_sender.clone();
-    let file_path_param = self.params.file_path.clone();
-    let sample_rate = self.sample_rate.clone();
+    let file_loader = self.file_loader.clone();
 
-    Box::new(move |task| match task {
-      Task::LoadFile(file_path, should_update_file_path) => {
-        if file_path.is_empty() {
-          return;
-        }
-        let wav_file_data =
-          match WavProcessor::new(sample_rate.load(Ordering::Relaxed)).read_wav(&file_path) {
-            Ok(data) => data,
-            Err(e) => {
-              nih_error!("Failed to read wav file data: {}", e);
-              return;
-            }
-          };
-        match sender.try_send(wav_file_data) {
-          Ok(_) => {
-            if should_update_file_path {
-              *file_path_param.lock().unwrap() = file_path.clone();
-            }
-          }
-          Err(e) => {
-            nih_error!("Failed to send wav file data to audio thread: {}", e)
-          }
-        }
-      }
+    Box::new(move |task| {
+      file_loader.handle_task(task);
     })
   }
 
@@ -184,7 +151,7 @@ impl Plugin for DmTimeWarp {
     self.set_param_values(buffer.samples());
     self.process_midi_events(context);
 
-    if let Ok(WavFileData { samples, duration }) = self.file_load_receiver.try_recv() {
+    if let Some(WavFileData { samples, duration }) = self.file_loader.try_receive_data() {
       self.time_warp.get_delay_line().set_values(&samples);
       self.process_params.set_file_duration(duration);
       self.process_params.reset_playback = true;
