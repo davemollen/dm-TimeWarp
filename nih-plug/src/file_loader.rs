@@ -3,7 +3,7 @@ use nih_plug::prelude::AtomicF32;
 use std::sync::{atomic::Ordering, Arc, Mutex};
 use time_warp::{WavFileData, WavProcessor};
 
-pub enum Task {
+pub enum BackgroundTask {
   LoadFile(String, bool),
 }
 
@@ -26,9 +26,9 @@ impl FileLoader {
     }
   }
 
-  pub fn handle_task(&self, task: Task) {
+  pub fn handle_task(&self, task: BackgroundTask) {
     match task {
-      Task::LoadFile(file_path, should_update_file_path) => {
+      BackgroundTask::LoadFile(file_path, should_update_file_path) => {
         if file_path.is_empty() {
           return;
         }

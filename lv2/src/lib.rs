@@ -1,10 +1,10 @@
-use lv2::prelude::{
-  path::{FreePath, MakePath, MapPath, PathManager},
-  *,
-};
-use std::{path::Path, string::String};
+mod state;
+mod worker;
+use lv2::prelude::*;
+use std::string::String;
 use time_warp::{Notes, Params, TimeMode, TimeWarp};
 use wmidi::*;
+use worker::*;
 
 #[derive(PortCollection)]
 struct Ports {
@@ -40,18 +40,20 @@ struct Ports {
 }
 
 #[derive(FeatureCollection)]
-pub struct Features<'a> {
+struct InitFeatures<'a> {
   map: LV2Map<'a>,
-  make_path: Option<MakePath<'a>>,
-  map_path: Option<MapPath<'a>>,
-  free_path: Option<FreePath<'a>>,
+}
+
+#[derive(FeatureCollection)]
+struct AudioFeatures<'a> {
+  schedule: Schedule<'a, DmTimeWarp>,
 }
 
 #[uri("https://github.com/davemollen/dm-TimeWarp#sample")]
 struct Sample;
 
 #[derive(URIDCollection)]
-pub struct URIDs {
+struct URIDs {
   atom: AtomURIDCollection,
   midi: MidiURIDCollection,
   unit: UnitURIDCollection,
@@ -65,58 +67,9 @@ struct DmTimeWarp {
   params: Params,
   urids: URIDs,
   notes: Notes,
-  file_path: String,
   activated: bool,
-}
-
-impl State for DmTimeWarp {
-  type StateFeatures = Features<'static>;
-
-  fn save(&self, mut store: StoreHandle, features: Self::StateFeatures) -> Result<(), StateErr> {
-    match (features.make_path, features.map_path, features.free_path) {
-      (Some(make_path), Some(map_path), Some(free_path)) => {
-        let mut manager = PathManager::new(make_path, map_path, free_path);
-
-        let (_, abstract_path) = manager.allocate_path(Path::new(&self.file_path))?;
-
-        let _ = store
-          .draft(self.urids.sample)
-          .init(self.urids.atom.path)?
-          .append(&*abstract_path);
-
-        store.commit_all()
-      }
-      (_, _, _) => Ok(()),
-    }
-  }
-  fn restore(
-    &mut self,
-    store: RetrieveHandle,
-    features: Self::StateFeatures,
-  ) -> Result<(), StateErr> {
-    match (
-      features.make_path,
-      features.map_path,
-      features.free_path,
-      self.activated,
-    ) {
-      (Some(make_path), Some(map_path), Some(free_path), true) => {
-        let mut manager = PathManager::new(make_path, map_path, free_path);
-
-        let abstract_path = store
-          .retrieve(self.urids.sample)?
-          .read(self.urids.atom.path)?;
-
-        self.file_path = manager
-          .deabstract_path(abstract_path)?
-          .to_string_lossy()
-          .to_string();
-
-        Ok(())
-      }
-      (_, _, _, _) => Ok(()),
-    }
-  }
+  file_path: String,
+  sample_rate: f32,
 }
 
 impl DmTimeWarp {
@@ -157,6 +110,7 @@ impl DmTimeWarp {
     }
   }
 
+  // TODO: see if we can process patch and midi event in one loop instead
   pub fn process_midi_events(&mut self, ports: &mut Ports) {
     let control_sequence = match ports
       .control
@@ -189,7 +143,7 @@ impl DmTimeWarp {
     self.notes.set_voice_count(*ports.voices as usize);
   }
 
-  pub fn process_patch_events(&mut self, ports: &mut Ports) {
+  pub fn process_patch_events(&mut self, ports: &mut Ports, features: &mut AudioFeatures) {
     let control_sequence = match ports
       .control
       .read(self.urids.atom.sequence)
@@ -226,6 +180,10 @@ impl DmTimeWarp {
               Ok(f) => f.to_string(),
               Err(_) => continue,
             };
+            features
+              .schedule
+              .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
+              .ok();
           }
         }
       }
@@ -234,14 +192,10 @@ impl DmTimeWarp {
 }
 
 impl Plugin for DmTimeWarp {
-  // Tell the framework which ports this plugin has.
   type Ports = Ports;
+  type InitFeatures = InitFeatures<'static>;
+  type AudioFeatures = AudioFeatures<'static>;
 
-  // We don't need any special host features; We can leave them out.
-  type InitFeatures = Features<'static>;
-  type AudioFeatures = ();
-
-  // Create a new instance of the plugin; Trivial in this case.
   fn new(plugin_info: &PluginInfo, features: &mut Self::InitFeatures) -> Option<Self> {
     let sample_rate = plugin_info.sample_rate() as f32;
 
@@ -250,17 +204,22 @@ impl Plugin for DmTimeWarp {
       params: Params::new(sample_rate),
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
-      file_path: "".to_string(),
       activated: false,
+      file_path: "".to_string(),
+      sample_rate,
     })
   }
 
-  // Process a chunk of audio. The audio ports are dereferenced to slices, which the plugin
-  // iterates over.
-  fn run(&mut self, ports: &mut Ports, _features: &mut Self::AudioFeatures, sample_count: u32) {
+  fn run(&mut self, ports: &mut Ports, features: &mut Self::AudioFeatures, sample_count: u32) {
+    if self.activated && !self.file_path.is_empty() {
+      features
+        .schedule
+        .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
+        .ok();
+    }
     self.set_param_values(ports, sample_count);
     self.process_midi_events(ports);
-    self.process_patch_events(ports);
+    self.process_patch_events(ports, features);
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
@@ -280,7 +239,7 @@ impl Plugin for DmTimeWarp {
   }
 
   fn extension_data(uri: &Uri) -> Option<&'static dyn std::any::Any> {
-    match_extensions!(uri, StateDescriptor<Self>)
+    match_extensions!(uri, StateDescriptor<Self>, WorkerDescriptor<Self>)
   }
 
   fn activate(&mut self, _features: &mut Self::InitFeatures) {

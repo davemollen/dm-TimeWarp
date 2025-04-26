@@ -11,6 +11,7 @@
 @prefix state: 	<http://lv2plug.in/ns/ext/state#> .
 @prefix units: 	<http://lv2plug.in/ns/extensions/units#> .
 @prefix urid: 	<http://lv2plug.in/ns/ext/urid#> .
+@prefix work:   <http://lv2plug.in/ns/ext/worker#> .
 
 <https://github.com/davemollen/dm-TimeWarp#sample>
 	a lv2:Parameter ;
@@ -34,13 +35,14 @@ A granular delay, sampler, looper with time stretch capabilities.
 """ ;
 	lv2:requiredFeature lv2:inPlaceBroken ,
 		state:loadDefaultState ,
-		urid:map ;
+		urid:map ,
+		work:schedule ;
 	lv2:optionalFeature lv2:hardRTCapable ,
 		state:makePath,
 		state:mapPath, 
 		state:freePath,
 		state:threadSafeRestore ;
-	lv2:extensionData state:interface ;
+	lv2:extensionData state:interface, work:interface ;
 	patch:writable <https://github.com/davemollen/dm-TimeWarp#sample> ;
 	lv2:port [
 		a lv2:InputPort, lv2:ControlPort ;

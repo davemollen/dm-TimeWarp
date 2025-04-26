@@ -1,7 +1,7 @@
 mod editor;
 mod file_loader;
 mod time_warp_parameters;
-use file_loader::{FileLoader, Task};
+use file_loader::{BackgroundTask, FileLoader};
 use nih_plug::prelude::*;
 use std::sync::Arc;
 use time_warp::{Notes, Params as ProcessParams, TimeMode, TimeWarp, WavFileData};
@@ -102,7 +102,7 @@ impl Plugin for DmTimeWarp {
   const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
   const SAMPLE_ACCURATE_AUTOMATION: bool = true;
 
-  type BackgroundTask = Task;
+  type BackgroundTask = BackgroundTask;
   type SysExMessage = ();
 
   fn params(&self) -> Arc<dyn Params> {
@@ -126,7 +126,7 @@ impl Plugin for DmTimeWarp {
     self.time_warp = TimeWarp::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
     self.file_loader.set_sample_rate(buffer_config.sample_rate);
-    context.execute(Task::LoadFile(
+    context.execute(BackgroundTask::LoadFile(
       self.params.file_path.lock().unwrap().clone(),
       false,
     ));
