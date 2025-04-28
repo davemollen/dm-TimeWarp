@@ -23,19 +23,14 @@ impl State for DmTimeWarp {
       (Some(make_path), Some(map_path), Some(free_path)) => {
         let mut manager = PathManager::new(make_path, map_path, free_path);
 
-        let (_, abstract_path) = manager.allocate_path(Path::new(&self.file_path))?;
+        let abstract_path = manager.abstract_path(Path::new(&self.file_path))?;
 
         let _ = store
           .draft(self.urids.sample)
           .init(self.urids.atom.path)?
-          .append(&*abstract_path);
+          .append(abstract_path);
 
-        // let _ = store
-        //   .draft(self.urids.sample)
-        //   .init(self.urids.atom.path)?
-        //   .append(&self.file_path);
-
-        let message = format!("saving file path: {}\n\0", &*abstract_path);
+        let message = format!("saving file path: {}\n\0", abstract_path);
         let _ = features.log.print_cstr(
           self.urids.log.note,
           CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
@@ -68,11 +63,6 @@ impl State for DmTimeWarp {
           .deabstract_path(abstract_path)?
           .to_string_lossy()
           .to_string();
-
-        // self.file_path = store
-        //   .retrieve(self.urids.sample)?
-        //   .read(self.urids.atom.path)?
-        //   .to_string();
 
         let message = format!("restoring file path: {}\n\0", self.file_path);
         let _ = features.log.print_cstr(
