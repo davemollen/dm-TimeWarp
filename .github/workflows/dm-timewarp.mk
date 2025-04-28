@@ -10,13 +10,9 @@ DM_TIMEWARP_SITE_METHOD = git
 DM_TIMEWARP_BUNDLES = dm-TimeWarp.lv2
 
 define DM_TIMEWARP_BUILD_CMDS
-	~/.cargo/bin/rustup default nightly
-
 	rm -f $(@D)/lv2/dm-TimeWarp.lv2/libdm_time_warp.so
 	(cd $(@D)/lv2 && \
 		~/.cargo/bin/cargo build $(MOD_PLUGIN_BUILDER_RUST_BUILD_FLAGS))
-
-	~/.cargo/bin/rustup default stable
 endef
 
 define DM_TIMEWARP_INSTALL_TARGET_CMDS
