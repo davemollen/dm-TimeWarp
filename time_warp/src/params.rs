@@ -183,8 +183,10 @@ impl Params {
     match (play, time_mode, self.loop_duration, self.file_duration) {
       (true, TimeMode::Looper, None, None) => false,
       (true, _, _, _) => {
-        // reset playback to beginning if play was off previously
-        self.reset_playback = !self.prev_play;
+        // reset playback to beginning if play was off previously and reset playback isn't activated already
+        if !self.reset_playback {
+          self.reset_playback = !self.prev_play;
+        }
         true
       }
       (false, _, _, _) => false,

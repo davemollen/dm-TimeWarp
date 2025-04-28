@@ -69,6 +69,7 @@ struct DmTimeWarp {
   urids: URIDs,
   notes: Notes,
   activated: bool,
+  worker_is_initialized: bool,
   file_path: String,
   sample_rate: f32,
 }
@@ -206,17 +207,21 @@ impl Plugin for DmTimeWarp {
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
       activated: false,
+      worker_is_initialized: true,
       file_path: "".to_string(),
       sample_rate,
     })
   }
 
   fn run(&mut self, ports: &mut Ports, features: &mut Self::AudioFeatures, sample_count: u32) {
-    if self.activated && !self.file_path.is_empty() {
-      features
-        .schedule
-        .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
-        .ok();
+    if self.activated && self.worker_is_initialized {
+      if !self.file_path.is_empty() {
+        features
+          .schedule
+          .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
+          .ok();
+      }
+      self.worker_is_initialized = false;
     }
     self.set_param_values(ports, sample_count);
     self.process_midi_events(ports);

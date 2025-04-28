@@ -35,7 +35,7 @@ impl State for DmTimeWarp {
         //   .init(self.urids.atom.path)?
         //   .append(&self.file_path);
 
-        let message = format!("saving file path: {}\n\0", &self.file_path);
+        let message = format!("saving file path: {}\n\0", &*abstract_path);
         let _ = features.log.print_cstr(
           self.urids.log.note,
           CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),

@@ -20,7 +20,7 @@
 	rdfs:range atom:Path .
 
 <https://github.com/davemollen/dm-TimeWarp>
-	a lv2:Plugin , lv2:PitchPlugin , mod:DelayPlugin ;
+	a lv2:Plugin , lv2:PitchPlugin , lv2:InstrumentPlugin , mod:DelayPlugin, mod:SpectralPlugin ;
 	lv2:project <http://lv2plug.in/ns/lv2> ;
 	doap:name "dm-TimeWarp" ;
 	doap:license "GPLv3" ;

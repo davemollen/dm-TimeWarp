@@ -63,6 +63,7 @@ impl DmTimeWarp {
       self.time_warp.get_delay_line(),
       buffer_size,
     );
+
     if self.process_params.should_clear_buffer() {
       *self.params.file_path.lock().unwrap() = "".to_string();
     }
