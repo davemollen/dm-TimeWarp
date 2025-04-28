@@ -37,6 +37,7 @@ pub struct Params {
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
   pub reset_playback: bool,
+  prev_reset_playback: bool,
   file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
@@ -70,6 +71,7 @@ impl Params {
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
       reset_playback: false,
+      prev_reset_playback: false,
       file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
@@ -107,7 +109,9 @@ impl Params {
     delay_line: &mut StereoDelayLine,
     buffer_size: usize,
   ) {
-    self.reset_playback = false;
+    if self.prev_reset_playback {
+      self.reset_playback = false;
+    }
     self.scan = scan;
     self.spray = spray;
     self.size = size.powf(0.333);
@@ -164,6 +168,7 @@ impl Params {
     self.prev_play = play;
     self.prev_clear = clear;
     self.prev_file_duration = self.file_duration;
+    self.prev_reset_playback = self.reset_playback;
   }
 
   pub fn set_file_duration(&mut self, file_duration: f32) {

@@ -58,6 +58,7 @@ struct URIDs {
   midi: MidiURIDCollection,
   unit: UnitURIDCollection,
   patch: PatchURIDCollection,
+  log: LogURIDCollection,
   sample: URID<Sample>,
 }
 
