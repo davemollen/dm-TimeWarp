@@ -34,7 +34,6 @@
 A granular delay, sampler, looper with time stretch capabilities.
 """ ;
 	lv2:requiredFeature lv2:inPlaceBroken ,
-		state:loadDefaultState ,
 		urid:map ,
 		work:schedule ;
 	lv2:optionalFeature lv2:hardRTCapable ,
@@ -290,7 +289,4 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:index 28 ;
 		lv2:symbol "output_right" ;
 		lv2:name "Out right"
-	] ;
-    state:state [
-        <https://github.com/davemollen/dm-TimeWarp#sample> <sample.wav>;
-    ] .
+	] .
