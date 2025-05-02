@@ -37,6 +37,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		urid:map ,
 		work:schedule ;
 	lv2:optionalFeature lv2:hardRTCapable ,
+		state:loadDefaultState ,
 		state:makePath,
 		state:mapPath, 
 		state:freePath,
@@ -261,8 +262,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
 	] , [
-		a lv2:InputPort ,
-		atom:AtomPort ;
+		a lv2:InputPort , atom:AtomPort ;
 		atom:bufferType atom:Sequence ;
 		atom:supports midi:MidiEvent , patch:Message ;
 		lv2:designation lv2:control ;
@@ -270,23 +270,31 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:symbol "control" ;
 		lv2:name "Control"
 	] , [
-		a lv2:AudioPort, lv2:InputPort ;
+		a lv2:OutputPort , atom:AtomPort ;
+		atom:bufferType atom:Sequence ;
+		atom:supports patch:Message ;
+		lv2:designation lv2:control ;
 		lv2:index 25 ;
+		lv2:symbol "notify" ;
+		lv2:name "Notify"
+	] , [
+		a lv2:AudioPort, lv2:InputPort ;
+		lv2:index 26 ;
 		lv2:symbol "input_left" ;
 		lv2:name "In left"
 	] , [
 		a lv2:AudioPort, lv2:InputPort ;
-		lv2:index 26 ;
+		lv2:index 27 ;
 		lv2:symbol "input_right" ;
 		lv2:name "In right"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 27 ;
+		lv2:index 28 ;
 		lv2:symbol "output_left" ;
 		lv2:name "Out left"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 28 ;
+		lv2:index 29 ;
 		lv2:symbol "output_right" ;
 		lv2:name "Out right"
 	] .
