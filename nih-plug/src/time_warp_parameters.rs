@@ -151,7 +151,7 @@ impl Default for TimeWarpParameters {
         2000.,
         FloatRange::Skewed {
           min: MIN_DELAY_TIME,
-          max: MAX_DELAY_TIME,
+          max: 10000.,
           factor: 0.3,
         },
       )

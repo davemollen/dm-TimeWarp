@@ -26,7 +26,7 @@ pub use {
 };
 
 pub const MIN_DELAY_TIME: f32 = 10.;
-pub const MAX_DELAY_TIME: f32 = 10000.;
+pub const MAX_DELAY_TIME: f32 = 60000.;
 
 pub struct TimeWarp {
   delay_line: StereoDelayLine,

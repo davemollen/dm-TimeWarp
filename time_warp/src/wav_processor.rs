@@ -1,4 +1,5 @@
 use {
+  crate::MAX_DELAY_TIME,
   hound::{SampleFormat, WavReader, WavSpec, WavWriter},
   std::path::Path,
   thiserror::Error,
@@ -77,6 +78,11 @@ impl WavProcessor {
         .collect()
     };
     let duration = stereo_samples.len() as f32 / self.sample_rate * 1000.;
+    if duration > MAX_DELAY_TIME {
+      return Err(WavProcessingError::FormatError(
+        "WAV file duration is too long.".to_string(),
+      ));
+    }
 
     Ok(WavFileData {
       samples: stereo_samples,
