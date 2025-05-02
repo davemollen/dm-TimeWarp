@@ -30,16 +30,12 @@ impl Worker for DmTimeWarp {
     if data.file_path.is_empty() {
       return Err(WorkerError::Unknown);
     }
-    let wav_file_data = match WavProcessor::new(data.sample_rate).read_wav(&data.file_path) {
-      Ok(data) => data,
-      Err(_) => {
-        return Err(WorkerError::Unknown);
-      }
-    };
-    match response_handler.respond(wav_file_data) {
-      Ok(_) => Ok(()),
-      Err(_) => Err(WorkerError::Unknown),
-    }
+    let wav_file_data = WavProcessor::new(data.sample_rate)
+      .read_wav(&data.file_path)
+      .or(Err(WorkerError::Unknown))?;
+    response_handler
+      .respond(wav_file_data)
+      .or(Err(WorkerError::Unknown))
   }
 
   fn work_response(
@@ -50,6 +46,7 @@ impl Worker for DmTimeWarp {
     self.time_warp.get_delay_line().set_values(&data.samples);
     self.params.set_file_duration(data.duration);
     self.params.reset_playback = true;
+    self.worker_is_finished = true;
 
     Ok(())
   }

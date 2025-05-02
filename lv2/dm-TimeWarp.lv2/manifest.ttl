@@ -4,5 +4,4 @@
 <https://github.com/davemollen/dm-TimeWarp>
     a lv2:Plugin ;
     lv2:binary <libdm_time_warp.dylib> ;
-    rdfs:seeAlso <dm-TimeWarp.ttl>  .
-<https://github.com/davemollen/dm-TimeWarp> rdfs:seeAlso <modgui.ttl> .
+    rdfs:seeAlso <dm-TimeWarp.ttl>  , <modgui.ttl> .

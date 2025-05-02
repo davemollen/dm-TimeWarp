@@ -112,4 +112,7 @@
             lv2:symbol "clear" ;
             lv2:name "Clear" ;
         ] ;
+        modgui:monitoredOutputs [ 
+            lv2:symbol "time" 
+        ] ;
     ] .

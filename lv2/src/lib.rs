@@ -1,9 +1,9 @@
+mod events;
 mod state;
 mod worker;
 use lv2::prelude::*;
 use std::string::String;
 use time_warp::{Notes, Params, TimeMode, TimeWarp};
-use wmidi::*;
 use worker::*;
 
 #[derive(PortCollection)]
@@ -33,6 +33,7 @@ struct Ports {
   release: InputPort<Control>,
   clear: InputPort<Control>,
   control: InputPort<AtomPort>,
+  notify: OutputPort<AtomPort>,
   input_left: InputPort<Audio>,
   input_right: InputPort<Audio>,
   output_left: OutputPort<Audio>,
@@ -47,6 +48,7 @@ struct InitFeatures<'a> {
 #[derive(FeatureCollection)]
 struct AudioFeatures<'a> {
   schedule: Schedule<'a, DmTimeWarp>,
+  log: Log<'a>,
 }
 
 #[uri("https://github.com/davemollen/dm-TimeWarp#sample")]
@@ -70,7 +72,9 @@ struct DmTimeWarp {
   notes: Notes,
   activated: bool,
   worker_is_initialized: bool,
+  worker_is_finished: bool,
   file_path: String,
+  time_stamp: i64,
   sample_rate: f32,
 }
 
@@ -110,86 +114,8 @@ impl DmTimeWarp {
     if self.params.should_clear_buffer() {
       self.file_path = "".to_string();
     }
-  }
-
-  // TODO: see if we can process patch and midi event in one loop instead
-  pub fn process_midi_events(&mut self, ports: &mut Ports) {
-    let control_sequence = match ports
-      .control
-      .read(self.urids.atom.sequence)
-      .and_then(|s| s.with_unit(self.urids.unit.frame))
-    {
-      Ok(sequence_iter) => sequence_iter,
-      Err(_) => return,
-    };
-
-    for (_, atom) in control_sequence {
-      let midi_message = match atom.read(self.urids.midi.wmidi) {
-        Ok(message) => message,
-        _ => continue,
-      };
-
-      match midi_message {
-        MidiMessage::NoteOn(_, note, velocity) => {
-          self
-            .notes
-            .note_on(note.into(), (u8::from(velocity) / 127).into());
-        }
-        MidiMessage::NoteOff(_, note, _) => {
-          self.notes.note_off(note.into());
-        }
-        _ => (),
-      }
-    }
 
     self.notes.set_voice_count(*ports.voices as usize);
-  }
-
-  pub fn process_patch_events(&mut self, ports: &mut Ports, features: &mut AudioFeatures) {
-    let control_sequence = match ports
-      .control
-      .read(self.urids.atom.sequence)
-      .and_then(|s| s.with_unit(self.urids.unit.frame))
-    {
-      Ok(sequence_iter) => sequence_iter,
-      Err(_) => return,
-    };
-
-    let mut should_read_patch_value = false;
-    for (_, atom) in control_sequence {
-      let (object_header, object_reader) = match atom
-        .read(self.urids.atom.object)
-        .or_else(|_| atom.read(self.urids.atom.blank))
-      {
-        Ok(x) => x,
-        Err(_) => {
-          continue;
-        }
-      };
-
-      if object_header.otype == self.urids.patch.set_class {
-        for (property_header, property) in object_reader {
-          if property_header.key == self.urids.patch.property {
-            match property.read(self.urids.atom.urid) {
-              Ok(patch_property) => {
-                should_read_patch_value = self.urids.sample.get() == patch_property.get()
-              }
-              Err(_) => continue,
-            }
-          }
-          if should_read_patch_value && property_header.key == self.urids.patch.value {
-            self.file_path = match property.read(self.urids.atom.path) {
-              Ok(f) => f.to_string(),
-              Err(_) => continue,
-            };
-            features
-              .schedule
-              .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
-              .ok();
-          }
-        }
-      }
-    }
   }
 }
 
@@ -207,25 +133,32 @@ impl Plugin for DmTimeWarp {
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
       activated: false,
-      worker_is_initialized: true,
+      worker_is_initialized: false,
+      worker_is_finished: false,
       file_path: "".to_string(),
+      time_stamp: 0,
       sample_rate,
     })
   }
 
   fn run(&mut self, ports: &mut Ports, features: &mut Self::AudioFeatures, sample_count: u32) {
-    if self.activated && self.worker_is_initialized {
+    self.set_param_values(ports, sample_count);
+    self.handle_events(ports, features);
+
+    if self.activated && !self.worker_is_initialized {
       if !self.file_path.is_empty() {
         features
           .schedule
           .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
           .ok();
       }
-      self.worker_is_initialized = false;
+      self.worker_is_initialized = true;
     }
-    self.set_param_values(ports, sample_count);
-    self.process_midi_events(ports);
-    self.process_patch_events(ports, features);
+
+    if self.worker_is_finished {
+      self.write_set_file(ports, features).ok();
+      self.worker_is_finished = false;
+    }
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports
