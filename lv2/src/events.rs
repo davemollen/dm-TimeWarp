@@ -1,10 +1,6 @@
 use {
   crate::{worker::WorkData, AudioFeatures, DmTimeWarp, Ports},
-  lv2::{
-    lv2_atom::atom_prelude::{AtomReadError, AtomWriteError},
-    prelude::*,
-  },
-  std::ffi::CStr,
+  lv2::prelude::*,
   wmidi::MidiMessage,
 };
 
@@ -12,74 +8,78 @@ impl DmTimeWarp {
   pub fn handle_events(&mut self, ports: &mut Ports, features: &mut AudioFeatures) {
     let control_sequence = match ports
       .control
-      .read(self.urids.atom.sequence)
-      .and_then(|s| s.with_unit(self.urids.unit.frame))
+      .read(self.urids.atom.sequence, self.urids.unit.beat)
     {
-      Ok(sequence_iter) => sequence_iter,
-      Err(_) => return,
+      Some(sequence_iter) => sequence_iter,
+      None => return,
     };
 
     let should_read_patch_value = false;
     for (time_stamp, atom) in control_sequence {
-      self.time_stamp = time_stamp;
-      self
-        .read_patch_set_events(atom, features, should_read_patch_value)
-        .ok();
-      self.read_midi_events(atom).ok();
+      self.time_stamp = time_stamp.as_frames().unwrap_or(0);
+      self.read_patch_get_events(atom, ports);
+      self.read_patch_set_events(atom, features, should_read_patch_value);
+      self.read_midi_events(atom);
     }
   }
 
-  pub fn write_set_file(
-    &mut self,
-    ports: &mut Ports,
-    features: &mut AudioFeatures,
-  ) -> Result<(), AtomWriteError> {
-    let mut notify_sequence = ports
-      .notify
-      .write(self.urids.atom.sequence)
-      .and_then(|s| s.with_unit(self.urids.unit.frame))?;
+  pub fn write_set_file(&mut self, ports: &mut Ports) {
+    let mut notify_sequence = match ports.notify.init(
+      self.urids.atom.sequence,
+      TimeStampURID::Frames(self.urids.unit.frame),
+    ) {
+      Some(sequence_iter) => sequence_iter,
+      None => return,
+    };
 
-    let object_header = notify_sequence.new_event(self.time_stamp, self.urids.atom.object)?;
-    let mut writer = object_header.write_header(ObjectHeader {
-      id: None,
-      otype: self.urids.patch.set_class.into_general(),
-    })?;
-    let mut property = writer.new_property(self.urids.sample, self.urids.atom.path)?;
-    let message = format!("created new property for patch message\n\0");
-    let _ = features.log.print_cstr(
-      self.urids.log.note,
-      CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
-    );
-    property.append(&self.file_path)?;
-    let message = format!("patch set file path: {}\n\0", self.file_path);
-    let _ = features.log.print_cstr(
-      self.urids.log.note,
-      CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
-    );
-
-    Ok(())
+    let mut object_writer = notify_sequence
+      .init(
+        TimeStamp::Frames(self.time_stamp),
+        self.urids.atom.object,
+        ObjectHeader {
+          id: None,
+          otype: self.urids.patch.set_class.into_general(),
+        },
+      )
+      .unwrap();
+    object_writer
+      .init(
+        self.urids.patch.property,
+        self.urids.atom.urid,
+        self.urids.sample.into_general(),
+      )
+      .unwrap();
+    let mut path_value_writer = object_writer
+      .init(self.urids.patch.value, self.urids.atom.path, ())
+      .unwrap();
+    path_value_writer.append(&self.file_path).unwrap();
   }
 
   fn read_patch_set_events(
     &mut self,
-    atom: &UnidentifiedAtom,
+    atom: UnidentifiedAtom<'static>,
     features: &mut AudioFeatures,
     mut should_read_patch_value: bool,
-  ) -> Result<(), AtomReadError> {
-    let (object_header, object_reader) = atom.read(self.urids.atom.object)?;
+  ) {
+    let (object_header, object_reader) = match atom.read(self.urids.atom.object, ()) {
+      Some(object) => object,
+      None => return,
+    };
 
     if object_header.otype == self.urids.patch.set_class {
       for (property_header, property) in object_reader {
         if property_header.key == self.urids.patch.property {
           should_read_patch_value = property
-            .read(self.urids.atom.urid)
-            .map(|patch_property| self.urids.sample.get() == patch_property.get())?;
+            .read(self.urids.atom.urid, ())
+            .map(|patch_property| self.urids.sample.get() == patch_property.get())
+            .unwrap();
         }
 
         if should_read_patch_value && property_header.key == self.urids.patch.value {
           self.file_path = property
-            .read(self.urids.atom.path)
-            .map(|path| path.to_string())?;
+            .read(self.urids.atom.path, ())
+            .map(|path| path.to_string())
+            .unwrap();
 
           features
             .schedule
@@ -87,13 +87,25 @@ impl DmTimeWarp {
             .ok();
         }
       }
-    }
-
-    Ok(())
+    };
   }
 
-  fn read_midi_events(&mut self, atom: &UnidentifiedAtom) -> Result<(), AtomReadError> {
-    let midi_message = atom.read(self.urids.midi.wmidi)?;
+  fn read_patch_get_events(&mut self, atom: UnidentifiedAtom<'static>, ports: &mut Ports) {
+    let object_header = match atom.read(self.urids.atom.object, ()) {
+      Some((object_header, _)) => object_header,
+      None => return,
+    };
+
+    if object_header.otype == self.urids.patch.get_class && !self.file_path.is_empty() {
+      self.write_set_file(ports);
+    }
+  }
+
+  fn read_midi_events(&mut self, atom: UnidentifiedAtom<'static>) {
+    let midi_message = match atom.read(self.urids.midi.wmidi, ()) {
+      Some(midi_message) => midi_message,
+      None => return,
+    };
 
     match midi_message {
       MidiMessage::NoteOn(_, note, velocity) => {
@@ -105,8 +117,6 @@ impl DmTimeWarp {
         self.notes.note_off(note.into());
       }
       _ => (),
-    }
-
-    Ok(())
+    };
   }
 }

@@ -156,7 +156,7 @@ impl Plugin for DmTimeWarp {
     }
 
     if self.worker_is_finished {
-      self.write_set_file(ports, features).ok();
+      self.write_set_file(ports);
       self.worker_is_finished = false;
     }
 
