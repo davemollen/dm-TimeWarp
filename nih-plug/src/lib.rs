@@ -4,8 +4,8 @@ mod time_warp_parameters;
 use file_loader::{BackgroundTask, FileLoader};
 use nih_plug::prelude::*;
 use std::sync::Arc;
-use time_warp::{Notes, Params as ProcessParams, TimeMode, TimeWarp, WavFileData};
-use time_warp_parameters::{TimeMode as ParamTimeMode, TimeWarpParameters};
+use time_warp::{Notes, Params as ProcessParams, RecordMode, TimeWarp, WavFileData};
+use time_warp_parameters::{RecordMode as ParamRecordMode, TimeWarpParameters};
 
 struct DmTimeWarp {
   params: Arc<TimeWarpParameters>,
@@ -42,12 +42,12 @@ impl DmTimeWarp {
       self.params.stretch.value(),
       self.params.record.value(),
       self.params.play.value(),
-      match self.params.time_mode.value() {
-        ParamTimeMode::Delay => TimeMode::Delay,
-        ParamTimeMode::Looper => TimeMode::Looper,
+      match self.params.record_mode.value() {
+        ParamRecordMode::Delay => RecordMode::Delay,
+        ParamRecordMode::Looper => RecordMode::Looper,
       },
       self.params.time.value(),
-      self.params.time_multiply.value(),
+      self.params.length.value(),
       self.params.highpass.value(),
       self.params.lowpass.value(),
       self.params.feedback.value(),
@@ -59,7 +59,7 @@ impl DmTimeWarp {
       self.params.decay.value(),
       self.params.sustain.value(),
       self.params.release.value(),
-      self.params.clear.value(),
+      self.params.flush.value(),
       self.time_warp.get_delay_line(),
       buffer_size,
     );

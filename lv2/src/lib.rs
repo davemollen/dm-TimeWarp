@@ -3,7 +3,7 @@ mod state;
 mod worker;
 use lv2::prelude::*;
 use std::string::String;
-use time_warp::{Notes, Params, TimeMode, TimeWarp};
+use time_warp::{Notes, Params, RecordMode, TimeWarp};
 use worker::*;
 
 #[derive(PortCollection)]
@@ -16,9 +16,9 @@ struct Ports {
   stretch: InputPort<Control>,
   record: InputPort<Control>,
   play: InputPort<Control>,
-  time_mode: InputPort<Control>,
+  record_mode: InputPort<Control>,
   time: InputPort<Control>,
-  time_multiply: InputPort<Control>,
+  length: InputPort<Control>,
   highpass: InputPort<Control>,
   lowpass: InputPort<Control>,
   feedback: InputPort<Control>,
@@ -31,7 +31,7 @@ struct Ports {
   decay: InputPort<Control>,
   sustain: InputPort<Control>,
   release: InputPort<Control>,
-  clear: InputPort<Control>,
+  flush: InputPort<Control>,
   control: InputPort<AtomPort>,
   notify: OutputPort<AtomPort>,
   input_left: InputPort<Audio>,
@@ -89,12 +89,12 @@ impl DmTimeWarp {
       *ports.stretch,
       *ports.record == 1.,
       *ports.play == 1.,
-      match *ports.time_mode {
-        1. => TimeMode::Delay,
-        _ => TimeMode::Looper,
+      match *ports.record_mode {
+        1. => RecordMode::Delay,
+        _ => RecordMode::Looper,
       },
       *ports.time,
-      *ports.time_multiply,
+      *ports.length,
       *ports.highpass,
       *ports.lowpass,
       *ports.feedback,
@@ -106,7 +106,7 @@ impl DmTimeWarp {
       *ports.decay,
       *ports.sustain,
       *ports.release,
-      *ports.clear == 1.,
+      *ports.flush == 1.,
       self.time_warp.get_delay_line(),
       sample_count as usize,
     );

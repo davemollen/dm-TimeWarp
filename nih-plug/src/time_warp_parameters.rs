@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use time_warp::{MAX_DELAY_TIME, MIN_DELAY_TIME};
 
 #[derive(Enum, PartialEq)]
-pub enum TimeMode {
+pub enum RecordMode {
   Delay,
   Looper,
 }
@@ -48,14 +48,14 @@ pub struct TimeWarpParameters {
   #[id = "play"]
   pub play: BoolParam,
 
-  #[id = "time_mode"]
-  pub time_mode: EnumParam<TimeMode>,
+  #[id = "record_mode"]
+  pub record_mode: EnumParam<RecordMode>,
 
   #[id = "time"]
   pub time: FloatParam,
 
-  #[id = "time_multiply"]
-  pub time_multiply: FloatParam,
+  #[id = "length"]
+  pub length: FloatParam,
 
   #[id = "highpass"]
   pub highpass: FloatParam,
@@ -93,8 +93,8 @@ pub struct TimeWarpParameters {
   #[id = "wet"]
   pub wet: FloatParam,
 
-  #[id = "clear"]
-  pub clear: BoolParam,
+  #[id = "flush"]
+  pub flush: BoolParam,
 
   #[persist = "file_path"]
   pub file_path: Arc<Mutex<String>>,
@@ -144,7 +144,7 @@ impl Default for TimeWarpParameters {
 
       play: BoolParam::new("Play / Stop", true),
 
-      time_mode: EnumParam::new("Time Mode", TimeMode::Delay),
+      record_mode: EnumParam::new("Record Mode", RecordMode::Delay),
 
       time: FloatParam::new(
         "Time",
@@ -158,7 +158,7 @@ impl Default for TimeWarpParameters {
       .with_value_to_string(v2s_f32_ms_then_s())
       .with_string_to_value(s2v_f32_ms_then_s()),
 
-      time_multiply: FloatParam::new("Time Multiply", 1., FloatRange::Linear { min: 0., max: 1. })
+      length: FloatParam::new("Length", 1., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
@@ -197,7 +197,7 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      midi_enabled: BoolParam::new("Midi on", false),
+      midi_enabled: BoolParam::new("MIDI", false),
 
       voices: IntParam::new("Voices", 1, IntRange::Linear { min: 1, max: 8 }),
 
@@ -291,7 +291,7 @@ impl Default for TimeWarpParameters {
         }
       })),
 
-      clear: BoolParam::new("Clear", false),
+      flush: BoolParam::new("Flush", false),
 
       file_path: Arc::new(Mutex::new("".to_string())),
     }

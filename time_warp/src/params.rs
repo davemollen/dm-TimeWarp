@@ -9,7 +9,7 @@ use {
 };
 
 #[derive(PartialEq)]
-pub enum TimeMode {
+pub enum RecordMode {
   Delay,
   Looper,
 }
@@ -43,7 +43,7 @@ pub struct Params {
   stopwatch: Stopwatch,
   prev_file_duration: Option<f32>,
   prev_play: bool,
-  prev_clear: bool,
+  prev_flush: bool,
 }
 
 impl Params {
@@ -77,7 +77,7 @@ impl Params {
       stopwatch: Stopwatch::new(sample_rate),
       prev_file_duration: None,
       prev_play: true,
-      prev_clear: false,
+      prev_flush: false,
     }
   }
 
@@ -91,9 +91,9 @@ impl Params {
     stretch: f32,
     record: bool,
     play: bool,
-    time_mode: TimeMode,
+    record_mode: RecordMode,
     time: f32,
-    time_multiply: f32,
+    length: f32,
     highpass: f32,
     lowpass: f32,
     feedback: f32,
@@ -105,7 +105,7 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
-    clear: bool,
+    flush: bool,
     delay_line: &mut StereoDelayLine,
     buffer_size: usize,
   ) {
@@ -120,25 +120,25 @@ impl Params {
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
-    let overridden_play = self.override_play(play, &time_mode);
+    let overridden_play = self.override_play(play, &record_mode);
     let recording_gain = if record { 1. } else { 0. };
     let playback_gain = if overridden_play { 1. } else { 0. };
     let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
-    if clear && !self.prev_clear {
+    if flush && !self.prev_flush {
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
       delay_line.reset();
-      self.prev_clear = false;
+      self.prev_flush = false;
     }
 
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
       self.playback_gain.set_target(playback_gain);
-      self.set_time(time_mode, record, play, time, time_multiply, buffer_size);
+      self.set_time(record_mode, record, play, time, length, buffer_size);
       self.highpass.set_target(highpass);
       self.lowpass.set_target(lowpass);
       self.feedback.set_target(feedback);
@@ -152,7 +152,7 @@ impl Params {
     } else {
       self.recording_gain.reset(recording_gain);
       self.playback_gain.reset(playback_gain);
-      self.reset_time(time, time_multiply);
+      self.reset_time(time, length);
       self.highpass.reset(highpass);
       self.lowpass.reset(lowpass);
       self.feedback.reset(feedback);
@@ -166,7 +166,7 @@ impl Params {
       self.is_initialized = true;
     }
     self.prev_play = play;
-    self.prev_clear = clear;
+    self.prev_flush = flush;
     self.prev_file_duration = self.file_duration;
     self.prev_reset_playback = self.reset_playback;
   }
@@ -176,12 +176,12 @@ impl Params {
   }
 
   pub fn should_clear_buffer(&mut self) -> bool {
-    self.prev_clear
+    self.prev_flush
   }
 
-  fn override_play(&mut self, play: bool, time_mode: &TimeMode) -> bool {
-    match (play, time_mode, self.loop_duration, self.file_duration) {
-      (true, TimeMode::Looper, None, None) => false,
+  fn override_play(&mut self, play: bool, record_mode: &RecordMode) -> bool {
+    match (play, record_mode, self.loop_duration, self.file_duration) {
+      (true, RecordMode::Looper, None, None) => false,
       (true, _, _, _) => {
         // reset playback to beginning if play was off previously and reset playback isn't activated already
         if !self.reset_playback {
@@ -195,39 +195,39 @@ impl Params {
 
   fn set_time(
     &mut self,
-    time_mode: TimeMode,
+    record_mode: RecordMode,
     record: bool,
     play: bool,
     time: f32,
-    time_multiply: f32,
+    length: f32,
     buffer_size: usize,
   ) {
     match (
       self.file_duration,
       self.prev_file_duration,
       self.loop_duration,
-      time_mode,
+      record_mode,
     ) {
       (Some(file_duration), Some(prev_file_duration), _, _) => {
         if file_duration == prev_file_duration {
-          self.time.set_target(file_duration * time_multiply);
+          self.time.set_target(file_duration * length);
         } else {
-          self.time.reset(file_duration * time_multiply);
+          self.time.reset(file_duration * length);
         }
       }
       (Some(file_duration), None, _, _) => {
-        self.time.reset(file_duration * time_multiply);
+        self.time.reset(file_duration * length);
       }
-      (None, _, None, TimeMode::Looper) => {
+      (None, _, None, RecordMode::Looper) => {
         // stop stopwatch if play changed from false to true
         let start = record && !(!self.prev_play && play);
         if let Some(loop_duration) = self.stopwatch.process(start, buffer_size) {
-          self.time.reset(loop_duration * time_multiply);
+          self.time.reset(loop_duration * length);
           self.loop_duration = Some(loop_duration);
         }
       }
-      (_, _, Some(loop_duration), TimeMode::Looper) => {
-        self.time.set_target(loop_duration * time_multiply);
+      (_, _, Some(loop_duration), RecordMode::Looper) => {
+        self.time.set_target(loop_duration * length);
       }
       _ => {
         self.time.set_target(time);
@@ -235,10 +235,10 @@ impl Params {
     }
   }
 
-  fn reset_time(&mut self, time: f32, time_multiply: f32) {
+  fn reset_time(&mut self, time: f32, length: f32) {
     match (self.file_duration, self.loop_duration) {
-      (Some(dur), _) => self.time.reset(dur * time_multiply),
-      (None, Some(dur)) => self.time.reset(dur * time_multiply),
+      (Some(dur), _) => self.time.reset(dur * length),
+      (None, Some(dur)) => self.time.reset(dur * length),
       _ => {
         self.time.reset(time);
       }

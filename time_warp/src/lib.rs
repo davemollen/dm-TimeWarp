@@ -21,7 +21,7 @@ use {
 };
 pub use {
   notes::Notes,
-  params::{Params, TimeMode},
+  params::{Params, RecordMode},
   wav_processor::{WavFileData, WavProcessor},
 };
 
