@@ -11,10 +11,6 @@
         modgui:javascript <modgui/javascript.js> ;
         modgui:brand "DM" ;
         modgui:label "TimeWarp" ;
-        modgui:model "boxy" ;
-        modgui:panel "1-select-3-knobs" ;
-        modgui:color "gray" ;
-        modgui:knob "steel" ;
         modgui:port [
             lv2:index 0 ;
             lv2:symbol "scan" ;

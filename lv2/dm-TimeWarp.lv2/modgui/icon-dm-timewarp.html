@@ -1,62 +1,275 @@
-<div
-  class="mod-pedal mod-pedal-boxy{{{cns}}} mod-one-knob mod-{{color}} {{color}}"
->
+<div class="mod-pedal mod-pedal{{{cns}}}">
   <div mod-role="drag-handle" class="mod-drag-handle"></div>
-  <div class="mod-plugin-brand"><h1>{{brand}}</h1></div>
-  <div class="mod-plugin-name"><h1>{{label}}</h1></div>
-  <div class="mod-light on" mod-role="bypass-light"></div>
-  <div class="mod-control-group mod-enumerated-group bottom clearfix">
-    {{#effect.parameters}} {{#path}}
-    <div
-      class="mod-enumerated"
-      mod-role="input-parameter"
-      mod-parameter-uri="{{uri}}"
-      mod-widget="custom-select-path"
-    >
-      <div
-        mod-role="input-parameter-value"
-        mod-parameter-uri="{{uri}}"
-        class="mod-enumerated-selected"
-      ></div>
-      <div class="mod-enumerated-list">
-        {{#files}}
-        <div mod-role="enumeration-option" mod-parameter-value="{{fullname}}">
-          {{basename}}
+  <div class="row">
+    <div class="column">
+      <div class="grain-controls">
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="scan"
+          ></div>
+          <div class="mod-param-title">SCAN</div>
         </div>
-        {{/files}}
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="spray"
+          ></div>
+          <div class="mod-param-title">SPRAY</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="size"
+          ></div>
+          <div class="mod-param-title">SIZE</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="speed"
+          ></div>
+          <div class="mod-param-title">SPEED</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="density"
+          ></div>
+          <div class="mod-param-title">DENSITY</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="stretch"
+          ></div>
+          <div class="mod-param-title">STRETCH</div>
+        </div>
+      </div>
+      <div class="buffer-controls">
+        <div class="mod-control-group mod-enumerated-group bottom clearfix">
+          {{#effect.parameters}} {{#path}}
+          <div
+            class="mod-enumerated"
+            mod-role="input-parameter"
+            mod-parameter-uri="{{uri}}"
+            mod-widget="custom-select-path"
+          >
+            <div
+              mod-role="input-parameter-value"
+              mod-parameter-uri="{{uri}}"
+              class="mod-enumerated-selected"
+            ></div>
+            <div class="mod-enumerated-list">
+              {{#files}}
+              <div
+                mod-role="enumeration-option"
+                mod-parameter-value="{{fullname}}"
+              >
+                {{basename}}
+              </div>
+              {{/files}}
+            </div>
+          </div>
+          {{/path}} {{/effect.parameters}}
+          <div class="mod-param-title">SAMPLE</div>
+        </div>
+        <div class="mod-tabs-container">
+          <div
+            class="mod-tabs"
+            mod-role="input-control-port"
+            mod-port-symbol="record_mode"
+            mod-widget="custom-select"
+          >
+            <div
+              class="mod-tab"
+              mod-role="enumeration-option"
+              mod-port-value="1"
+            >
+              DELAY
+            </div>
+            <div
+              class="mod-tab"
+              mod-role="enumeration-option"
+              mod-port-value="2"
+            >
+              LOOPER
+            </div>
+          </div>
+          <div class="mod-param-title">RECORD MODE</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="length"
+          ></div>
+          <div class="mod-param-title">LENGTH</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="highpass"
+          ></div>
+          <div class="mod-param-title">HIGHPASS</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="lowpass"
+          ></div>
+          <div class="mod-param-title">LOWPASS</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="feedback"
+          ></div>
+          <div class="mod-param-title">FEEDBACK</div>
+        </div>
+        <div class="mod-knob">
+          <div
+            class="mod-knob-image"
+            mod-role="input-control-port"
+            mod-port-symbol="recycle"
+          ></div>
+          <div class="mod-param-title">RECYCLE</div>
+        </div>
       </div>
     </div>
-    {{/path}} {{/effect.parameters}}
+    <div class="column">
+      <div class="row">
+        <div class="midi-controls">
+          <div class="row gap">
+            <div class="mod-slider">
+              <div
+                class="mod-slider-image"
+                mod-role="input-control-port"
+                mod-port-symbol="attack"
+              ></div>
+              <div class="mod-param-title">ATTACK</div>
+            </div>
+            <div class="mod-slider">
+              <div
+                class="mod-slider-image"
+                mod-role="input-control-port"
+                mod-port-symbol="decay"
+              ></div>
+              <div class="mod-param-title">DECAY</div>
+            </div>
+            <div class="mod-slider">
+              <div
+                class="mod-slider-image"
+                mod-role="input-control-port"
+                mod-port-symbol="sustain"
+              ></div>
+              <div class="mod-param-title">SUSTAIN</div>
+            </div>
+            <div class="mod-slider">
+              <div
+                class="mod-slider-image"
+                mod-role="input-control-port"
+                mod-port-symbol="release"
+              ></div>
+              <div class="mod-param-title">RELEASE</div>
+            </div>
+          </div>
+          <div class="midi-settings">
+            <div class="mod-switch">
+              <div
+                class="mod-switch-image"
+                mod-role="input-control-port"
+                mod-port-symbol="midi_enabled"
+              >
+                <div class="circle"></div>
+              </div>
+              <div class="mod-param-title">MIDI</div>
+            </div>
+            <div class="mod-number-input">
+              <div
+                class="mod-number-input-image"
+                mod-role="input-control-port"
+                mod-port-symbol="voices"
+              ></div>
+              <div class="mod-param-title">VOICES</div>
+            </div>
+          </div>
+        </div>
+        <div class="mix-controls row gap">
+          <div class="mod-slider">
+            <div
+              class="mod-slider-image"
+              mod-role="input-control-port"
+              mod-port-symbol="dry"
+            ></div>
+            <div class="mod-param-title">DRY</div>
+          </div>
+          <div class="mod-slider">
+            <div
+              class="mod-slider-image"
+              mod-role="input-control-port"
+              mod-port-symbol="wet"
+            ></div>
+            <div class="mod-param-title">WET</div>
+          </div>
+        </div>
+      </div>
+      <div class="logo"></div>
+    </div>
   </div>
-  <div
-    class="mod-footswitch"
-    mod-role="input-control-port"
-    mod-port-symbol="flush"
-  >
-    <div class="mod-light"></div>
-    <span class="mod-knob-title">Clear</span>
-  </div>
-  <div class="mod-control-group mod-{{knob}} top clearfix">
-    {{#effect.parameters}} {{#control}}
-    <div class="mod-knob">
+  <div class="footswitches">
+    <div>
+      <div class="mod-footswitch" mod-role="bypass">
+        <div class="mod-light" mod-role="bypass-light"></div>
+      </div>
+      <div class="mod-param-title">
+        <span class="unicode-symbol">&#x23FB;</span>
+      </div>
+    </div>
+    <div>
       <div
-        class="mod-knob-image"
-        mod-role="input-parameter"
-        mod-parameter-uri="{{uri}}"
-        mod-widget="film"
-      ></div>
-      <div>
-        <span class="mod-knob-title">{{label}}</span>
-        <div
-          class="mod-knob-value"
-          mod-role="input-parameter-value"
-          mod-parameter-uri="{{uri}}"
-        ></div>
+        class="mod-footswitch on"
+        mod-role="input-control-port"
+        mod-port-symbol="record"
+      >
+        <div class="mod-light" mod-role="bypass-light"></div>
+      </div>
+      <div class="mod-param-title">
+        <span class="unicode-symbol">&#x23FA;</span>&nbsp;&nbsp;/&nbsp;&nbsp;DUB
       </div>
     </div>
-    {{/control}} {{/effect.parameters}}
+    <div>
+      <div
+        class="mod-footswitch on"
+        mod-role="input-control-port"
+        mod-port-symbol="play"
+      >
+        <div class="mod-light" mod-role="bypass-light"></div>
+      </div>
+      <div class="mod-param-title">
+        <span class="unicode-symbol">&#x23F5;</span>&nbsp;&nbsp;/&nbsp;&nbsp;
+        <span class="unicode-symbol">&#x23F9;</span>
+      </div>
+    </div>
+    <div>
+      <div
+        class="mod-footswitch"
+        mod-role="input-control-port"
+        mod-port-symbol="flush"
+      ></div>
+      <div class="mod-param-title">FLUSH</div>
+    </div>
   </div>
-  <div class="mod-footswitch" mod-role="bypass"></div>
+
   <div class="mod-pedal-input">
     {{#effect.ports.audio.input}}
     <div
