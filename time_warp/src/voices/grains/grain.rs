@@ -1,6 +1,6 @@
 use {
   crate::{
-    shared::tuple_ext::TupleExt,
+    shared::{float_ext::FloatExt, tuple_ext::TupleExt},
     stereo_delay_line::{Interpolation, StereoDelayLine},
   },
   std::f32::consts::PI,
@@ -93,7 +93,7 @@ impl Grain {
   }
 
   fn apply_curve(x: f32) -> f32 {
-    (1. - (x * PI).cos()) * 0.5
+    (1. - (x * PI).fast_cos()) * 0.5
   }
 
   fn wrap(x: f32) -> f32 {
