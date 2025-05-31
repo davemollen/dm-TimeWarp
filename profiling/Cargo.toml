@@ -1,0 +1,22 @@
+[package]
+name = "benches"
+version = "0.1.0"
+edition = "2021"
+
+[profile.dev]
+debug = true
+
+[profile.release]
+debug = true
+
+[dependencies]
+fastrand = "2.3.0"
+time_warp = { path = "../time_warp" }
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+flamegraph = "0.3"
+
+[[bench]]
+name = "time_warp_bench"
+harness = false
