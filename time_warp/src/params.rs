@@ -132,7 +132,6 @@ impl Params {
       self.stopwatch.reset();
       self.loop_duration = None;
       delay_line.reset();
-      self.prev_flush = false;
     }
 
     if self.is_initialized {

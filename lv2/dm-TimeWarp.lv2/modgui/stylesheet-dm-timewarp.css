@@ -302,7 +302,7 @@
     overflow:auto;
     position: absolute;
     top: 28px;
-    left: 0px;
+    left: -2px;
     border: 2px solid #797979;
     border-radius: 8px;
 }

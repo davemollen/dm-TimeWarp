@@ -31,7 +31,7 @@ impl State for DmTimeWarp {
           .append(&*abstract_path)
           .unwrap();
 
-        let message = format!("saving file path: {}\n\0", &*abstract_path);
+        let message = format!("Saving sample with file path: {}\n\0", &*abstract_path);
         let _ = features.log.print_cstr(
           self.urids.log.note,
           CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),
@@ -60,7 +60,7 @@ impl State for DmTimeWarp {
           .retrieve(self.urids.sample)?
           .read(self.urids.atom.path, ())?;
 
-        let message = format!("restoring file path: {}\n\0", abstract_path);
+        let message = format!("Restoring sample with file path: {}\n\0", abstract_path);
         let _ = features.log.print_cstr(
           self.urids.log.note,
           CStr::from_bytes_with_nul(message.as_bytes()).unwrap(),

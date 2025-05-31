@@ -48,7 +48,6 @@ struct InitFeatures<'a> {
 #[derive(FeatureCollection)]
 struct AudioFeatures<'a> {
   schedule: Schedule<'a, DmTimeWarp>,
-  log: Log<'a>,
 }
 
 #[uri("https://github.com/davemollen/dm-TimeWarp#sample")]
@@ -113,6 +112,7 @@ impl DmTimeWarp {
 
     if self.params.should_clear_buffer() {
       self.file_path = "".to_string();
+      self.write_set_file(ports);
     }
 
     self.notes.set_voice_count(*ports.voices as usize);
