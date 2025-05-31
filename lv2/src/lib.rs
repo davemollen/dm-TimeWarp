@@ -94,8 +94,6 @@ impl DmTimeWarp {
       },
       *ports.time,
       *ports.length,
-      *ports.highpass,
-      *ports.lowpass,
       *ports.feedback,
       *ports.recycle,
       *ports.dry,
@@ -106,13 +104,18 @@ impl DmTimeWarp {
       *ports.sustain,
       *ports.release,
       *ports.flush == 1.,
-      self.time_warp.get_delay_line(),
       sample_count as usize,
     );
+
+    self
+      .time_warp
+      .get_filter()
+      .set_coefficients(*ports.highpass, *ports.lowpass);
 
     if self.params.should_clear_buffer() {
       self.file_path = "".to_string();
       self.write_set_file(ports);
+      self.time_warp.get_delay_line().reset();
     }
 
     self.notes.set_voice_count(*ports.voices as usize);

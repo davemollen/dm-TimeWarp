@@ -18,8 +18,6 @@ fn main() {
     time_warp::RecordMode::Delay,
     250.,
     1.,
-    200.,
-    3000.,
     0.75,
     0.,
     0.,
@@ -30,9 +28,9 @@ fn main() {
     -12.,
     1000.,
     false,
-    time_warp.get_delay_line(),
     512,
   );
+  time_warp.get_filter().set_coefficients(200., 3000.);
 
   loop {
     let input = (generate_signal(), generate_signal());

@@ -48,8 +48,6 @@ impl DmTimeWarp {
       },
       self.params.time.value(),
       self.params.length.value(),
-      self.params.highpass.value(),
-      self.params.lowpass.value(),
       self.params.feedback.value(),
       self.params.recycle.value(),
       self.params.dry.value(),
@@ -60,12 +58,17 @@ impl DmTimeWarp {
       self.params.sustain.value(),
       self.params.release.value(),
       self.params.flush.value(),
-      self.time_warp.get_delay_line(),
       buffer_size,
     );
 
+    self
+      .time_warp
+      .get_filter()
+      .set_coefficients(self.params.highpass.value(), self.params.lowpass.value());
+
     if self.process_params.should_clear_buffer() {
       *self.params.file_path.lock().unwrap() = "".to_string();
+      self.time_warp.get_delay_line().reset();
     }
   }
 

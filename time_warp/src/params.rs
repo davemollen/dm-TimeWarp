@@ -3,7 +3,6 @@ mod stopwatch;
 pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,
-  crate::stereo_delay_line::StereoDelayLine,
   smooth::{LinearSmooth, LogarithmicSmooth},
   stopwatch::Stopwatch,
 };
@@ -24,8 +23,7 @@ pub struct Params {
   pub recording_gain: LinearSmooth,
   pub playback_gain: LinearSmooth,
   pub time: LogarithmicSmooth,
-  pub highpass: LinearSmooth,
-  pub lowpass: LinearSmooth,
+  pub filter_coefficients: ([f32; 3], [f32; 3]),
   pub feedback: LinearSmooth,
   pub recycle: LinearSmooth,
   pub dry: LinearSmooth,
@@ -58,8 +56,7 @@ impl Params {
       recording_gain: LinearSmooth::new(sample_rate, 50.),
       playback_gain: LinearSmooth::new(sample_rate, 50.),
       time: LogarithmicSmooth::new(sample_rate, 0.3),
-      highpass: LinearSmooth::new(sample_rate, 20.),
-      lowpass: LinearSmooth::new(sample_rate, 20.),
+      filter_coefficients: ([0.; 3], [0.; 3]),
       feedback: LinearSmooth::new(sample_rate, 20.),
       recycle: LinearSmooth::new(sample_rate, 20.),
       dry: LinearSmooth::new(sample_rate, 20.),
@@ -94,8 +91,6 @@ impl Params {
     record_mode: RecordMode,
     time: f32,
     length: f32,
-    highpass: f32,
-    lowpass: f32,
     feedback: f32,
     recycle: f32,
     dry: f32,
@@ -106,7 +101,6 @@ impl Params {
     sustain: f32,
     release: f32,
     flush: bool,
-    delay_line: &mut StereoDelayLine,
     buffer_size: usize,
   ) {
     if self.prev_reset_playback {
@@ -130,15 +124,12 @@ impl Params {
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
-      delay_line.reset();
     }
 
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
       self.playback_gain.set_target(playback_gain);
       self.set_time(record_mode, record, play, time, length, buffer_size);
-      self.highpass.set_target(highpass);
-      self.lowpass.set_target(lowpass);
       self.feedback.set_target(feedback);
       self.recycle.set_target(recycle);
       self.dry.set_target(dry);
@@ -151,8 +142,6 @@ impl Params {
       self.recording_gain.reset(recording_gain);
       self.playback_gain.reset(playback_gain);
       self.reset_time(time, length);
-      self.highpass.reset(highpass);
-      self.lowpass.reset(lowpass);
       self.feedback.reset(feedback);
       self.recycle.reset(recycle);
       self.dry.reset(dry);

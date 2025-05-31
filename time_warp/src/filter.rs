@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
 pub struct Filter {
+  coefficients: ([f32; 3], [f32; 3]),
   z: [(f32, f32); 2],
   double_sample_rate: f32,
   freq_multiplier: f32,
@@ -10,19 +11,26 @@ impl Filter {
   pub fn new(sample_rate: f32) -> Self {
     let double_sample_rate = sample_rate * 2.;
     Self {
+      coefficients: ([0.; 3], [0.; 3]),
       z: [(0., 0.); 2],
       double_sample_rate,
       freq_multiplier: sample_rate.recip() * PI,
     }
   }
 
-  pub fn process(&mut self, x: (f32, f32), high_pass: f32, low_pass: f32) -> (f32, f32) {
-    let w1 = self.convert_to_angular_frequency(high_pass);
-    let w2 = self.convert_to_angular_frequency(low_pass);
+  pub fn set_coefficients(&mut self, highpass: f32, lowpass: f32) {
+    let w1 = self.convert_to_angular_frequency(highpass);
+    let w2 = self.convert_to_angular_frequency(lowpass);
+    self.coefficients = self.get_z_domain_coefficients(w1, w2);
+  }
 
-    let z_domain_coeffs = self.get_z_domain_coefficients(w1, w2);
+  pub fn process(&mut self, x: (f32, f32)) -> (f32, f32) {
+    let (b, a) = self.coefficients;
+    let y = (x.0 * b[0] + self.z[0].0, x.1 * b[0] + self.z[0].1);
+    self.z[0] = (self.z[1].0 - a[1] * y.0, self.z[1].1 - a[1] * y.1);
+    self.z[1] = (x.0 * b[2] - a[2] * y.0, x.1 * b[2] - a[2] * y.1);
 
-    self.apply_filter(x, z_domain_coeffs)
+    y
   }
 
   fn convert_to_angular_frequency(&self, freq: f32) -> f32 {
@@ -42,13 +50,5 @@ impl Filter {
     let b0 = b2 * -1.;
 
     ([b0, 0., b2], [a0, a1, a2])
-  }
-
-  fn apply_filter(&mut self, x: (f32, f32), (b, a): ([f32; 3], [f32; 3])) -> (f32, f32) {
-    let y = (x.0 * b[0] + self.z[0].0, x.1 * b[0] + self.z[0].1);
-    self.z[0] = (self.z[1].0 - a[1] * y.0, self.z[1].1 - a[1] * y.1);
-    self.z[1] = (x.0 * b[2] - a[2] * y.0, x.1 * b[2] - a[2] * y.1);
-
-    return y;
   }
 }

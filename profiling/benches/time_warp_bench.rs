@@ -20,8 +20,6 @@ fn time_warp_bench(c: &mut Criterion) {
     time_warp::RecordMode::Delay,
     250.,
     1.,
-    200.,
-    3000.,
     0.75,
     0.,
     0.,
@@ -32,9 +30,9 @@ fn time_warp_bench(c: &mut Criterion) {
     -12.,
     1000.,
     false,
-    time_warp.get_delay_line(),
     512,
   );
+  time_warp.get_filter().set_coefficients(200., 3000.);
   let signal_stream = generate_stereo_signal_stream(44100);
 
   c.bench_function("time_warp", |b| {

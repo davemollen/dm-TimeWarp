@@ -68,8 +68,6 @@ impl TimeWarp {
     let recording_gain = params.recording_gain.next();
     let playback_gain = params.playback_gain.next();
     let time = params.time.next();
-    let highpass = params.highpass.next();
-    let lowpass = params.lowpass.next();
     let feedback = params.feedback.next();
     let recycle = params.recycle.next();
     let dry = params.dry.next();
@@ -110,8 +108,6 @@ impl TimeWarp {
       feedback,
       recycle,
       recording_gain,
-      highpass,
-      lowpass,
       is_recording,
     );
 
@@ -122,6 +118,10 @@ impl TimeWarp {
     &mut self.delay_line
   }
 
+  pub fn get_filter(&mut self) -> &mut Filter {
+    &mut self.filter
+  }
+
   fn write_to_delay(
     &mut self,
     input: (f32, f32),
@@ -130,13 +130,11 @@ impl TimeWarp {
     feedback: f32,
     recycle: f32,
     recording_gain: f32,
-    highpass: f32,
-    lowpass: f32,
     is_recording: bool,
   ) {
     if is_recording {
       let delay_out = self.delay_line.read(time, Interpolation::Linear);
-      let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback, highpass, lowpass);
+      let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
       let delay_in = input
         .add(feedback)
         .multiply(recording_gain)
@@ -151,14 +149,12 @@ impl TimeWarp {
     grains_out: (f32, f32),
     recycle: f32,
     feedback: f32,
-    highpass: f32,
-    lowpass: f32,
   ) -> (f32, f32) {
     let feedback = delay_out
       .multiply((1. - recycle) * feedback)
       .add(grains_out.multiply(recycle * feedback));
     let feedback = Self::clip(feedback);
-    self.filter.process(feedback, highpass, lowpass)
+    self.filter.process(feedback)
   }
 
   fn clip(x: (f32, f32)) -> (f32, f32) {
