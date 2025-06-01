@@ -204,6 +204,18 @@
 .mod-pedal{{{cns}}} .footswitches .mod-param-title {
     margin-top: 8px;
 }
+.mod-pedal{{{cns}}} .mod-footswitch.bypass.on > .mod-light {
+    background-position-y: bottom !important;
+}
+.mod-pedal{{{cns}}} .mod-footswitch.bypass.off > .mod-light {
+    background-position-y: top !important;
+}
+.mod-pedal{{{cns}}} .mod-footswitch.bypass.on {
+    background-position-y: bottom !important;
+}
+.mod-pedal{{{cns}}} .mod-footswitch.bypass.off {
+    background-position-y: top !important;
+}
 
 /* = SWITCH
 ================================================ */

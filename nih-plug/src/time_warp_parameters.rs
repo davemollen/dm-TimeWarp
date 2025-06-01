@@ -140,7 +140,7 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      record: BoolParam::new("Rec / Dub", false),
+      record: BoolParam::new("Rec / Dub", true),
 
       play: BoolParam::new("Play / Stop", true),
 

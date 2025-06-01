@@ -100,7 +100,7 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:symbol "record" ;
 		lv2:name "Rec / Dub" ;
 		lv2:portProperty lv2:integer, lv2:toggled;
-		lv2:default 0 ;
+		lv2:default 1 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
 	] , [
