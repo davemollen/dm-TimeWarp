@@ -15,7 +15,7 @@ time_warp = { path = "../time_warp" }
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
-flamegraph = "0.3"
+flamegraph = "0.6.8"
 
 [[bench]]
 name = "time_warp_bench"
