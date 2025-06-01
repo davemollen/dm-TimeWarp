@@ -3,5 +3,5 @@
 
 <https://github.com/davemollen/dm-TimeWarp>
     a lv2:Plugin ;
-    lv2:binary <libdm_time_warp.dylib> ;
+    lv2:binary <libdm_time_warp.so> ;
     rdfs:seeAlso <dm-TimeWarp.ttl>  , <modgui.ttl> .
