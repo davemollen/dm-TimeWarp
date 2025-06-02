@@ -50,11 +50,11 @@ impl Grain {
     self.position = self.position + self.sample_factor / time * speed;
 
     let delay_out = delay_line
-      .read(position_a * time, Interpolation::Spline)
+      .read(position_a * time, Interpolation::Linear)
       .multiply(position_a_fade * grain_fade)
       .add(
         delay_line
-          .read(position_b * time, Interpolation::Spline)
+          .read(position_b * time, Interpolation::Linear)
           .multiply(position_b_fade * grain_fade),
       );
 
