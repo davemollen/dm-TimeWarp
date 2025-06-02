@@ -1,3 +1,5 @@
+use std::array;
+
 #[derive(PartialEq, Clone)]
 pub enum ADSRStage {
   Attack,
@@ -14,6 +16,7 @@ pub struct Note {
   speed: f32,
   gain: f32,
   adsr_stage: ADSRStage,
+  note_to_speed_table: [f32; 128],
 }
 
 impl Note {
@@ -23,12 +26,15 @@ impl Note {
       speed: 0.,
       gain: 0.,
       adsr_stage: ADSRStage::Idle,
+      note_to_speed_table: array::from_fn(|note| {
+        2_f32.powf((note as f32 - 60.).clamp(-48., 48.) / 12.)
+      }),
     }
   }
 
   pub fn note_on(&mut self, note: u8, velocity: f32) {
     self.note = note;
-    self.speed = Self::calculate_speed(note);
+    self.speed = self.note_to_speed_table[note as usize];
     self.gain = velocity;
     self.adsr_stage = ADSRStage::Attack;
   }
@@ -39,7 +45,7 @@ impl Note {
 
   pub fn steal_note(&mut self, note: u8, velocity: f32) {
     self.note = note;
-    self.speed = Self::calculate_speed(note);
+    self.speed = self.note_to_speed_table[note as usize];
     self.gain = velocity;
     self.adsr_stage = match self.adsr_stage {
       ADSRStage::Idle => ADSRStage::Attack,
@@ -72,9 +78,5 @@ impl Note {
 
   pub fn get_adsr_stage(&self) -> &ADSRStage {
     &self.adsr_stage
-  }
-
-  fn calculate_speed(note: u8) -> f32 {
-    2_f32.powf((note as f32 - 60.).clamp(-48., 48.) / 12.)
   }
 }
