@@ -87,8 +87,8 @@ impl Grain {
   }
 
   fn get_xfade(&self, position: f32, fade_factor: f32, fade_offset: f32) -> f32 {
-    let mut fade = (position * fade_factor).clamp(0., 1.);
-    fade *= ((fade_offset - position) * fade_factor).clamp(0., 1.);
+    let fade =
+      (position * fade_factor).min(1.) * ((fade_offset - position) * fade_factor).clamp(0., 1.);
     Self::apply_curve(fade)
   }
 
@@ -97,12 +97,10 @@ impl Grain {
   }
 
   fn wrap(x: f32) -> f32 {
-    if x >= 1. {
-      x - 1.
-    } else if x <= 0. {
+    if x <= 0. {
       x + 1.
     } else {
-      x
+      x.fract()
     }
   }
 }
