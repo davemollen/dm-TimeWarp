@@ -57,10 +57,9 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:index 1 ;
 		lv2:symbol "spray" ;
 		lv2:name "Spray" ;
-		lv2:portProperty pprops:logarithmic ;
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
-		lv2:maximum 250.0 ;
+		lv2:maximum 500.0 ;
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
@@ -239,15 +238,15 @@ A granular delay, sampler, looper with time stretch capabilities.
 		lv2:index 21 ;
 		lv2:symbol "sustain" ;
 		lv2:name "Sustain" ;
-		lv2:default 0.0 ;
-		lv2:minimum -70.0 ;
-		lv2:maximum 0.0 ;
-		units:unit units:db
+		lv2:default 1.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
 	], [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 22 ;
 		lv2:symbol "release" ;
 		lv2:name "Release" ;
+		lv2:portProperty pprops:logarithmic ;
 		lv2:default 2000.0 ;
 		lv2:minimum 1.0 ;
 		lv2:maximum 15000.0 ;

@@ -110,17 +110,9 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      spray: FloatParam::new(
-        "Spray",
-        0.,
-        FloatRange::Skewed {
-          min: 0.,
-          max: 250.,
-          factor: 0.3,
-        },
-      )
-      .with_unit(" ms")
-      .with_value_to_string(v2s_f32_rounded(2)),
+      spray: FloatParam::new("Spray", 0., FloatRange::Linear { min: 0., max: 500. })
+        .with_unit(" ms")
+        .with_value_to_string(v2s_f32_rounded(2)),
 
       size: FloatParam::new("Size", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
@@ -225,23 +217,8 @@ impl Default for TimeWarpParameters {
       .with_unit(" ms")
       .with_value_to_string(v2s_f32_rounded(2)),
 
-      sustain: FloatParam::new(
-        "Sustain",
-        0.,
-        FloatRange::Skewed {
-          min: -70.,
-          max: 0.,
-          factor: 2.,
-        },
-      )
-      .with_unit(" dB")
-      .with_value_to_string(Arc::new(move |value| {
-        if value == -70. {
-          "-inf".to_string()
-        } else {
-          format!("{:.2}", value)
-        }
-      })),
+      sustain: FloatParam::new("Sustain", 1., FloatRange::Linear { min: 0., max: 1. })
+        .with_value_to_string(v2s_f32_rounded(2)),
 
       release: FloatParam::new(
         "Release",

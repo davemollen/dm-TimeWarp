@@ -123,7 +123,6 @@ impl Params {
     let overridden_play = self.override_play(play, &record_mode);
     let recording_gain = if record { 1. } else { 0. };
     let playback_gain = if overridden_play { 1. } else { 0. };
-    let sustain = sustain.dbtoa();
     let dry = dry.dbtoa();
     let wet = wet.dbtoa();
 
