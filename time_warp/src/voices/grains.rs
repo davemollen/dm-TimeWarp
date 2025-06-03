@@ -8,14 +8,14 @@ use {
 
 #[derive(Clone)]
 pub struct Grains {
-  grains: Vec<Grain>,
+  grains: [Grain; 20],
   rsqrt_table: RsqrtTable,
 }
 
 impl Grains {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      grains: vec![Grain::new(sample_rate); 20],
+      grains: [Grain::new(sample_rate); 20],
       rsqrt_table: RsqrtTable::new(1., 15.),
     }
   }
@@ -48,7 +48,7 @@ impl Grains {
       }
     }
 
-    let (grains_left, grain_right, gain) = self
+    let (grains_left, grains_right, gain) = self
       .grains
       .iter_mut()
       .filter(|grain| grain.is_active())
@@ -72,10 +72,11 @@ impl Grains {
         },
       );
 
-    (grains_left, grain_right).multiply(if gain == 0. {
+    (grains_left, grains_right).multiply(if gain == 0. {
       0.
     } else {
-      self.rsqrt_table.get_value(gain)
+      gain.recip().sqrt()
+      // self.rsqrt_table.get_value(gain)
     })
   }
 
