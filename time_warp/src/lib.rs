@@ -11,22 +11,16 @@ pub mod shared {
 }
 mod wav_processor;
 
-use {
-  filter::Filter,
-  notes::Note,
-  params::Smoother,
-  shared::tuple_ext::TupleExt,
-  stereo_delay_line::{Interpolation, StereoDelayLine},
-  voices::Voices,
-};
+use {filter::Filter, notes::Note, params::Smoother, shared::tuple_ext::TupleExt, voices::Voices};
 pub use {
   notes::Notes,
   params::{Params, RecordMode},
+  stereo_delay_line::{Interpolation, StereoDelayLine},
   wav_processor::{WavFileData, WavProcessor},
 };
 
 pub const MIN_DELAY_TIME: f32 = 10.;
-pub const MAX_DELAY_TIME: f32 = 60000.;
+const MAX_DELAY_TIME: f32 = 60000.;
 
 pub struct TimeWarp {
   delay_line: StereoDelayLine,
@@ -114,8 +108,13 @@ impl TimeWarp {
     input.multiply(dry).add(grains_out.multiply(wet))
   }
 
-  pub fn get_delay_line(&mut self) -> &mut StereoDelayLine {
-    &mut self.delay_line
+  pub fn get_delay_line_size(&self) -> usize {
+    self.delay_line.get_size()
+  }
+
+  pub fn set_delay_line_values(&mut self, values: Vec<(f32, f32)>, write_pointer_index: usize) {
+    self.delay_line.set_values(values);
+    self.delay_line.set_write_pointer(write_pointer_index);
   }
 
   pub fn get_filter(&mut self) -> &mut Filter {

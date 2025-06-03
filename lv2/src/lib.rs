@@ -78,7 +78,12 @@ struct DmTimeWarp {
 }
 
 impl DmTimeWarp {
-  pub fn set_param_values(&mut self, ports: &mut Ports, sample_count: u32) {
+  pub fn set_param_values(
+    &mut self,
+    ports: &mut Ports,
+    features: &mut AudioFeatures,
+    sample_count: u32,
+  ) {
     self.params.set(
       *ports.scan,
       *ports.spray,
@@ -115,7 +120,12 @@ impl DmTimeWarp {
     if self.params.should_clear_buffer() {
       self.file_path = "".to_string();
       self.write_set_file(ports);
-      self.time_warp.get_delay_line().reset();
+      features
+        .schedule
+        .schedule_work(WorkRequest::FlushBuffer(
+          self.time_warp.get_delay_line_size(),
+        ))
+        .ok();
     }
 
     self.notes.set_voice_count(*ports.voices as usize);
@@ -145,14 +155,18 @@ impl Plugin for DmTimeWarp {
   }
 
   fn run(&mut self, ports: &mut Ports, features: &mut Self::AudioFeatures, sample_count: u32) {
-    self.set_param_values(ports, sample_count);
+    self.set_param_values(ports, features, sample_count);
     self.handle_events(ports, features);
 
     if self.activated && !self.worker_is_initialized {
       if !self.file_path.is_empty() {
         features
           .schedule
-          .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
+          .schedule_work(WorkRequest::LoadFile(
+            self.file_path.to_string(),
+            self.sample_rate,
+            self.time_warp.get_delay_line_size(),
+          ))
           .ok();
       }
       self.worker_is_initialized = true;

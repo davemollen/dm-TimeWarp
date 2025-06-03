@@ -1,5 +1,4 @@
 use {
-  crate::MAX_DELAY_TIME,
   hound::{SampleFormat, WavReader, WavSpec, WavWriter},
   std::path::Path,
   thiserror::Error,
@@ -16,7 +15,8 @@ pub enum WavProcessingError {
 
 pub struct WavFileData {
   pub samples: Vec<(f32, f32)>,
-  pub duration: f32,
+  pub duration_in_samples: usize,
+  pub duration_in_ms: f32,
 }
 
 #[derive(Clone)]
@@ -77,16 +77,13 @@ impl WavProcessor {
         .map(|chunk| (chunk[0], chunk[1]))
         .collect()
     };
-    let duration = stereo_samples.len() as f32 / self.sample_rate * 1000.;
-    if duration > MAX_DELAY_TIME {
-      return Err(WavProcessingError::FormatError(
-        "WAV file duration is too long.".to_string(),
-      ));
-    }
+    let duration_in_samples = stereo_samples.len();
+    let duration_in_ms = duration_in_samples as f32 / self.sample_rate * 1000.;
 
     Ok(WavFileData {
       samples: stereo_samples,
-      duration,
+      duration_in_samples,
+      duration_in_ms,
     })
   }
 
@@ -135,7 +132,7 @@ mod tests {
             assert_eq!(actual.0, expected.0);
             assert_eq!(actual.1, expected.1);
           });
-        assert_eq!(r.duration, 0.36281177);
+        assert_eq!(r.duration_in_ms, 0.36281177);
       }
       _ => (),
     }
@@ -164,7 +161,7 @@ mod tests {
             assert_eq!(actual.0, expected.0);
             assert_eq!(actual.1, expected.1);
           });
-        assert_eq!(r.duration, 0.36281177);
+        assert_eq!(r.duration_in_ms, 0.36281177);
       }
       Err(e) => {
         println!("{}", e);

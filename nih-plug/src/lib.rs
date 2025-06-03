@@ -1,38 +1,42 @@
 mod editor;
-mod file_loader;
 mod time_warp_parameters;
-use file_loader::{BackgroundTask, FileLoader};
+mod worker;
 use nih_plug::prelude::*;
 use std::sync::Arc;
 use time_warp::{Notes, Params as ProcessParams, RecordMode, TimeWarp, WavFileData};
 use time_warp_parameters::{RecordMode as ParamRecordMode, TimeWarpParameters};
+use worker::{Worker, WorkerRequest, WorkerResponseData};
 
 struct DmTimeWarp {
   params: Arc<TimeWarpParameters>,
   time_warp: TimeWarp,
   process_params: ProcessParams,
   notes: Notes,
-  file_loader: FileLoader,
+  worker: Worker,
 }
 
 impl Default for DmTimeWarp {
   fn default() -> Self {
     let sample_rate = 44100_f32;
     let params = Arc::new(TimeWarpParameters::default());
-    let file_loader = FileLoader::new(sample_rate, params.file_path.clone());
+    let time_warp = TimeWarp::new(sample_rate);
 
     Self {
       params: params.clone(),
       time_warp: TimeWarp::new(sample_rate),
       process_params: ProcessParams::new(sample_rate),
       notes: Notes::new(),
-      file_loader,
+      worker: Worker::new(
+        sample_rate,
+        params.file_path.clone(),
+        time_warp.get_delay_line_size(),
+      ),
     }
   }
 }
 
 impl DmTimeWarp {
-  pub fn set_param_values(&mut self, buffer_size: usize) {
+  pub fn set_param_values(&mut self, buffer_size: usize, context: &mut impl ProcessContext<Self>) {
     self.process_params.set(
       self.params.scan.value(),
       self.params.spray.value(),
@@ -68,7 +72,7 @@ impl DmTimeWarp {
 
     if self.process_params.should_clear_buffer() {
       *self.params.file_path.lock().unwrap() = "".to_string();
-      self.time_warp.get_delay_line().reset();
+      context.execute_background(WorkerRequest::FlushBuffer);
     }
   }
 
@@ -106,7 +110,7 @@ impl Plugin for DmTimeWarp {
   const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
   const SAMPLE_ACCURATE_AUTOMATION: bool = true;
 
-  type BackgroundTask = BackgroundTask;
+  type BackgroundTask = WorkerRequest;
   type SysExMessage = ();
 
   fn params(&self) -> Arc<dyn Params> {
@@ -129,8 +133,11 @@ impl Plugin for DmTimeWarp {
   ) -> bool {
     self.time_warp = TimeWarp::new(buffer_config.sample_rate);
     self.process_params = ProcessParams::new(buffer_config.sample_rate);
-    self.file_loader.set_sample_rate(buffer_config.sample_rate);
-    context.execute(BackgroundTask::LoadFile(
+    self.worker.initialize(
+      buffer_config.sample_rate,
+      self.time_warp.get_delay_line_size(),
+    );
+    context.execute(WorkerRequest::LoadFile(
       self.params.file_path.lock().unwrap().clone(),
       false,
     ));
@@ -139,10 +146,10 @@ impl Plugin for DmTimeWarp {
   }
 
   fn task_executor(&mut self) -> TaskExecutor<Self> {
-    let file_loader = self.file_loader.clone();
+    let worker = self.worker.clone();
 
     Box::new(move |task| {
-      file_loader.handle_task(task);
+      worker.handle_task(task);
     })
   }
 
@@ -152,13 +159,26 @@ impl Plugin for DmTimeWarp {
     _aux: &mut AuxiliaryBuffers,
     context: &mut impl ProcessContext<Self>,
   ) -> ProcessStatus {
-    self.set_param_values(buffer.samples());
+    self.set_param_values(buffer.samples(), context);
     self.process_midi_events(context);
 
-    if let Some(WavFileData { samples, duration }) = self.file_loader.try_receive_data() {
-      self.time_warp.get_delay_line().set_values(&samples);
-      self.process_params.set_file_duration(duration);
-      self.process_params.reset_playback = true;
+    if let Some(worker_response_data) = self.worker.try_receive_data() {
+      match worker_response_data {
+        WorkerResponseData::LoadFile(WavFileData {
+          samples,
+          duration_in_samples,
+          duration_in_ms,
+        }) => {
+          self
+            .time_warp
+            .set_delay_line_values(samples, duration_in_samples);
+          self.process_params.set_file_duration(duration_in_ms);
+          self.process_params.reset_playback = true;
+        }
+        WorkerResponseData::FlushBuffer(samples) => {
+          self.time_warp.set_delay_line_values(samples, 0);
+        }
+      }
     }
 
     buffer.iter_samples().for_each(|mut channel_samples| {

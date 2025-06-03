@@ -1,5 +1,5 @@
 use {
-  crate::{worker::WorkData, AudioFeatures, DmTimeWarp, Ports},
+  crate::{worker::WorkRequest, AudioFeatures, DmTimeWarp, Ports},
   lv2::prelude::*,
   wmidi::MidiMessage,
 };
@@ -83,7 +83,11 @@ impl DmTimeWarp {
 
           features
             .schedule
-            .schedule_work(WorkData::new(&self.file_path, self.sample_rate))
+            .schedule_work(WorkRequest::LoadFile(
+              self.file_path.to_string(),
+              self.sample_rate,
+              self.time_warp.get_delay_line_size(),
+            ))
             .ok();
         }
       }

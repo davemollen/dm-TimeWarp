@@ -11,7 +11,7 @@ use nih_plug::{
 };
 use nih_plug_vizia::ViziaState;
 use std::sync::{Arc, Mutex};
-use time_warp::{MAX_DELAY_TIME, MIN_DELAY_TIME};
+use time_warp::MIN_DELAY_TIME;
 
 #[derive(Enum, PartialEq)]
 pub enum RecordMode {

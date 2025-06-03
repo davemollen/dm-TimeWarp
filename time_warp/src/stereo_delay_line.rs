@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, mem};
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
@@ -44,22 +44,16 @@ impl StereoDelayLine {
     self.write_pointer = self.write_pointer + 1 & self.wrap;
   }
 
-  pub fn set_values(&mut self, values: &Vec<(f32, f32)>) {
-    let buffer_len = self.buffer.len();
-    let values_len = values.len();
-
-    if values_len >= buffer_len {
-      self.buffer.copy_from_slice(&values[..buffer_len]);
-    } else {
-      self.buffer[..values_len].copy_from_slice(&values);
-      self.buffer[values_len..].fill((0.0, 0.0));
-    }
-
-    self.write_pointer = values_len;
+  pub fn set_values(&mut self, mut values: Vec<(f32, f32)>) {
+    mem::swap(&mut self.buffer, &mut values);
   }
 
-  pub fn reset(&mut self) {
-    self.buffer.fill((0., 0.));
+  pub fn set_write_pointer(&mut self, index: usize) {
+    self.write_pointer = index;
+  }
+
+  pub fn get_size(&self) -> usize {
+    self.buffer.len()
   }
 
   fn step_interp(&self, time: f32) -> (f32, f32) {

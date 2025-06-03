@@ -1,5 +1,5 @@
 use crate::DmTimeWarp;
-use crate::{time_warp_parameters::TimeWarpParameters, BackgroundTask};
+use crate::{time_warp_parameters::TimeWarpParameters, WorkerRequest};
 use nih_plug::prelude::{AsyncExecutor, GuiContext, ParamPtr};
 use nih_plug_vizia::vizia::prelude::*;
 use rfd::FileDialog;
@@ -33,7 +33,7 @@ impl Model for UiData {
 
         cx.spawn(move |_cx_proxy| {
           if let Some(file) = FileDialog::new().add_filter("wav", &["wav"]).pick_file() {
-            executor.execute_background(BackgroundTask::LoadFile(
+            executor.execute_background(WorkerRequest::LoadFile(
               file.to_string_lossy().into_owned(),
               true,
             ));
