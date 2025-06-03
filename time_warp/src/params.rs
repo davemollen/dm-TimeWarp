@@ -42,6 +42,7 @@ pub struct Params {
   prev_file_duration: Option<f32>,
   prev_play: bool,
   prev_flush: bool,
+  is_flushing: bool,
 }
 
 impl Params {
@@ -75,6 +76,7 @@ impl Params {
       prev_file_duration: None,
       prev_play: true,
       prev_flush: false,
+      is_flushing: false,
     }
   }
 
@@ -124,6 +126,9 @@ impl Params {
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
+      self.is_flushing = true;
+    } else {
+      self.is_flushing = false;
     }
 
     if self.is_initialized {
@@ -163,7 +168,7 @@ impl Params {
   }
 
   pub fn should_clear_buffer(&mut self) -> bool {
-    self.prev_flush
+    self.is_flushing
   }
 
   fn override_play(&mut self, play: bool, record_mode: &RecordMode) -> bool {
