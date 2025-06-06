@@ -49,6 +49,9 @@ impl StereoDelayLine {
   }
 
   pub fn set_write_pointer(&mut self, index: usize) {
+    if index >= self.buffer.len() {
+      self.write_pointer = 0;
+    }
     self.write_pointer = index;
   }
 
