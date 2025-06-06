@@ -1,22 +1,18 @@
 mod grain;
-mod rsqrt_table;
 use {
   crate::{shared::tuple_ext::TupleExt, stereo_delay_line::StereoDelayLine},
   grain::Grain,
-  rsqrt_table::RsqrtTable,
 };
 
 #[derive(Clone)]
 pub struct Grains {
   grains: [Grain; 20],
-  rsqrt_table: RsqrtTable,
 }
 
 impl Grains {
   pub fn new(sample_rate: f32) -> Self {
     Self {
       grains: [Grain::new(sample_rate); 20],
-      rsqrt_table: RsqrtTable::new(1., 15.),
     }
   }
 
@@ -72,12 +68,7 @@ impl Grains {
         },
       );
 
-    (grains_left, grains_right).multiply(if gain == 0. {
-      0.
-    } else {
-      gain.recip().sqrt()
-      // self.rsqrt_table.get_value(gain)
-    })
+    (grains_left, grains_right).multiply(if gain == 0. { 0. } else { gain.recip().sqrt() })
   }
 
   pub fn reset(&mut self) {

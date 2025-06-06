@@ -30,6 +30,7 @@ pub struct TimeWarp {
   delay_line: StereoDelayLine,
   voices: Voices,
   filter: Filter,
+  mix: Mix,
 }
 
 impl TimeWarp {
@@ -43,6 +44,7 @@ impl TimeWarp {
       ),
       voices: Voices::new(sample_rate, Self::FADE_TIME),
       filter: Filter::new(sample_rate),
+      mix: Mix::default(),
     }
   }
 
@@ -138,7 +140,9 @@ impl TimeWarp {
     if is_recording {
       let delay_out = self.delay_line.read(time, Interpolation::Linear);
       let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
-      let delay_in = Mix::process(delay_out, input.add(feedback), recording_gain);
+      let delay_in = self
+        .mix
+        .process(delay_out, input.add(feedback), recording_gain);
       self.delay_line.write(delay_in);
     }
   }
