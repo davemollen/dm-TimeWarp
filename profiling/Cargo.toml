@@ -20,7 +20,3 @@ flamegraph = "0.6.8"
 [[bench]]
 name = "time_warp_bench"
 harness = false
-
-[[bench]]
-name = "flush_buffer_bench"
-harness = false
