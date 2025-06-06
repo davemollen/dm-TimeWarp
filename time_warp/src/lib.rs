@@ -1,4 +1,5 @@
 mod filter;
+mod mix;
 mod notes;
 mod params;
 mod stereo_delay_line;
@@ -11,7 +12,10 @@ pub mod shared {
 }
 mod wav_processor;
 
-use {filter::Filter, notes::Note, params::Smoother, shared::tuple_ext::TupleExt, voices::Voices};
+use {
+  filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::tuple_ext::TupleExt,
+  voices::Voices,
+};
 pub use {
   notes::Notes,
   params::{Params, RecordMode},
@@ -134,10 +138,7 @@ impl TimeWarp {
     if is_recording {
       let delay_out = self.delay_line.read(time, Interpolation::Linear);
       let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
-      let delay_in = input
-        .add(feedback)
-        .multiply(recording_gain)
-        .add(delay_out.multiply(1. - recording_gain));
+      let delay_in = Mix::process(delay_out, input.add(feedback), recording_gain);
       self.delay_line.write(delay_in);
     }
   }
