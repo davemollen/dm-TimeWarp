@@ -167,6 +167,11 @@ impl Params {
     self.file_duration = Some(file_duration);
   }
 
+  pub fn set_reset_playback(&mut self, reset_playback: bool) {
+    self.reset_playback = reset_playback;
+    self.recording_gain.reset(0.);
+  }
+
   pub fn should_clear_buffer(&mut self) -> bool {
     self.is_flushing
   }

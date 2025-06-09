@@ -173,7 +173,7 @@ impl Plugin for DmTimeWarp {
             .time_warp
             .set_delay_line_values(samples, duration_in_samples);
           self.process_params.set_file_duration(duration_in_ms);
-          self.process_params.reset_playback = true;
+          self.process_params.set_reset_playback(true);
         }
         WorkerResponseData::FlushBuffer(samples) => {
           self.time_warp.set_delay_line_values(samples, 0);

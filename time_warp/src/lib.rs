@@ -62,6 +62,7 @@ impl TimeWarp {
       stretch,
       speed,
       midi_enabled,
+      reset_playback,
       ..
     } = *params;
 
@@ -77,7 +78,6 @@ impl TimeWarp {
     let sustain = params.sustain.next();
     let release = params.release.next();
     let is_recording = recording_gain > 0.;
-    let reset_playback = params.reset_playback;
 
     let grains_out = self
       .voices

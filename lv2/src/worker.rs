@@ -58,7 +58,7 @@ impl Worker for DmTimeWarp {
           .time_warp
           .set_delay_line_values(samples, duration_in_samples);
         self.params.set_file_duration(duration_in_ms);
-        self.params.reset_playback = true;
+        self.params.set_reset_playback(true);
         self.worker_is_finished = true;
       }
       WorkResponseData::FlushBuffer(samples) => {
