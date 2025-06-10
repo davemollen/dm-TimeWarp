@@ -108,7 +108,4 @@
             lv2:symbol "flush" ;
             lv2:name "Flush" ;
         ] ;
-        modgui:monitoredOutputs [ 
-            lv2:symbol "time" 
-        ] ;
     ] .
