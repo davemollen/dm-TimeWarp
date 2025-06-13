@@ -43,9 +43,6 @@ pub struct Params {
   prev_play: bool,
   prev_flush: bool,
   is_flushing: bool,
-  prev_dry: f32,
-  prev_wet: f32,
-  prev_size: f32,
 }
 
 impl Params {
@@ -80,9 +77,6 @@ impl Params {
       prev_play: true,
       prev_flush: false,
       is_flushing: false,
-      prev_dry: 0.,
-      prev_wet: 0.,
-      prev_size: 0.,
     }
   }
 
@@ -116,9 +110,7 @@ impl Params {
     }
     self.scan = scan;
     self.spray = spray;
-    if size != self.prev_size {
-      self.size = size.cbrt();
-    }
+    self.size = size.cbrt();
     self.speed = speed;
     self.density = density;
     self.stretch = stretch;
@@ -127,6 +119,8 @@ impl Params {
     let overridden_play = self.override_play(play, &record_mode);
     let recording_gain = if record { 1. } else { 0. };
     let playback_gain = if overridden_play { 1. } else { 0. };
+    let dry = dry.fast_dbtoa();
+    let wet = wet.fast_dbtoa();
 
     if flush && !self.prev_flush {
       self.file_duration = None;
@@ -143,14 +137,8 @@ impl Params {
       self.set_time(record_mode, record, play, time, length, buffer_size);
       self.feedback.set_target(feedback);
       self.recycle.set_target(recycle);
-      if dry != self.prev_dry {
-        self.dry.set_target(dry.fast_dbtoa());
-        self.prev_dry = dry;
-      }
-      if wet != self.prev_wet {
-        self.wet.set_target(wet.fast_dbtoa());
-        self.prev_wet = wet;
-      }
+      self.dry.set_target(dry);
+      self.wet.set_target(wet);
       self.attack.set_target(attack);
       self.decay.set_target(decay);
       self.sustain.set_target(sustain);
