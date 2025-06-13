@@ -110,7 +110,7 @@ impl Params {
     }
     self.scan = scan;
     self.spray = spray;
-    self.size = size.powf(0.333);
+    self.set_size(size);
     self.speed = speed;
     self.density = density;
     self.stretch = stretch;
@@ -119,8 +119,8 @@ impl Params {
     let overridden_play = self.override_play(play, &record_mode);
     let recording_gain = if record { 1. } else { 0. };
     let playback_gain = if overridden_play { 1. } else { 0. };
-    let dry = dry.dbtoa();
-    let wet = wet.dbtoa();
+    let dry = dry.fast_dbtoa();
+    let wet = wet.fast_dbtoa();
 
     if flush && !self.prev_flush {
       self.file_duration = None;
@@ -241,5 +241,16 @@ impl Params {
         self.time.reset(time);
       }
     }
+  }
+
+  fn set_size(&mut self, size: f32) {
+    // same as size.powf(0.333) and size.cbrt()
+    self.size = if size == 0. {
+      0.
+    } else if size == 1. {
+      1.
+    } else {
+      size.fast_cbrt()
+    };
   }
 }

@@ -126,8 +126,14 @@ impl Grain {
       0.
     } else if x == 1. {
       1.
+    /*
+    Replaced `} else { (1. - (x * PI).cos()) * 0.5 }` with a bhaskara cosine approximation.
+    cos and sin are needed because Bhaskara only constructs half of a sine correctly.
+    */
+    } else if x < 0.5 {
+      (1. - (x * PI).fast_cos_bhaskara()) * 0.5
     } else {
-      (1. - (x * PI).fast_cos()) * 0.5
+      ((x - 0.5) * PI).fast_sin_bhaskara() * 0.5 + 0.5
     }
   }
 

@@ -13,8 +13,8 @@ impl Mix {
     if mix != self.mix {
       let factor = mix * FRAC_PI_2;
       self.mix = mix;
-      self.dry_gain = factor.fast_cos();
-      self.wet_gain = factor.fast_sin();
+      self.dry_gain = factor.fast_cos_bhaskara();
+      self.wet_gain = factor.fast_sin_bhaskara();
     }
     (
       dry.0 * self.dry_gain + wet.0 * self.wet_gain,

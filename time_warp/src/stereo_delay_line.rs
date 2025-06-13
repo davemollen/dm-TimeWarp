@@ -163,9 +163,9 @@ mod tests {
   fn should_set_values() {
     let mut delay_line = StereoDelayLine::new(2, 1000.);
     let values = vec![(0.4, 0.4), (0.2, 0.2), (-0.2, -0.2), (-0.4, -0.4)];
-    delay_line.set_values(&values);
+    delay_line.set_values(values.to_vec());
     assert_eq!(values.len(), 4);
-    assert_eq!(delay_line.buffer.len(), 2);
+    assert_eq!(delay_line.buffer.len(), 4);
     delay_line
       .buffer
       .iter()

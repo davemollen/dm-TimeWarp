@@ -1,7 +1,8 @@
-use std::f32::consts::{FRAC_PI_2, PI};
+use std::f32::consts::{FRAC_PI_2, LN_10, PI, TAU};
 
 pub trait FloatExt {
   fn dbtoa(self) -> Self;
+  fn fast_dbtoa(self) -> Self;
   fn scale(self, in_low: Self, in_high: Self, out_low: Self, out_high: Self) -> Self;
   fn mix(self, right: f32, factor: f32) -> Self;
   fn fast_atan1(self) -> Self;
@@ -15,13 +16,26 @@ pub trait FloatExt {
   fn fast_cos_bhaskara(self) -> Self;
   fn fast_pow(self, exponent: Self) -> Self;
   fn fast_exp(self) -> Self;
+  fn fast_cbrt(self) -> Self;
   fn mstosamps(self, sample_rate: Self) -> Self;
 }
 
 impl FloatExt for f32 {
+  fn fast_cbrt(self) -> Self {
+    let i = self.to_bits();
+    let approx = i / 3 + 709921077;
+    f32::from_bits(approx)
+  }
+
   /// Converts decibels to a linear amplitude value
   fn dbtoa(self) -> Self {
     (10_f32).powf(self * 0.05)
+  }
+
+  /// Fast decibels to linear amplitude conversion
+  fn fast_dbtoa(self) -> Self {
+    const CONVERSION_FACTOR: f32 = LN_10 / 20.0;
+    (self * CONVERSION_FACTOR).exp()
   }
 
   fn scale(self, in_low: Self, in_high: Self, out_low: Self, out_high: Self) -> Self {
@@ -84,39 +98,33 @@ impl FloatExt for f32 {
 
   /// This is a sine approximation. Use this to safe processing power.
   fn fast_sin(self) -> Self {
-    const TWOPI: f32 = 6.2831853071795865;
     const INVTWOPI: f32 = 0.15915494309189534;
     let k: u32 = (self * INVTWOPI) as u32;
     let half = if self < 0_f32 { -0.5_f32 } else { 0.5_f32 };
-    let x = (half + (k as f32)) * TWOPI - self;
+    let x = (half + (k as f32)) * TAU - self;
     sin_approx(x)
   }
 
   /// This is a cosine approximation. Use this to safe processing power.
   fn fast_cos(self) -> Self {
-    const TWOPI: f32 = 6.2831853071795865;
     const INVTWOPI: f32 = 0.15915494309189534;
     let x = self + FRAC_PI_2;
     let k: u32 = (x * INVTWOPI) as u32;
     let half = if x < 0_f32 { -0.5_f32 } else { 0.5_f32 };
-    let x_new = (half + (k as f32)) * TWOPI - x;
+    let x_new = (half + (k as f32)) * TAU - x;
     sin_approx(x_new)
   }
 
   /// This is the Bhaskara sine approximation. It returns a sine from 0 to 180 degrees.
-  /// This function expects values between 0. and 1.
   fn fast_sin_bhaskara(self) -> Self {
-    let x = self * FRAC_PI_2;
     let pi_squared = 9.869604401089358;
-    let a = x * (PI - x);
+    let a = self * (PI - self);
     (16. * a) / (5. * pi_squared - 4. * a)
   }
 
   /// This is the Bhaskara cosine approximation. It returns a sine from 0 to 180 degrees.
-  /// This function expects values between 0. and 1.
   fn fast_cos_bhaskara(self) -> Self {
-    let x = self * FRAC_PI_2;
-    let x_squared = x * x;
+    let x_squared = self * self;
     let pi_squared = 9.869604401089358;
     (pi_squared - 4. * x_squared) / (pi_squared + x_squared)
   }
@@ -139,7 +147,7 @@ impl FloatExt for f32 {
 #[cfg(test)]
 mod tests {
   use super::FloatExt;
-  use std::f32::consts::{FRAC_1_SQRT_2, PI};
+  use std::f32::consts::PI;
 
   fn assert_approximately_eq(left: f32, right: f32) {
     assert_eq!((left * 100.).floor() / 100., (right * 100.).floor() / 100.)
@@ -150,6 +158,17 @@ mod tests {
     assert_eq!((-3f32).dbtoa(), 0.70794576);
     assert_eq!((-6f32).dbtoa(), 0.5011872);
     assert_eq!((-12f32).dbtoa(), 0.25118864);
+    assert_eq!((-70f32).dbtoa(), 0.00031622776);
+    assert_eq!((-100f32).dbtoa(), 1e-5);
+  }
+
+  #[test]
+  fn fast_dbtoa() {
+    assert_approximately_eq(-3f32.fast_dbtoa(), -3f32.dbtoa());
+    assert_approximately_eq(-6f32.fast_dbtoa(), -6f32.dbtoa());
+    assert_approximately_eq(-12f32.fast_dbtoa(), -12f32.dbtoa());
+    assert_approximately_eq(-70f32.fast_dbtoa(), -70f32.dbtoa());
+    assert_approximately_eq((-100.0).fast_dbtoa(), (-100.0).dbtoa());
   }
 
   #[test]
@@ -228,13 +247,23 @@ mod tests {
 
   #[test]
   fn fast_bhaskara() {
-    assert_approximately_eq((0.).fast_sin_bhaskara(), 0.);
-    assert_approximately_eq((0.5).fast_sin_bhaskara(), FRAC_1_SQRT_2);
-    assert_approximately_eq((1.).fast_sin_bhaskara(), 1.);
-    assert_approximately_eq((0.).fast_cos_bhaskara(), 1.);
-    assert_approximately_eq((0.5).fast_cos_bhaskara(), FRAC_1_SQRT_2);
-    assert_approximately_eq((0.5).fast_cos_bhaskara(), (0.5).fast_sin_bhaskara());
-    assert_approximately_eq((0.).fast_cos_bhaskara(), (1.).fast_sin_bhaskara());
+    assert_approximately_eq(0f32.fast_sin_bhaskara(), 0f32.sin());
+    assert_approximately_eq((PI * 0.25).fast_sin_bhaskara(), (PI * 0.25).sin());
+    assert_approximately_eq((PI * 0.5).fast_sin_bhaskara(), (PI * 0.5).sin());
+
+    assert_approximately_eq(0f32.fast_cos_bhaskara(), 0f32.cos());
+    assert_approximately_eq((PI * 0.25).fast_cos_bhaskara(), (PI * 0.25).cos());
+    assert_approximately_eq((PI * 0.5).fast_cos_bhaskara(), (PI * 0.5).cos());
+  }
+
+  #[test]
+  fn size() {
+    for i in 0..101 {
+      let x = i as f32 / 100.;
+      println!("{}, {}, {}", x, x.cbrt(), x.fast_cbrt(),);
+    }
+    // assert_approximately_eq(0_f32.powf(0.333), 0_f32.fast_pow(0.333));
+    // assert_approximately_eq(0.1_f32.powf(0.333), 0.1_f32.fast_pow(0.333));
   }
 }
 
