@@ -221,6 +221,7 @@ impl Params {
         if let Some(loop_duration) = self.stopwatch.process(start, buffer_size) {
           self.time.reset(loop_duration * length);
           self.loop_duration = Some(loop_duration);
+          self.reset_playback = true;
         }
       }
       (_, _, Some(loop_duration), RecordMode::Looper) => {
