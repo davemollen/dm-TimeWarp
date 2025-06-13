@@ -55,7 +55,7 @@ impl Voices {
     reset_playback: bool,
   ) -> (f32, f32) {
     let duration = (1. - size) * (time - self.fade_time) + self.fade_time; // range from time to fade_time
-    let grain_density = density * 14. + 1.; // range from 1 to 15
+    let grain_density = density * 7. + 1.; // range from 1 to 8
 
     if reset_playback {
       self.start_phasor.reset();

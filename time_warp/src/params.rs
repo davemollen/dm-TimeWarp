@@ -112,7 +112,7 @@ impl Params {
     self.spray = spray;
     self.size = size.powf(0.333);
     self.speed = speed;
-    self.density = density * density;
+    self.density = density;
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 

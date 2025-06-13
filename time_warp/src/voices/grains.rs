@@ -6,13 +6,13 @@ use {
 
 #[derive(Clone)]
 pub struct Grains {
-  grains: [Grain; 20],
+  grains: [Grain; 12], // extra grains to allow for speed changes without voice stealing
 }
 
 impl Grains {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      grains: [Grain::new(sample_rate); 20],
+      grains: [Grain::new(sample_rate); 12],
     }
   }
 
