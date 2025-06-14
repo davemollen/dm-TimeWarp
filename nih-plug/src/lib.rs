@@ -61,7 +61,7 @@ impl DmTimeWarp {
       self.params.decay.value(),
       self.params.sustain.value(),
       self.params.release.value(),
-      self.params.flush.value(),
+      self.params.erase.value(),
       buffer_size,
     );
 
@@ -70,7 +70,7 @@ impl DmTimeWarp {
       .get_filter()
       .set_coefficients(self.params.highpass.value(), self.params.lowpass.value());
 
-    if self.process_params.should_clear_buffer() {
+    if self.process_params.should_erase_buffer() {
       *self.params.file_path.lock().unwrap() = "".to_string();
       context.execute_background(WorkerRequest::FlushBuffer);
     }

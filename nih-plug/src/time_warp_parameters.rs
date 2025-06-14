@@ -93,8 +93,8 @@ pub struct TimeWarpParameters {
   #[id = "wet"]
   pub wet: FloatParam,
 
-  #[id = "flush"]
-  pub flush: BoolParam,
+  #[id = "erase"]
+  pub erase: BoolParam,
 
   #[persist = "file_path"]
   pub file_path: Arc<Mutex<String>>,
@@ -268,7 +268,7 @@ impl Default for TimeWarpParameters {
         }
       })),
 
-      flush: BoolParam::new("Flush", false),
+      erase: BoolParam::new("Erase", false),
 
       file_path: Arc::new(Mutex::new("".to_string())),
     }

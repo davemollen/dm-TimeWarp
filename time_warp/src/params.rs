@@ -41,8 +41,8 @@ pub struct Params {
   stopwatch: Stopwatch,
   prev_file_duration: Option<f32>,
   prev_play: bool,
-  prev_flush: bool,
-  is_flushing: bool,
+  prev_erase: bool,
+  is_erasing_buffer: bool,
 }
 
 impl Params {
@@ -75,8 +75,8 @@ impl Params {
       stopwatch: Stopwatch::new(sample_rate),
       prev_file_duration: None,
       prev_play: true,
-      prev_flush: false,
-      is_flushing: false,
+      prev_erase: false,
+      is_erasing_buffer: false,
     }
   }
 
@@ -102,7 +102,7 @@ impl Params {
     decay: f32,
     sustain: f32,
     release: f32,
-    flush: bool,
+    erase: bool,
     buffer_size: usize,
   ) {
     if self.prev_reset_playback {
@@ -122,13 +122,13 @@ impl Params {
     let dry = dry.fast_dbtoa();
     let wet = wet.fast_dbtoa();
 
-    if flush && !self.prev_flush {
+    if erase && !self.prev_erase {
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
-      self.is_flushing = true;
+      self.is_erasing_buffer = true;
     } else {
-      self.is_flushing = false;
+      self.is_erasing_buffer = false;
     }
 
     if self.is_initialized {
@@ -158,7 +158,7 @@ impl Params {
       self.is_initialized = true;
     }
     self.prev_play = play;
-    self.prev_flush = flush;
+    self.prev_erase = erase;
     self.prev_file_duration = self.file_duration;
     self.prev_reset_playback = self.reset_playback;
   }
@@ -172,8 +172,8 @@ impl Params {
     self.recording_gain.reset(0.);
   }
 
-  pub fn should_clear_buffer(&mut self) -> bool {
-    self.is_flushing
+  pub fn should_erase_buffer(&mut self) -> bool {
+    self.is_erasing_buffer
   }
 
   fn override_play(&mut self, play: bool, record_mode: &RecordMode) -> bool {

@@ -32,15 +32,15 @@ function(event) {
           play.removeClass("on");
         }
         break;
-      case "flush":
-        const flush = event.icon.find("[mod-port-symbol=flush]");
+      case "erase":
+        const erase = event.icon.find("[mod-port-symbol=erase]");
         if(value == 1) {
-          flush.addClass("on");
+          erase.addClass("on");
           event.icon.find("#sample-parameter").text("");
           const record_mode = event.icon.find(".mod-tab.selected").attr('mod-port-value');
           show_correct_time_control_knob(record_mode)
         } else {
-          flush.removeClass("on");
+          erase.removeClass("on");
         }
         break;
       case "midi_enabled":

@@ -31,7 +31,7 @@ struct Ports {
   decay: InputPort<Control>,
   sustain: InputPort<Control>,
   release: InputPort<Control>,
-  flush: InputPort<Control>,
+  erase: InputPort<Control>,
   control: InputPort<AtomPort>,
   notify: OutputPort<AtomPort>,
   input_left: InputPort<Audio>,
@@ -108,7 +108,7 @@ impl DmTimeWarp {
       *ports.decay,
       *ports.sustain,
       *ports.release,
-      *ports.flush == 1.,
+      *ports.erase == 1.,
       sample_count as usize,
     );
 
@@ -117,7 +117,7 @@ impl DmTimeWarp {
       .get_filter()
       .set_coefficients(*ports.highpass, *ports.lowpass);
 
-    if self.params.should_clear_buffer() {
+    if self.params.should_erase_buffer() {
       self.file_path = "".to_string();
       self.write_set_file(ports);
       features
