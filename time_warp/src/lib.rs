@@ -23,7 +23,7 @@ pub use {
   wav_processor::{WavFileData, WavProcessor},
 };
 
-pub const MIN_DELAY_TIME: f32 = 10.;
+pub const MIN_DELAY_TIME: f32 = 2.5;
 const MAX_DELAY_TIME: f32 = 60000.;
 
 pub struct TimeWarp {
