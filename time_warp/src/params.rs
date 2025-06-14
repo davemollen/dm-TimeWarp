@@ -7,7 +7,7 @@ use {
   stopwatch::Stopwatch,
 };
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum RecordMode {
   Delay,
   Looper,
@@ -43,6 +43,7 @@ pub struct Params {
   prev_play: bool,
   prev_erase: bool,
   is_erasing_buffer: bool,
+  prev_record_mode: RecordMode,
 }
 
 impl Params {
@@ -77,6 +78,7 @@ impl Params {
       prev_play: true,
       prev_erase: false,
       is_erasing_buffer: false,
+      prev_record_mode: RecordMode::Delay,
     }
   }
 
@@ -122,13 +124,22 @@ impl Params {
     let dry = dry.fast_dbtoa();
     let wet = wet.fast_dbtoa();
 
-    if erase && !self.prev_erase {
+    let record_mode_has_changed = record_mode != self.prev_record_mode;
+    let erase_has_changed = erase && !self.prev_erase;
+    self.is_erasing_buffer = record_mode_has_changed || erase_has_changed;
+
+    if erase_has_changed {
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
-      self.is_erasing_buffer = true;
-    } else {
-      self.is_erasing_buffer = false;
+    }
+
+    if record_mode_has_changed {
+      self.prev_record_mode = record_mode;
+      if record_mode == RecordMode::Looper {
+        self.stopwatch.reset();
+        self.loop_duration = None;
+      }
     }
 
     if self.is_initialized {
