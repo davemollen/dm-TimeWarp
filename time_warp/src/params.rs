@@ -118,12 +118,6 @@ impl Params {
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
-    let overridden_play = self.override_play(play, &record_mode);
-    let recording_gain = if record { 1. } else { 0. };
-    let playback_gain = if overridden_play { 1. } else { 0. };
-    let dry = dry.fast_dbtoa();
-    let wet = wet.fast_dbtoa();
-
     let record_mode_has_changed = record_mode != self.prev_record_mode;
     let erase_has_changed = erase && !self.prev_erase;
     self.is_erasing_buffer = record_mode_has_changed || erase_has_changed;
@@ -139,8 +133,15 @@ impl Params {
       if record_mode == RecordMode::Looper {
         self.stopwatch.reset();
         self.loop_duration = None;
+        self.playback_gain.reset(0.);
       }
     }
+
+    let overridden_play = self.override_play(play, &record_mode);
+    let recording_gain = if record { 1. } else { 0. };
+    let playback_gain = if overridden_play { 1. } else { 0. };
+    let dry = dry.fast_dbtoa();
+    let wet = wet.fast_dbtoa();
 
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
@@ -185,6 +186,10 @@ impl Params {
 
   pub fn should_erase_buffer(&mut self) -> bool {
     self.is_erasing_buffer
+  }
+
+  pub fn get_feedback_is_enabled(&self) -> bool {
+    !(self.prev_record_mode == RecordMode::Looper && self.loop_duration.is_none())
   }
 
   fn override_play(&mut self, play: bool, record_mode: &RecordMode) -> bool {

@@ -77,7 +77,7 @@ impl TimeWarp {
     let decay = params.decay.next();
     let sustain = params.sustain.next();
     let release = params.release.next();
-    let is_recording = recording_gain > 0.;
+    let feedback_is_enabled = params.get_feedback_is_enabled();
 
     let grains_out = self
       .voices
@@ -96,7 +96,6 @@ impl TimeWarp {
         decay,
         sustain,
         release,
-        is_recording,
         reset_playback,
       )
       .multiply(playback_gain);
@@ -108,7 +107,7 @@ impl TimeWarp {
       feedback,
       recycle,
       recording_gain,
-      is_recording,
+      feedback_is_enabled,
     );
 
     input.multiply(dry).add(grains_out.multiply(wet))
@@ -135,16 +134,18 @@ impl TimeWarp {
     feedback: f32,
     recycle: f32,
     recording_gain: f32,
-    is_recording: bool,
+    feedback_is_enabled: bool,
   ) {
-    if is_recording {
-      let delay_out = self.delay_line.read(time, Interpolation::Linear);
+    let delay_out = self.delay_line.read(time, Interpolation::Linear);
+    let delay_in = if feedback_is_enabled {
       let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
-      let delay_in = self
+      self
         .mix
-        .process(delay_out, input.add(feedback), recording_gain);
-      self.delay_line.write(delay_in);
-    }
+        .process(delay_out, input.add(feedback), recording_gain)
+    } else {
+      self.mix.process(delay_out, input, recording_gain)
+    };
+    self.delay_line.write(delay_in);
   }
 
   fn get_feedback(
