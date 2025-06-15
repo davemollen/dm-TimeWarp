@@ -10,15 +10,18 @@ use nih_plug::{
   params::Param,
   prelude::{AsyncExecutor, Editor},
 };
-use nih_plug_vizia::vizia::{
-  binding::LensExt,
-  context::EmitContext,
-  layout::Units::Auto,
-  model::Model,
-  modifiers::{LayoutModifiers, StyleModifiers, TextModifiers},
-  prelude::Units::{Pixels, Stretch},
-  style::FontWeightKeyword,
-  views::{Button, Element, HStack, Label, VStack},
+use nih_plug_vizia::{
+  assets,
+  vizia::{
+    binding::LensExt,
+    context::EmitContext,
+    layout::Units::Auto,
+    model::Model,
+    modifiers::{LayoutModifiers, StyleModifiers, TextModifiers},
+    prelude::Units::{Pixels, Stretch},
+    style::FontWeightKeyword,
+    views::{Button, Element, HStack, Label, VStack},
+  },
 };
 use nih_plug_vizia::{create_vizia_editor, vizia_assets, ViziaState, ViziaTheming};
 use std::sync::Arc;
@@ -41,6 +44,7 @@ pub(crate) fn create(
     move |cx, gui_context| {
       vizia_assets::register_roboto(cx);
       vizia_assets::register_roboto_bold(cx);
+      cx.set_default_font(&[vizia_assets::ROBOTO]);
       cx.add_stylesheet(STYLE).ok();
 
       UiData {
