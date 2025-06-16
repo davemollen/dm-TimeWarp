@@ -19,6 +19,7 @@ impl GrainTrigger {
       self.phasor.reset();
       return true;
     }
+    // use synced phasor to drive this one
     let phase = self.phasor.process(1000. / duration * density);
     self.delta.process(phase) < 0.
   }

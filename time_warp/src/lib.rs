@@ -8,6 +8,7 @@ pub mod shared {
   pub mod delta;
   pub mod float_ext;
   pub mod phasor;
+  mod synced_phasor;
   pub mod tuple_ext;
 }
 mod wav_processor;

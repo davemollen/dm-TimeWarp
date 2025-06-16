@@ -60,6 +60,7 @@ impl Voices {
     if reset_playback {
       self.start_phasor.reset();
     }
+    // use synced phasor to drive start_phasor
     let start_phase = self
       .start_phasor
       .process(speed, time, size, density, stretch, is_recording);
