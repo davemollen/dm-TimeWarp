@@ -36,7 +36,6 @@ impl Grain {
   ) -> (f32, f32, f32) {
     let position_a = Self::wrap(self.position) * 2.;
     let position_b = Self::wrap(self.position + 0.5) * 2.;
-    // TODO: investigate if there's double windowing going on
     let grain_fade = self.get_grain_fade(window_factor);
     let position_a_fade = Self::get_xfade(position_a, fade_factor, fade_offset);
     let position_b_fade = 1. - position_a_fade;
@@ -92,18 +91,18 @@ impl Grain {
     match (position_a_fade > 0., position_b_fade > 0.) {
       (true, true) => delay_line
         .read(position_a * time, Interpolation::Linear)
-        .multiply(position_a_fade * grain_fade)
+        .multiply(position_a_fade.min(grain_fade)) // take the minimum of both fades to prevent audible decreasing gain
         .add(
           delay_line
             .read(position_b * time, Interpolation::Linear)
-            .multiply(position_b_fade * grain_fade),
+            .multiply(position_b_fade.min(grain_fade)),
         ),
       (true, false) => delay_line
         .read(position_a * time, Interpolation::Linear)
-        .multiply(position_a_fade * grain_fade),
+        .multiply(position_a_fade.min(grain_fade)),
       (false, true) => delay_line
         .read(position_b * time, Interpolation::Linear)
-        .multiply(position_b_fade * grain_fade),
+        .multiply(position_b_fade.min(grain_fade)),
       _ => (0., 0.),
     }
   }
