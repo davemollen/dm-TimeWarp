@@ -3,7 +3,7 @@ use {
     shared::{float_ext::FloatExt, tuple_ext::TupleExt},
     stereo_delay_line::{Interpolation, StereoDelayLine},
   },
-  std::f32::consts::PI,
+  std::f32::consts::FRAC_PI_2,
 };
 
 #[derive(Clone, Copy)]
@@ -126,14 +126,9 @@ impl Grain {
       0.
     } else if x == 1. {
       1.
-    /*
-    Replaced `} else { (1. - (x * PI).cos()) * 0.5 }` with a bhaskara cosine approximation.
-    cos and sin are needed because Bhaskara only constructs half of a sine correctly.
-    */
-    } else if x < 0.5 {
-      (1. - (x * PI).fast_cos_bhaskara()) * 0.5
     } else {
-      ((x - 0.5) * PI).fast_sin_bhaskara() * 0.5 + 0.5
+      let y = (x * FRAC_PI_2).fast_sin_bhaskara();
+      y * y
     }
   }
 
