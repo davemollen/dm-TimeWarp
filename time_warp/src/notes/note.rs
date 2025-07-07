@@ -35,7 +35,7 @@ impl Note {
   pub fn note_on(&mut self, note: u8, velocity: f32) {
     self.note = note;
     self.speed = self.note_to_speed_table[note as usize];
-    self.gain = velocity;
+    self.gain = velocity.sqrt();
     self.adsr_stage = ADSRStage::Attack;
   }
 
