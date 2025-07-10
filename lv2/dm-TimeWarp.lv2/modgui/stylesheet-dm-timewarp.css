@@ -6,14 +6,13 @@
 .mod-pedal{{{cns}}} .mix-controls {
     padding: 16px;
     border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-right: none !important;
 }
 
 .mod-pedal{{{cns}}} .midi-controls {
     display: flex;
     flex-direction: row;
     padding: 16px;
-    border-top-left-radius: 8px;
     border-bottom-left-radius: 8px;
     border-right: none;
 }
@@ -34,17 +33,16 @@
     align-items: center;
     padding: 16px;
     margin-top: 64px;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
     border-bottom: none;
+    border-top-right-radius: 8px;
 }
 
 .mod-pedal{{{cns}}} .buffer-controls {
     justify-content: end;
     align-items: center;
     padding: 16px;
-    border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
+    margin-bottom: -2px;
 }
 
 .mod-pedal{{{cns}}} .footswitches {
@@ -52,9 +50,9 @@
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    margin-top: 3px;
     height: 136px;
-    border-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .mod-pedal{{{cns}}} .row {
@@ -77,7 +75,7 @@
     flex-direction: row;
     gap: 12px;
     background-color: #211F24;
-    border: 2.5px solid #797979;
+    border: 2px solid #797979;
 }
 
 .mod-pedal{{{cns}}} .grain-controls, .buffer-controls, .footswitches {
@@ -116,10 +114,9 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 1136px;
-    height: 447px;
+    width: 1118px;
+    height: 426px;
     border-radius: 8px;
-    padding: 8px;
 }
 
 .mod-pedal{{{cns}}}::after {
@@ -357,7 +354,7 @@
     width: 80px;
     height: 28px;
     line-height: 25px;
-    border: 2.5px solid #797979;
+    border: 2px solid #797979;
     font-size: 10px;
     font-weight: bold;
     text-align: center;
