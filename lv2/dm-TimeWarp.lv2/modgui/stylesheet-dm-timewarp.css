@@ -382,6 +382,7 @@
 ================================================ */
 .mod-pedal{{{cns}}} {
     background-image:url(/resources/assets/background.png{{{ns}}});
+    border-radius: 8px;
 }
 
 /* = COLORS - Color of the pedals labels
