@@ -14,7 +14,9 @@ impl Mix {
       let factor = mix * FRAC_PI_2;
       self.mix = mix;
       self.dry_gain = factor.fast_cos_bhaskara();
+      self.dry_gain *= self.dry_gain;
       self.wet_gain = factor.fast_sin_bhaskara();
+      self.wet_gain *= self.wet_gain;
     }
     (
       dry.0 * self.dry_gain + wet.0 * self.wet_gain,
