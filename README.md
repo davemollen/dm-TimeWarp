@@ -1,7 +1,7 @@
 ## dm-TimeWarp
 
 A granular audio effect written in Rust.
-It's a granular delay, looper & sampler with timestretch abilities wrapped into one plugin.
+It's a granular delay, looper & sampler with time stretch capabilities wrapped into one plugin.
 The effect can be compiled to a [MOD audio](https://mod.audio/), VST3 or CLAP plugin.
 
 ## Table of contents:

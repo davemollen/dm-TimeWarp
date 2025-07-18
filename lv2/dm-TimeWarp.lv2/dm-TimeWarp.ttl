@@ -31,7 +31,7 @@
 	mod:brand "DM" ;
 	mod:label "TimeWarp" ;
 	rdfs:comment """
-A granular delay, sampler, looper with time stretch capabilities.
+A granular delay, looper & sampler with time stretch capabilities.
 """ ;
 	lv2:requiredFeature lv2:inPlaceBroken ,
 		urid:map ,
