@@ -22,7 +22,7 @@ if mv target/release/$binary_name $move_to; then
 fi
 
 # replace <binary_name>.so with <binary_name>.dylib in manifest.ttl
-sed -i '' "s/$binary_name_to_replace/$binary_name/g" $lv2_folder/manifest.ttl
+perl -pi -e "s|$binary_name_to_replace|$binary_name|" $lv2_folder/manifest.ttl
 
 # move lv2 plugin
 cp -R $lv2_folder "/Applications/MOD Desktop.app/Contents/LV2"

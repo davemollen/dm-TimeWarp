@@ -1,58 +1,42 @@
 ## dm-TimeWarp
 
-A granular effect written in Rust.
-The effect can be compiled to a [Mod devices](https://moddevices.com/), lv2, vst3, CLAP or vst plugin.
+A granular audio effect written in Rust.
+It's a granular delay, looper & sampler with timestretch abilities wrapped into one plugin.
+The effect can be compiled to a [MOD audio](https://mod.audio/), VST3 or CLAP plugin.
 
 ## Table of contents:
 
-- [Mod devices installation](#Mod-devices-installation)
-- [Other plugin format installation](#Other-plugin-format-installation)
-  - [LV2 installation](#LV2-installation)
-  - [VST3 installation](#VST3-installation)
-  - [CLAP installation](#CLAP-installation)
-  - [VST installation](#VST-installation)
+- [VST3 and CLAP installation](#VST3-and-CLAP-installation)
+- [MOD installation](#MOD-installation)
+- [MOD Desktop installation](#MOD-Desktop-installation)
+- [Copyright notices](#Copyright-notices)
 
-## Mod devices installation
+## VST3 and CLAP installation
 
-You can find the plugin for the Mod Dwarf [here](./lv2/dm-TimeWarp.lv2/).
+You can download the VST3 and CLAP plugins for Linux, Windows and macOS from the [releases page](https://github.com/davemollen/dm-TimeWarp/releases).
 
-To build the plugin for your MOD device see [these instructions](https://github.com/moddevices/mod-plugin-builder).
+On macOS you may need to [disable Gatekeeper](https://disable-gatekeeper.github.io/) as Apple has recently made it more difficult to run unsigned code on macOS.
 
-## Other plugin format installation
+If you want to build the plugin on your own machine check out the [nih-plug repository](https://github.com/robbert-vdh/nih-plug) for instructions.
 
-A prerequisite to install any plugin is to have Rust installed on your machine.
-Follow [these instructions](https://www.rust-lang.org/tools/install) to install Rust.
+## MOD installation
 
-Below you can find the additional instructions per plugin format. These instructions might not be complete. Please let me know if anything's missing.
+~~Install the plugin from the MOD Audio plugin store.~~
 
-### LV2 installation
+The latest MOD builds can also be found on the [releases page](https://github.com/davemollen/dm-TimeWarp/releases).
 
-Go into the lv2 directory and run the `cargo build --release` command.
-Once finished, copy the compiled plugin from [/target/release](./lv2/target/release) into your plugin folder.
+If you want to build the plugin on your own machine check out the [mod-plugin-builder repository](https://github.com/moddevices/mod-plugin-builder) for instructions.
 
-### VST3 installation
+## MOD Desktop installation
 
-If you want to compile the vst3 plugin for mac you should run `./scripts/build-vst3-for-mac.sh`. This will compile and copy the plugin to the default plugin folder.
+You can download the MOD Desktop lv2 plugin for Linux, Windows and macOS from the [releases page](https://github.com/davemollen/dm-TimeWarp/releases). You can use the plugin in other lv2 hosts too, but you'll only have a GUI on MOD Desktop.
 
-If you want to compile the vst3 plugin on other systems you should go into the nih-plug directory and run `cargo xtask bundle dm_time_warp --release`.
-Once finished, copy the compiled plugin from [/target/bundled](./nih-plug/target/bundled) into your plugin folder.
+## Copyright notices
 
-### CLAP installation
+Make Noise Erbe-Verb is a trademark or trade name of another manufacturer and was used merely to identify the product whose sound was reviewed in the creation of this product.
 
-If you want to compile the CLAP plugin you should go into the nih-plug directory and run `cargo xtask bundle dm_time_warp --release`.
-Once finished, copy the compiled plugin from [/target/bundled](./nih-plug/target/bundled) into your plugin folder.
+VST is a trademark of Steinberg Media Technologies GmbH, registered in Europe and other countries.
 
-### VST installation
+All other trademarks are the property of their respective holders.
 
-The following scripts can be used to compile the plugin for mac. Prefix the command with `sudo ` if you get a `Permission denied` error.
-
-- For intel macs:
-
-  Running the `./scripts/build-vst-for-mac.sh` command will compile and copy the plugin to the default plugin folder.
-
-- For M1 macs:
-
-  Running the `./scripts/build-vst-for-mac-m1.sh` command will compile and copy the plugin to the default plugin folder.
-
-If you want to compile the vst plugin on other systems you should go into the vst directory and run `cargo build --release`.
-Once finished, copy the compiled plugin from [/target/release](./vst/target/release) into your plugin folder.
+<img src="https://steinbergmedia.github.io/vst3_dev_portal/resources/licensing_6.png" width="60" height="auto" alt="VST trademark">
