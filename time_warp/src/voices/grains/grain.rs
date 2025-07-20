@@ -90,18 +90,18 @@ impl Grain {
   ) -> (f32, f32) {
     match (position_a_fade > 0., position_b_fade > 0.) {
       (true, true) => delay_line
-        .read(position_a * time, Interpolation::Linear)
+        .read(position_a * time, Interpolation::Spline)
         .multiply(position_a_fade.min(grain_fade)) // take the minimum of both fades to prevent audible decreasing gain
         .add(
           delay_line
-            .read(position_b * time, Interpolation::Linear)
+            .read(position_b * time, Interpolation::Spline)
             .multiply(position_b_fade.min(grain_fade)),
         ),
       (true, false) => delay_line
-        .read(position_a * time, Interpolation::Linear)
+        .read(position_a * time, Interpolation::Spline)
         .multiply(position_a_fade.min(grain_fade)),
       (false, true) => delay_line
-        .read(position_b * time, Interpolation::Linear)
+        .read(position_b * time, Interpolation::Spline)
         .multiply(position_b_fade.min(grain_fade)),
       _ => (0., 0.),
     }
