@@ -33,9 +33,7 @@
 	rdfs:comment """
 A granular delay, looper & sampler with time stretch capabilities.
 """ ;
-	lv2:requiredFeature lv2:inPlaceBroken,
-		urid:map,
-		work:schedule ;
+	lv2:requiredFeature urid:map, work:schedule ;
 	lv2:optionalFeature lv2:hardRTCapable,
 		state:loadDefaultState ,
 		state:makePath,

@@ -8,36 +8,36 @@ use worker::*;
 
 #[derive(PortCollection)]
 struct Ports {
-  scan: InputPort<Control>,
-  spray: InputPort<Control>,
-  size: InputPort<Control>,
-  speed: InputPort<Control>,
-  density: InputPort<Control>,
-  stretch: InputPort<Control>,
-  record: InputPort<Control>,
-  play: InputPort<Control>,
-  record_mode: InputPort<Control>,
-  time: InputPort<Control>,
-  length: InputPort<Control>,
-  highpass: InputPort<Control>,
-  lowpass: InputPort<Control>,
-  feedback: InputPort<Control>,
-  recycle: InputPort<Control>,
-  dry: InputPort<Control>,
-  wet: InputPort<Control>,
-  midi_enabled: InputPort<Control>,
-  voices: InputPort<Control>,
-  attack: InputPort<Control>,
-  decay: InputPort<Control>,
-  sustain: InputPort<Control>,
-  release: InputPort<Control>,
-  erase: InputPort<Control>,
+  scan: InputPort<InPlaceControl>,
+  spray: InputPort<InPlaceControl>,
+  size: InputPort<InPlaceControl>,
+  speed: InputPort<InPlaceControl>,
+  density: InputPort<InPlaceControl>,
+  stretch: InputPort<InPlaceControl>,
+  record: InputPort<InPlaceControl>,
+  play: InputPort<InPlaceControl>,
+  record_mode: InputPort<InPlaceControl>,
+  time: InputPort<InPlaceControl>,
+  length: InputPort<InPlaceControl>,
+  highpass: InputPort<InPlaceControl>,
+  lowpass: InputPort<InPlaceControl>,
+  feedback: InputPort<InPlaceControl>,
+  recycle: InputPort<InPlaceControl>,
+  dry: InputPort<InPlaceControl>,
+  wet: InputPort<InPlaceControl>,
+  midi_enabled: InputPort<InPlaceControl>,
+  voices: InputPort<InPlaceControl>,
+  attack: InputPort<InPlaceControl>,
+  decay: InputPort<InPlaceControl>,
+  sustain: InputPort<InPlaceControl>,
+  release: InputPort<InPlaceControl>,
+  erase: InputPort<InPlaceControl>,
   control: InputPort<AtomPort>,
   notify: OutputPort<AtomPort>,
-  input_left: InputPort<Audio>,
-  input_right: InputPort<Audio>,
-  output_left: OutputPort<Audio>,
-  output_right: OutputPort<Audio>,
+  input_left: InputPort<InPlaceAudio>,
+  input_right: InputPort<InPlaceAudio>,
+  output_left: OutputPort<InPlaceAudio>,
+  output_right: OutputPort<InPlaceAudio>,
 }
 
 #[derive(FeatureCollection)]
@@ -85,37 +85,37 @@ impl DmTimeWarp {
     sample_count: u32,
   ) {
     self.params.set(
-      *ports.scan,
-      *ports.spray,
-      *ports.size,
-      *ports.speed,
-      *ports.density,
-      *ports.stretch,
-      *ports.record == 1.,
-      *ports.play == 1.,
-      match *ports.record_mode {
+      ports.scan.get(),
+      ports.spray.get(),
+      ports.size.get(),
+      ports.speed.get(),
+      ports.density.get(),
+      ports.stretch.get(),
+      ports.record.get() == 1.,
+      ports.play.get() == 1.,
+      match ports.record_mode.get() {
         1. => RecordMode::Delay,
         _ => RecordMode::Looper,
       },
-      *ports.time,
-      *ports.length,
-      *ports.feedback,
-      *ports.recycle,
-      *ports.dry,
-      *ports.wet,
-      *ports.midi_enabled == 1.,
-      *ports.attack,
-      *ports.decay,
-      *ports.sustain,
-      *ports.release,
-      *ports.erase == 1.,
+      ports.time.get(),
+      ports.length.get(),
+      ports.feedback.get(),
+      ports.recycle.get(),
+      ports.dry.get(),
+      ports.wet.get(),
+      ports.midi_enabled.get() == 1.,
+      ports.attack.get(),
+      ports.decay.get(),
+      ports.sustain.get(),
+      ports.release.get(),
+      ports.erase.get() == 1.,
       sample_count as usize,
     );
 
     self
       .time_warp
       .get_filter()
-      .set_coefficients(*ports.highpass, *ports.lowpass);
+      .set_coefficients(ports.highpass.get(), ports.lowpass.get());
 
     if self.params.should_erase_buffer() {
       self.file_path = "".to_string();
@@ -128,7 +128,7 @@ impl DmTimeWarp {
         .ok();
     }
 
-    self.notes.set_voice_count(*ports.voices as usize);
+    self.notes.set_voice_count(ports.voices.get() as usize);
   }
 }
 
@@ -178,19 +178,18 @@ impl Plugin for DmTimeWarp {
     }
 
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
-    let output_channels = ports
-      .output_left
-      .iter_mut()
-      .zip(ports.output_right.iter_mut());
+    let output_channels = ports.output_left.iter().zip(ports.output_right.iter());
 
     for ((input_left, input_right), (output_left, output_right)) in
       input_channels.zip(output_channels)
     {
-      (*output_left, *output_right) = self.time_warp.process(
-        (*input_left, *input_right),
+      let time_warp_output = self.time_warp.process(
+        (input_left.get(), input_right.get()),
         &mut self.params,
         &mut self.notes.get_notes(),
       );
+      output_left.set(time_warp_output.0);
+      output_right.set(time_warp_output.1);
     }
   }
 
