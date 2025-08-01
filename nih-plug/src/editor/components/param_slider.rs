@@ -1,20 +1,17 @@
-#[path = "param_knob/arc_track.rs"]
-mod arc_track;
-use arc_track::ArcTrack;
 use nih_plug::params::Param;
 use vizia_plug::vizia::prelude::*;
 use vizia_plug::widgets::param_base::ParamWidgetBase;
 
-enum ParamKnobEvent {
+enum ParamSliderEvent {
   SetValue(f32),
   TextInput(String),
 }
 
-pub struct ParamKnob {
+pub struct ParamSlider {
   param_base: ParamWidgetBase,
 }
 
-impl ParamKnob {
+impl ParamSlider {
   pub fn new<L, Params, P, FMap>(
     cx: &mut Context,
     params: L,
@@ -37,40 +34,12 @@ impl ParamKnob {
         let display_value_lens = param_data.make_lens(|param| {
           param.normalized_value_to_string(param.modulated_normalized_value(), true)
         });
-        let default_normalized_value = param_data.param().default_normalized_value();
 
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name()).alignment(Alignment::Center);
-
-          Knob::custom(
-            cx,
-            default_normalized_value,
-            unmodulated_normalized_value_lens,
-            |cx, lens| {
-              ZStack::new(cx, |cx| {
-                ArcTrack::new(
-                  cx,
-                  lens,
-                  false,
-                  Percentage(100.0),
-                  Percentage(15.0),
-                  -240.0,
-                  60.0,
-                  KnobMode::Continuous,
-                )
-                .class("knob-track");
-
-                HStack::new(cx, |cx| {
-                  Element::new(cx).class("knob-tick");
-                })
-                .rotate(lens.map(|v| Angle::Deg(*v * 300.0 - 150.0)))
-                .class("knob-head");
-              })
-            },
-          )
-          .size(Pixels(64.0))
-          .on_change(|cx, val| cx.emit(ParamKnobEvent::SetValue(val)));
-
+          Slider::new(cx, unmodulated_normalized_value_lens)
+            .on_change(|cx, val| cx.emit(ParamSliderEvent::SetValue(val)))
+            .orientation(Orientation::Vertical);
           Textbox::new(cx, display_value_lens)
             .placeholder("..")
             .on_mouse_down(|cx, _| {
@@ -80,7 +49,7 @@ impl ParamKnob {
             .on_submit(|cx, text, success| {
               cx.emit(TextEvent::EndEdit);
               if success {
-                cx.emit(ParamKnobEvent::TextInput(text));
+                cx.emit(ParamSliderEvent::TextInput(text));
               };
             });
         })
@@ -91,21 +60,21 @@ impl ParamKnob {
   }
 }
 
-impl View for ParamKnob {
+impl View for ParamSlider {
   fn element(&self) -> Option<&'static str> {
-    Some("param-knob")
+    Some("param-slider")
   }
 
   fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
     event.map(|param_event, meta| match param_event {
-      ParamKnobEvent::SetValue(val) => {
+      ParamSliderEvent::SetValue(val) => {
         self.param_base.begin_set_parameter(cx);
         self.param_base.set_normalized_value(cx, *val);
         self.param_base.end_set_parameter(cx);
         meta.consume();
       }
 
-      ParamKnobEvent::TextInput(string) => {
+      ParamSliderEvent::TextInput(string) => {
         if let Some(normalized_value) = self.param_base.string_to_normalized_value(string) {
           self.param_base.begin_set_parameter(cx);
           self.param_base.set_normalized_value(cx, normalized_value);

@@ -1,33 +1,44 @@
-#[path = "./editor/components/param_checkbox.rs"]
-mod param_checkbox;
-use param_checkbox::ParamCheckbox;
+#[path = "./editor/components/param_footswitch.rs"]
+mod param_footswitch;
+use param_footswitch::ParamFootswitch;
 #[path = "./editor/components/param_knob.rs"]
 mod param_knob;
-use param_knob::{ParamKnob, ParamKnobSize};
-mod ui_data;
+use param_knob::ParamKnob;
+#[path = "./editor/components/param_slider.rs"]
+mod param_slider;
+use param_slider::ParamSlider;
+#[path = "./editor/components/param_switch.rs"]
+mod param_switch;
+use param_switch::ParamSwitch;
+#[path = "./editor/components/param_number_input.rs"]
+mod param_number_input;
+use param_number_input::ParamNumberInput;
+#[path = "./editor/components/param_tabs.rs"]
+mod param_tabs;
+use param_tabs::ParamTabs;
+#[path = "./editor/components/param_file_drop.rs"]
+mod param_file_drop;
+use param_file_drop::ParamFileDrop;
+mod assets;
+use crate::time_warp_parameters::RecordMode;
 use crate::{time_warp_parameters::TimeWarpParameters, DmTimeWarp};
-use nih_plug::{
-  params::Param,
-  prelude::{AsyncExecutor, Editor},
-};
-use nih_plug_vizia::vizia::{
-  binding::LensExt,
-  context::EmitContext,
-  layout::Units::Auto,
-  model::Model,
-  modifiers::{LayoutModifiers, StyleModifiers, TextModifiers},
-  prelude::Units::{Pixels, Stretch},
-  style::FontWeightKeyword,
-  views::{Button, Element, HStack, Label, VStack},
-};
-use nih_plug_vizia::{create_vizia_editor, vizia_assets, ViziaState, ViziaTheming};
+use assets::{register_roboto, register_roboto_bold, ROBOTO_FONT_NAME};
+use nih_plug::prelude::{AsyncExecutor, Editor, Enum};
 use std::sync::Arc;
-pub use ui_data::{ParamChangeEvent, UiData};
+use vizia_plug::vizia::prelude::*;
+use vizia_plug::{create_vizia_editor, ViziaState, ViziaTheming};
 
-const STYLE: &str = include_str!("./editor/style.css");
+const STYLE: &str = include_str!("editor/style.css");
+
+#[derive(Lens)]
+pub struct Data {
+  pub params: Arc<TimeWarpParameters>,
+}
+
+impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-  ViziaState::new(|| (568, 344))
+  ViziaState::new(|| (1114, 426))
 }
 
 pub(crate) fn create(
@@ -35,202 +46,124 @@ pub(crate) fn create(
   editor_state: Arc<ViziaState>,
   async_executor: AsyncExecutor<DmTimeWarp>,
 ) -> Option<Box<dyn Editor>> {
-  create_vizia_editor(
-    editor_state,
-    ViziaTheming::Custom,
-    move |cx, gui_context| {
-      vizia_assets::register_roboto(cx);
-      vizia_assets::register_roboto_bold(cx);
-      cx.set_default_font(&[vizia_assets::ROBOTO]);
-      cx.add_stylesheet(STYLE).ok();
+  create_vizia_editor(editor_state, ViziaTheming::Custom, move |cx, _| {
+    register_roboto(cx);
+    register_roboto_bold(cx);
+    cx.set_default_font(&[ROBOTO_FONT_NAME]);
+    cx.add_stylesheet(STYLE).ok();
+    cx.load_image(
+      "background.png",
+      include_bytes!("editor/assets/background.png"),
+      ImageRetentionPolicy::DropWhenNoObservers,
+    );
+    cx.load_image(
+      "logo.png",
+      include_bytes!("editor/assets/logo.png"),
+      ImageRetentionPolicy::DropWhenNoObservers,
+    );
+    cx.scale_factor();
 
-      UiData {
-        params: params.clone(),
-        gui_context: gui_context.clone(),
-      }
-      .build(cx);
+    Data {
+      params: params.clone(),
+    }
+    .build(cx);
 
-      VStack::new(cx, |cx| {
-        HStack::new(cx, |cx| {
-          VStack::new(cx, |cx| {
-            let executor = async_executor.clone();
-            Button::new(
+    VStack::new(cx, |cx| {
+      HStack::new(cx, |cx| {
+        VStack::new(cx, |cx| {
+          HStack::new(cx, |cx| {
+            ParamKnob::new(cx, Data::params, |params| &params.scan);
+            ParamKnob::new(cx, Data::params, |params| &params.spray);
+            ParamKnob::new(cx, Data::params, |params| &params.size);
+            ParamKnob::new(cx, Data::params, |params| &params.speed);
+            ParamKnob::new(cx, Data::params, |params| &params.density);
+            ParamKnob::new(cx, Data::params, |params| &params.stretch);
+          })
+          .width(Pixels(658.0))
+          .height(Pixels(114.0))
+          .border_color("#797979")
+          .border_width(Pixels(2.0))
+          .corner_top_right_radius(Pixels(8.0))
+          .top(Pixels(64.0))
+          .padding(Pixels(16.0))
+          .horizontal_gap(Pixels(16.0))
+          .background_color("#211F24");
+
+          HStack::new(cx, |cx| {
+            ParamFileDrop::new(
               cx,
-              move |cx| {
-                cx.emit(ParamChangeEvent::PickFile(executor.clone()));
-              },
-              |cx| Label::new(cx, "Open file"),
+              async_executor.clone(),
+              Data::params.map(|p| p.file_path.lock().unwrap().clone()),
+              "Sample".to_string(),
             );
-            Label::new(
-              cx,
-              UiData::params.map(|p| p.file_path.lock().unwrap().clone()),
-            );
+            ParamTabs::new(cx, RecordMode::variants(), Data::params, |params| {
+              &params.record_mode
+            });
+            ParamKnob::new(cx, Data::params, |params| &params.time);
+            ParamKnob::new(cx, Data::params, |params| &params.highpass);
+            ParamKnob::new(cx, Data::params, |params| &params.lowpass);
+            ParamKnob::new(cx, Data::params, |params| &params.feedback);
+            ParamKnob::new(cx, Data::params, |params| &params.recycle);
+          })
+          .width(Pixels(658.0))
+          .height(Pixels(114.0))
+          .border_color("#797979")
+          .border_width(Pixels(2.0))
+          .corner_bottom_right_radius(Pixels(8.0))
+          .padding(Pixels(16.0))
+          .horizontal_gap(Pixels(16.0))
+          .background_color("#211F24");
+        });
+        VStack::new(cx, |cx| {
+          HStack::new(cx, |cx| {
+            HStack::new(cx, |cx| {
+              ParamSlider::new(cx, Data::params, |params| &params.attack);
+              ParamSlider::new(cx, Data::params, |params| &params.decay);
+              ParamSlider::new(cx, Data::params, |params| &params.sustain);
+              ParamSlider::new(cx, Data::params, |params| &params.release);
+              VStack::new(cx, |cx| {
+                ParamSwitch::new(cx, Data::params, |params| &params.midi_enabled);
+                ParamNumberInput::new(cx, Data::params, |params| &params.voices);
+              });
+            })
+            .width(Pixels(318.0))
+            .height(Pixels(213.0))
+            .border_color("#797979")
+            .border_width(Pixels(2.0))
+            .corner_bottom_left_radius(Pixels(8.0))
+            .padding(Pixels(16.0))
+            .horizontal_gap(Pixels(16.0))
+            .background_color("#211F24");
+
+            HStack::new(cx, |cx| {
+              ParamSlider::new(cx, Data::params, |params| &params.dry);
+              ParamSlider::new(cx, Data::params, |params| &params.wet);
+            })
+            .width(Pixels(138.0))
+            .height(Pixels(213.0))
+            .border_color("#797979")
+            .border_width(Pixels(2.0))
+            .padding(Pixels(16.0))
+            .horizontal_gap(Pixels(16.0))
+            .background_color("#211F24");
           });
-
-          VStack::new(cx, |cx| {
-            HStack::new(cx, |cx| {
-              ParamKnob::new(
-                cx,
-                params.scan.name(),
-                UiData::params,
-                params.scan.as_ptr(),
-                |params| &params.scan,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-              ParamKnob::new(
-                cx,
-                params.spray.name(),
-                UiData::params,
-                params.spray.as_ptr(),
-                |params| &params.spray,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-              ParamKnob::new(
-                cx,
-                params.size.name(),
-                UiData::params,
-                params.size.as_ptr(),
-                |params| &params.size,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-              ParamKnob::new(
-                cx,
-                params.speed.name(),
-                UiData::params,
-                params.speed.as_ptr(),
-                |params| &params.speed,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Large,
-              );
-              ParamKnob::new(
-                cx,
-                params.density.name(),
-                UiData::params,
-                params.density.as_ptr(),
-                |params| &params.density,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-              ParamKnob::new(
-                cx,
-                params.stretch.name(),
-                UiData::params,
-                params.stretch.as_ptr(),
-                |params| &params.stretch,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Large,
-              );
-            })
-            .size(Auto)
-            .child_space(Stretch(1.0));
-
-            HStack::new(cx, |cx| {
-              ParamCheckbox::new(
-                cx,
-                params.record.name(),
-                UiData::params,
-                params.record.as_ptr(),
-                |params| &params.record,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-              )
-              .top(Pixels(12.))
-              .width(Pixels(72.));
-              ParamKnob::new(
-                cx,
-                params.time.name(),
-                UiData::params,
-                params.time.as_ptr(),
-                |params| &params.time,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-              ParamKnob::new(
-                cx,
-                params.highpass.name(),
-                UiData::params,
-                params.highpass.as_ptr(),
-                |params| &params.highpass,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-              ParamKnob::new(
-                cx,
-                params.lowpass.name(),
-                UiData::params,
-                params.lowpass.as_ptr(),
-                |params| &params.lowpass,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-              ParamKnob::new(
-                cx,
-                params.feedback.name(),
-                UiData::params,
-                params.feedback.as_ptr(),
-                |params| &params.feedback,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Large,
-              );
-              ParamKnob::new(
-                cx,
-                params.recycle.name(),
-                UiData::params,
-                params.recycle.as_ptr(),
-                |params| &params.recycle,
-                |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-                ParamKnobSize::Regular,
-              );
-            })
-            .size(Auto)
-            .child_space(Stretch(1.0));
-          })
-          .top(Pixels(32.))
-          .size(Auto);
-
-          Element::new(cx).class("line");
-
-          VStack::new(cx, |cx| {
-            ParamKnob::new(
-              cx,
-              params.dry.name(),
-              UiData::params,
-              params.dry.as_ptr(),
-              |params| &params.dry,
-              |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-              ParamKnobSize::Large,
-            );
-            ParamKnob::new(
-              cx,
-              params.wet.name(),
-              UiData::params,
-              params.wet.as_ptr(),
-              |params| &params.wet,
-              |param_ptr, val| ParamChangeEvent::SetParam(param_ptr, val),
-              ParamKnobSize::Large,
-            );
-          })
-          .size(Auto);
-        })
-        .col_between(Pixels(16.0));
-
-        Label::new(cx, "dm-TimeWarp")
-          .font_size(22.0)
-          .font_weight(FontWeightKeyword::Bold)
-          .border_radius(Pixels(16.0))
-          .border_width(Pixels(1.))
-          .border_color("#2c5494")
-          .background_color("#3c6ab5")
-          .child_top(Pixels(4.0))
-          .child_bottom(Pixels(8.0))
-          .child_left(Pixels(12.0))
-          .child_right(Pixels(12.0))
-          .left(Stretch(1.0));
+          Element::new(cx)
+            .width(Pixels(458.0))
+            .height(Pixels(77.0))
+            .class("logo");
+        });
+      });
+      HStack::new(cx, |cx| {
+        ParamFootswitch::new(cx, Data::params, |params| &params.record);
+        ParamFootswitch::new(cx, Data::params, |params| &params.play);
+        ParamFootswitch::new(cx, Data::params, |params| &params.erase);
       })
-      .child_space(Pixels(16.0))
-      .background_color("#505050");
-    },
-  )
+      .height(Pixels(136.))
+      .border_color("#797979")
+      .border_width(Pixels(2.0))
+      .horizontal_gap(Pixels(16.0))
+      .background_color("#211F24");
+    })
+    .class("background");
+  })
 }

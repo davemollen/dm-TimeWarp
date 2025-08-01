@@ -9,9 +9,9 @@ use nih_plug::{
   params::{BoolParam, EnumParam, IntParam},
   prelude::{Enum, FloatParam, FloatRange, IntRange, Params},
 };
-use nih_plug_vizia::ViziaState;
 use std::sync::{Arc, Mutex};
 use time_warp::MIN_DELAY_TIME;
+use vizia_plug::ViziaState;
 
 #[derive(Enum, PartialEq)]
 pub enum RecordMode {
@@ -110,9 +110,17 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      spray: FloatParam::new("Spray", 0., FloatRange::Linear { min: 0., max: 500. })
-        .with_unit(" ms")
-        .with_value_to_string(v2s_f32_rounded(2)),
+      spray: FloatParam::new(
+        "Spray",
+        0.,
+        FloatRange::Skewed {
+          min: 0.,
+          max: 500.,
+          factor: 0.3,
+        },
+      )
+      .with_unit(" ms")
+      .with_value_to_string(v2s_f32_rounded(2)),
 
       size: FloatParam::new("Size", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
@@ -132,9 +140,9 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      record: BoolParam::new("Rec / Dub", true),
+      record: BoolParam::new("● / Dub", true),
 
-      play: BoolParam::new("Play / Stop", true),
+      play: BoolParam::new("▶ / ◼️", true),
 
       record_mode: EnumParam::new("Record Mode", RecordMode::Delay),
 

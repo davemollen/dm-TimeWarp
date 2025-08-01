@@ -7,7 +7,7 @@ use time_warp::{Notes, Params as ProcessParams, RecordMode, TimeWarp, WavFileDat
 use time_warp_parameters::{RecordMode as ParamRecordMode, TimeWarpParameters};
 use worker::{Worker, WorkerRequest, WorkerResponseData};
 
-struct DmTimeWarp {
+pub struct DmTimeWarp {
   params: Arc<TimeWarpParameters>,
   time_warp: TimeWarp,
   process_params: ProcessParams,
