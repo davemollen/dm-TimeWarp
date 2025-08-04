@@ -33,10 +33,6 @@ You can download the MOD Desktop lv2 plugin for Linux, Windows and macOS from th
 
 ## Copyright notices
 
-Make Noise Erbe-Verb is a trademark or trade name of another manufacturer and was used merely to identify the product whose sound was reviewed in the creation of this product.
-
 VST is a trademark of Steinberg Media Technologies GmbH, registered in Europe and other countries.
-
-All other trademarks are the property of their respective holders.
 
 <img src="https://steinbergmedia.github.io/vst3_dev_portal/resources/licensing_6.png" width="60" height="auto" alt="VST trademark">

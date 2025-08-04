@@ -10,18 +10,15 @@ use nih_plug::{
   params::Param,
   prelude::{AsyncExecutor, Editor},
 };
-use nih_plug_vizia::{
-  assets,
-  vizia::{
-    binding::LensExt,
-    context::EmitContext,
-    layout::Units::Auto,
-    model::Model,
-    modifiers::{LayoutModifiers, StyleModifiers, TextModifiers},
-    prelude::Units::{Pixels, Stretch},
-    style::FontWeightKeyword,
-    views::{Button, Element, HStack, Label, VStack},
-  },
+use nih_plug_vizia::vizia::{
+  binding::LensExt,
+  context::EmitContext,
+  layout::Units::Auto,
+  model::Model,
+  modifiers::{LayoutModifiers, StyleModifiers, TextModifiers},
+  prelude::Units::{Pixels, Stretch},
+  style::FontWeightKeyword,
+  views::{Button, Element, HStack, Label, VStack},
 };
 use nih_plug_vizia::{create_vizia_editor, vizia_assets, ViziaState, ViziaTheming};
 use std::sync::Arc;
