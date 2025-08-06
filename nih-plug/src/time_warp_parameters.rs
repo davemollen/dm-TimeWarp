@@ -9,9 +9,9 @@ use nih_plug::{
   params::{BoolParam, EnumParam, IntParam},
   prelude::{Enum, FloatParam, FloatRange, IntRange, Params},
 };
+use nih_plug_vizia::ViziaState;
 use std::sync::{Arc, Mutex};
 use time_warp::MIN_DELAY_TIME;
-use vizia_plug::ViziaState;
 
 #[derive(Enum, PartialEq)]
 pub enum RecordMode {
@@ -116,11 +116,11 @@ impl Default for TimeWarpParameters {
         FloatRange::Skewed {
           min: 0.,
           max: 500.,
-          factor: 0.3,
+          factor: 0.5,
         },
       )
-      .with_unit(" ms")
-      .with_value_to_string(v2s_f32_rounded(2)),
+      .with_value_to_string(v2s_f32_ms_then_s())
+      .with_string_to_value(s2v_f32_ms_then_s()),
 
       size: FloatParam::new("Size", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
@@ -210,8 +210,8 @@ impl Default for TimeWarpParameters {
           factor: 0.2,
         },
       )
-      .with_unit(" ms")
-      .with_value_to_string(v2s_f32_rounded(2)),
+      .with_value_to_string(v2s_f32_ms_then_s())
+      .with_string_to_value(s2v_f32_ms_then_s()),
 
       decay: FloatParam::new(
         "Decay",
@@ -222,8 +222,8 @@ impl Default for TimeWarpParameters {
           factor: 0.2,
         },
       )
-      .with_unit(" ms")
-      .with_value_to_string(v2s_f32_rounded(2)),
+      .with_value_to_string(v2s_f32_ms_then_s())
+      .with_string_to_value(s2v_f32_ms_then_s()),
 
       sustain: FloatParam::new("Sustain", 1., FloatRange::Linear { min: 0., max: 1. })
         .with_value_to_string(v2s_f32_rounded(2)),
@@ -237,8 +237,8 @@ impl Default for TimeWarpParameters {
           factor: 0.3,
         },
       )
-      .with_unit(" ms")
-      .with_value_to_string(v2s_f32_rounded(2)),
+      .with_value_to_string(v2s_f32_ms_then_s())
+      .with_string_to_value(s2v_f32_ms_then_s()),
 
       dry: FloatParam::new(
         "Dry",

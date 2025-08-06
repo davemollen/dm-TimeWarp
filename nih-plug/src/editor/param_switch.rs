@@ -1,5 +1,5 @@
 use nih_plug::params::Param;
-use vizia_plug::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamSwitchEvent {
   Toggle,
@@ -30,14 +30,18 @@ impl ParamSwitch {
         let label_text = param_data.param().name();
 
         VStack::new(cx, |cx| {
+          Label::new(cx, label_text)
+            .describing(label_text)
+            .font_size(13.0)
+            .font_weight(FontWeightKeyword::SemiBold)
+            .child_space(Stretch(1.0));
           Switch::new(cx, value)
             .on_toggle(|cx| cx.emit(ParamSwitchEvent::Toggle))
             .id(label_text);
-          Label::new(cx, label_text).describing(label_text);
         })
         .size(Auto)
-        .vertical_gap(Pixels(8.0))
-        .alignment(Alignment::Center);
+        .row_between(Pixels(4.0))
+        .child_space(Stretch(1.0));
       }),
     )
   }

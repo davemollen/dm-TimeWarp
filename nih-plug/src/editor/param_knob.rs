@@ -2,8 +2,8 @@
 mod arc_track;
 use arc_track::ArcTrack;
 use nih_plug::params::Param;
-use vizia_plug::vizia::prelude::*;
-use vizia_plug::widgets::param_base::ParamWidgetBase;
+use nih_plug_vizia::vizia::prelude::*;
+use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
 
 enum ParamKnobEvent {
   SetValue(f32),
@@ -40,7 +40,10 @@ impl ParamKnob {
         let default_normalized_value = param_data.param().default_normalized_value();
 
         VStack::new(cx, |cx| {
-          Label::new(cx, param_data.param().name()).alignment(Alignment::Center);
+          Label::new(cx, param_data.param().name())
+            .font_size(13.0)
+            .font_weight(FontWeightKeyword::SemiBold)
+            .child_space(Stretch(1.0));
 
           Knob::custom(
             cx,
@@ -54,8 +57,8 @@ impl ParamKnob {
                   false,
                   Percentage(100.0),
                   Percentage(15.0),
-                  -240.0,
-                  60.0,
+                  -150.,
+                  150.,
                   KnobMode::Continuous,
                 )
                 .class("knob-track");
@@ -69,7 +72,7 @@ impl ParamKnob {
             },
           )
           .size(Pixels(64.0))
-          .on_change(|cx, val| cx.emit(ParamKnobEvent::SetValue(val)));
+          .on_changing(|cx, val| cx.emit(ParamKnobEvent::SetValue(val)));
 
           Textbox::new(cx, display_value_lens)
             .placeholder("..")
@@ -82,10 +85,14 @@ impl ParamKnob {
               if success {
                 cx.emit(ParamKnobEvent::TextInput(text));
               };
-            });
+            })
+            .font_size(12.0)
+            .top(Pixels(-1.0))
+            .text_align(TextAlign::Center);
         })
-        .alignment(Alignment::Center)
-        .vertical_gap(Pixels(8.0));
+        .size(Auto)
+        .child_space(Stretch(1.0))
+        .row_between(Pixels(4.0));
       }),
     )
   }

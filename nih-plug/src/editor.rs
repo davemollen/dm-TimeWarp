@@ -1,32 +1,32 @@
-#[path = "./editor/components/param_footswitch.rs"]
-mod param_footswitch;
-use param_footswitch::ParamFootswitch;
-#[path = "./editor/components/param_knob.rs"]
-mod param_knob;
-use param_knob::ParamKnob;
-#[path = "./editor/components/param_slider.rs"]
-mod param_slider;
-use param_slider::ParamSlider;
-#[path = "./editor/components/param_switch.rs"]
-mod param_switch;
-use param_switch::ParamSwitch;
-#[path = "./editor/components/param_number_input.rs"]
-mod param_number_input;
-use param_number_input::ParamNumberInput;
-#[path = "./editor/components/param_tabs.rs"]
-mod param_tabs;
-use param_tabs::ParamTabs;
-#[path = "./editor/components/param_file_drop.rs"]
-mod param_file_drop;
-use param_file_drop::ParamFileDrop;
 mod assets;
-use crate::time_warp_parameters::RecordMode;
-use crate::{time_warp_parameters::TimeWarpParameters, DmTimeWarp};
-use assets::{register_roboto, register_roboto_bold, ROBOTO_FONT_NAME};
-use nih_plug::prelude::{AsyncExecutor, Editor, Enum};
-use std::sync::Arc;
-use vizia_plug::vizia::prelude::*;
-use vizia_plug::{create_vizia_editor, ViziaState, ViziaTheming};
+mod param_file_drop;
+mod param_footswitch;
+mod param_knob;
+mod param_number_input;
+mod param_slider;
+mod param_switch;
+mod param_tabs;
+use {
+  crate::{
+    time_warp_parameters::{RecordMode, TimeWarpParameters},
+    DmTimeWarp,
+  },
+  assets::{register_roboto, register_roboto_bold, ROBOTO_FONT_NAME},
+  nih_plug::prelude::{AsyncExecutor, Editor, Enum},
+  nih_plug_vizia::{
+    create_vizia_editor,
+    vizia::{image, prelude::*},
+    ViziaState, ViziaTheming,
+  },
+  param_file_drop::ParamFileDrop,
+  param_footswitch::ParamFootswitch,
+  param_knob::ParamKnob,
+  param_number_input::ParamNumberInput,
+  param_slider::ParamSlider,
+  param_switch::ParamSwitch,
+  param_tabs::ParamTabs,
+  std::sync::Arc,
+};
 
 const STYLE: &str = include_str!("editor/style.css");
 
@@ -53,15 +53,22 @@ pub(crate) fn create(
     cx.add_stylesheet(STYLE).ok();
     cx.load_image(
       "background.png",
-      include_bytes!("editor/assets/background.png"),
-      ImageRetentionPolicy::DropWhenNoObservers,
+      image::load_from_memory_with_format(
+        include_bytes!("editor/assets/background.png"),
+        image::ImageFormat::Png,
+      )
+      .unwrap(),
+      ImageRetentionPolicy::DropWhenUnusedForOneFrame,
     );
     cx.load_image(
       "logo.png",
-      include_bytes!("editor/assets/logo.png"),
-      ImageRetentionPolicy::DropWhenNoObservers,
+      image::load_from_memory_with_format(
+        include_bytes!("editor/assets/logo.png"),
+        image::ImageFormat::Png,
+      )
+      .unwrap(),
+      ImageRetentionPolicy::DropWhenUnusedForOneFrame,
     );
-    cx.scale_factor();
 
     Data {
       params: params.clone(),
@@ -72,21 +79,22 @@ pub(crate) fn create(
       HStack::new(cx, |cx| {
         VStack::new(cx, |cx| {
           HStack::new(cx, |cx| {
-            ParamKnob::new(cx, Data::params, |params| &params.scan);
-            ParamKnob::new(cx, Data::params, |params| &params.spray);
-            ParamKnob::new(cx, Data::params, |params| &params.size);
-            ParamKnob::new(cx, Data::params, |params| &params.speed);
-            ParamKnob::new(cx, Data::params, |params| &params.density);
-            ParamKnob::new(cx, Data::params, |params| &params.stretch);
+            ParamKnob::new(cx, Data::params, |params| &params.scan).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.spray).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.size).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.speed).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.density).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.stretch).size(Auto);
           })
-          .width(Pixels(658.0))
-          .height(Pixels(114.0))
+          .width(Stretch(1.0))
+          .height(Auto)
+          .col_between(Pixels(16.0))
           .border_color("#797979")
           .border_width(Pixels(2.0))
-          .corner_top_right_radius(Pixels(8.0))
-          .top(Pixels(64.0))
-          .padding(Pixels(16.0))
-          .horizontal_gap(Pixels(16.0))
+          .border_top_right_radius(Pixels(8.0))
+          .top(Stretch(1.0))
+          .child_space(Pixels(16.0))
+          .child_left(Stretch(1.0))
           .background_color("#211F24");
 
           HStack::new(cx, |cx| {
@@ -95,73 +103,112 @@ pub(crate) fn create(
               async_executor.clone(),
               Data::params.map(|p| p.file_path.lock().unwrap().clone()),
               "Sample".to_string(),
-            );
+            )
+            .size(Auto);
             ParamTabs::new(cx, RecordMode::variants(), Data::params, |params| {
               &params.record_mode
-            });
-            ParamKnob::new(cx, Data::params, |params| &params.time);
-            ParamKnob::new(cx, Data::params, |params| &params.highpass);
-            ParamKnob::new(cx, Data::params, |params| &params.lowpass);
-            ParamKnob::new(cx, Data::params, |params| &params.feedback);
-            ParamKnob::new(cx, Data::params, |params| &params.recycle);
+            })
+            .size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.time)
+              .size(Auto)
+              .class("show")
+              .toggle_class(
+                "hide",
+                Data::params.map(|p| {
+                  p.record_mode.value() != RecordMode::Delay
+                    || !p.file_path.lock().unwrap().is_empty()
+                }),
+              );
+            ParamKnob::new(cx, Data::params, |params| &params.length)
+              .size(Auto)
+              .class("show")
+              .toggle_class(
+                "hide",
+                Data::params.map(|p| {
+                  p.record_mode.value() == RecordMode::Delay
+                    && p.file_path.lock().unwrap().is_empty()
+                }),
+              );
+            ParamKnob::new(cx, Data::params, |params| &params.highpass).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.lowpass).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.feedback).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.recycle).size(Auto);
           })
-          .width(Pixels(658.0))
-          .height(Pixels(114.0))
+          .width(Stretch(1.0))
+          .height(Auto)
+          .col_between(Pixels(16.0))
           .border_color("#797979")
           .border_width(Pixels(2.0))
-          .corner_bottom_right_radius(Pixels(8.0))
-          .padding(Pixels(16.0))
-          .horizontal_gap(Pixels(16.0))
+          .border_bottom_right_radius(Pixels(8.0))
+          .child_space(Pixels(16.0))
+          .child_left(Stretch(1.0))
           .background_color("#211F24");
-        });
+        })
+        .width(Stretch(1.0));
+
         VStack::new(cx, |cx| {
           HStack::new(cx, |cx| {
             HStack::new(cx, |cx| {
-              ParamSlider::new(cx, Data::params, |params| &params.attack);
-              ParamSlider::new(cx, Data::params, |params| &params.decay);
-              ParamSlider::new(cx, Data::params, |params| &params.sustain);
-              ParamSlider::new(cx, Data::params, |params| &params.release);
+              ParamSlider::new(cx, Data::params, |params| &params.attack).size(Auto);
+              ParamSlider::new(cx, Data::params, |params| &params.decay).size(Auto);
+              ParamSlider::new(cx, Data::params, |params| &params.sustain).size(Auto);
+              ParamSlider::new(cx, Data::params, |params| &params.release).size(Auto);
               VStack::new(cx, |cx| {
-                ParamSwitch::new(cx, Data::params, |params| &params.midi_enabled);
-                ParamNumberInput::new(cx, Data::params, |params| &params.voices);
-              });
+                ParamSwitch::new(cx, Data::params, |params| &params.midi_enabled).size(Auto);
+                ParamNumberInput::new(cx, Data::params, |params| &params.voices)
+                  .size(Auto)
+                  .top(Stretch(1.0));
+              })
+              .child_left(Stretch(1.0))
+              .child_right(Stretch(1.0))
+              .width(Auto)
+              .height(Stretch(1.0));
             })
-            .width(Pixels(318.0))
-            .height(Pixels(213.0))
+            .size(Auto)
+            .child_space(Pixels(16.0))
+            .col_between(Pixels(4.0))
             .border_color("#797979")
             .border_width(Pixels(2.0))
-            .corner_bottom_left_radius(Pixels(8.0))
-            .padding(Pixels(16.0))
-            .horizontal_gap(Pixels(16.0))
+            .border_bottom_left_radius(Pixels(8.0))
             .background_color("#211F24");
 
             HStack::new(cx, |cx| {
-              ParamSlider::new(cx, Data::params, |params| &params.dry);
-              ParamSlider::new(cx, Data::params, |params| &params.wet);
+              ParamSlider::new(cx, Data::params, |params| &params.dry).size(Auto);
+              ParamSlider::new(cx, Data::params, |params| &params.wet).size(Auto);
             })
-            .width(Pixels(138.0))
-            .height(Pixels(213.0))
+            .size(Auto)
+            .col_between(Pixels(4.0))
             .border_color("#797979")
             .border_width(Pixels(2.0))
-            .padding(Pixels(16.0))
-            .horizontal_gap(Pixels(16.0))
+            .child_space(Pixels(16.0))
             .background_color("#211F24");
-          });
-          Element::new(cx)
-            .width(Pixels(458.0))
-            .height(Pixels(77.0))
-            .class("logo");
-        });
+          })
+          .size(Auto);
+          Element::new(cx).class("logo");
+        })
+        .size(Auto)
+        .right(Pixels(0.0));
       });
       HStack::new(cx, |cx| {
-        ParamFootswitch::new(cx, Data::params, |params| &params.record);
-        ParamFootswitch::new(cx, Data::params, |params| &params.play);
-        ParamFootswitch::new(cx, Data::params, |params| &params.erase);
+        ParamFootswitch::new(cx, Data::params, |params| &params.record)
+          .size(Auto)
+          .left(Stretch(1.0))
+          .right(Stretch(1.0));
+        ParamFootswitch::new(cx, Data::params, |params| &params.play)
+          .size(Auto)
+          .left(Stretch(1.0))
+          .right(Stretch(1.0));
+        ParamFootswitch::new(cx, Data::params, |params| &params.erase)
+          .size(Auto)
+          .left(Stretch(1.0))
+          .right(Stretch(1.0));
       })
-      .height(Pixels(136.))
+      .width(Stretch(1.0))
+      .height(Auto)
+      .child_space(Pixels(16.0))
       .border_color("#797979")
       .border_width(Pixels(2.0))
-      .horizontal_gap(Pixels(16.0))
+      .col_between(Pixels(4.0))
       .background_color("#211F24");
     })
     .class("background");

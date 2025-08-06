@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 nih_plug = { git = "https://github.com/robbert-vdh/nih-plug", features = ["assert_process_allocs", "standalone"] }
-vizia_plug = { git = "https://github.com/vizia/vizia-plug" }
+nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
 time_warp = { path = "../time_warp" }
 rfd = "0.15.2"
 crossbeam-channel = "0.5.15"

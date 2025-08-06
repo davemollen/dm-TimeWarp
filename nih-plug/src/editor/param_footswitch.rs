@@ -1,5 +1,5 @@
 use nih_plug::params::Param;
-use vizia_plug::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamFootswitchEvent {
   Toggle,
@@ -30,11 +30,14 @@ impl ParamFootswitch {
         let value = param_data.make_lens(|param| param.modulated_plain_value());
 
         VStack::new(cx, |cx| {
-          Label::new(cx, param_data.param().name()).alignment(Alignment::Center);
+          Label::new(cx, param_data.param().name())
+            .font_size(13.0)
+            .font_weight(FontWeightKeyword::SemiBold)
+            .child_space(Stretch(1.0));
           HStack::new(cx, |cx| {
             ZStack::new(cx, |cx| {
               Element::new(cx)
-                .shadow(Shadow::new(
+                .box_shadow(BoxShadow::new(
                   0.,
                   0.,
                   Some(Length::px(8.0)),
@@ -50,7 +53,7 @@ impl ParamFootswitch {
                 .class("footswitch-beam")
                 .toggle_class("active", value);
             })
-            .shadow(Shadow::new(
+            .box_shadow(BoxShadow::new(
               0.,
               4.,
               Some(Length::px(4.0)),
@@ -67,7 +70,7 @@ impl ParamFootswitch {
             .toggle_class("active", value);
 
             ZStack::new(cx, |cx| {
-              Element::new(cx).class("footswitch-bg");
+              Element::new(cx).class("footswitch-bg").hoverable(true);
               Element::new(cx)
                 .class("footswitch-shadow")
                 .toggle_class("active", value);
@@ -76,13 +79,14 @@ impl ParamFootswitch {
                 .toggle_class("active", value)
                 .on_press(|cx| cx.emit(ParamFootswitchEvent::Toggle));
             })
-            .horizontal_gap(Pixels(8.0))
+            .row_between(Pixels(8.0))
             .class("footswitch");
           })
           .size(Auto);
         })
-        .alignment(Alignment::Center)
-        .vertical_gap(Pixels(8.0));
+        .size(Auto)
+        .child_space(Stretch(1.0))
+        .row_between(Pixels(8.0));
       }),
     )
   }

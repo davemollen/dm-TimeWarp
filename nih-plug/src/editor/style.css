@@ -6,126 +6,30 @@
 
 .logo {
   background-image: url("logo.png");
-  size: 100%;
-  background-size: cover;
+  background-size: contain;
+  width: 1s;
+  height: auto;
+  top: 16px;
+}
+
+.show {
+  display: flex;
+}
+
+.hide {
+  display: none;
 }
 
 /* LABEL */
 label {
-  font-size: 13px;
   color: #ececec;
   font-weight: 600;
 }
 
-/* KNOB */
-knob {
-  size: 64px;
-  corner-radius: 50%;
-  overflow: hidden;
-}
-
-knob .knob-track {
-  width: 1s;
-  height: 1s;
-  corner-radius: 50%;
-  color: #0cc0c0;
-  background-color: #797979;
-}
-
-knob .knob-head {
-  width: 1s;
-  height: 1s;
-  corner-radius: 50%;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  color: transparent;
-  background-color: transparent;
-  border-color: transparent;
-}
-
-knob .knob-tick {
-  width: 8%;
-  height: 45%;
-  corner-bottom-left-radius: 50%;
-  corner-bottom-right-radius: 50%;
-  background-color: #797979;
-}
-
-/* SLIDER */
-slider {
-  height: 16px;
-  width: 1s;
-  alignment: left;
-  corner-radius: 50%;
-}
-
-slider.vertical {
-  height: 136px;
-  width: 16px;
-  alignment: bottom-center;
-}
-
-slider .track {
-  width: 1s;
-  height: 4px;
-  corner-radius: 50%;
-  alignment: left;
-  background-color: #797979;
-}
-
-slider.vertical .track {
-  width: 8px;
-  height: 1s;
-  corner-radius: 50%;
-  alignment: bottom-center;
-}
-
-slider .thumb {
-  width: 22px;
-  height: 22px;
-  corner-radius: 50%;
-  background-color: #0cc0c0;
-  shadow: 0px 3px 3px #00000026;
-}
-
-slider:focus-visible {
-  outline-width: 1px;
-  outline-color: #51afef80;
-  outline-offset: 3px;
-  corner-radius: 4px;
-}
-slider .active {
-  background-color: #0cc0c0;
-  corner-radius: 50%;
-}
-
-slider .thumb:hover {
-  background-color: #0b9f9f;
-}
-
-slider .thumb:active {
-  background-color: #0b9f9f;
-}
-
-slider:disabled {
-  background-color: #404040;
-}
-
-slider:disabled .active {
-  background-color: #404040;
-}
-
-slider:disabled .thumb {
-  background-color: #404040;
-}
-
 /* TEXTBOX */
 textbox {
-  font-size: 12px;
   text-align: center;
-  width: 88px;
+  width: 64px;
   height: 12px;
   color: #ececec;
   background-color: transparent;
@@ -146,14 +50,113 @@ textbox:checked.caret {
   caret-color: #ececec;
 }
 
+/* KNOB */
+param-knob knob {
+  size: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+param-knob knob .knob-track {
+  width: 1s;
+  height: 1s;
+  border-radius: 50%;
+  color: #0cc0c0;
+  background-color: #797979;
+}
+
+param-knob knob .knob-head {
+  width: 1s;
+  height: 1s;
+  border-radius: 50%;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  color: transparent;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+param-knob knob .knob-tick {
+  width: 8%;
+  height: 45%;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 50%;
+  background-color: #797979;
+}
+
+param-knob knob:hover .knob-track {
+  background-color: #8e8e8e;
+}
+
+param-knob knob:hover .knob-tick {
+  background-color: #8e8e8e;
+}
+
+/* SLIDER */
+param-slider2 textbox {
+  width: 56px;
+}
+param-slider2 slider {
+  height: 16px;
+  width: 1s;
+  border-radius: 50%;
+  background-color: #797979;
+}
+
+param-slider2 slider.vertical {
+  height: 136px;
+  width: 8px;
+}
+
+param-slider2 slider .thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #0cc0c0;
+  box-shadow: 0px 3px 3px #00000026;
+}
+
+param-slider2 slider:focus-visible {
+  outline-width: 1px;
+  outline-color: #51afef80;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+param-slider2 slider .active {
+  background-color: #0cc0c0;
+  border-radius: 50%;
+}
+
+param-slider2 slider .thumb:hover {
+  background-color: #0b9f9f;
+}
+
+param-slider2 slider .thumb:active {
+  background-color: #0b9f9f;
+}
+
+param-slider2 slider:disabled {
+  background-color: #404040;
+}
+
+param-slider2 slider:disabled .active {
+  background-color: #404040;
+}
+
+param-slider2 slider:disabled .thumb {
+  background-color: #404040;
+}
+
 /* SWITCH */
-switch {
+param-switch switch {
   width: 60px;
   height: 30px;
   cursor: hand;
 }
 
-switch .switch-handle {
+param-switch switch .switch-handle {
   left: 6px;
   width: 20px;
   height: 20px;
@@ -164,7 +167,7 @@ switch .switch-handle {
   background-color: #797979;
 }
 
-switch .switch-handle-bg {
+param-switch switch .switch-handle-bg {
   width: 60px;
   height: 30px;
   top: 1s;
@@ -172,25 +175,25 @@ switch .switch-handle-bg {
   border-color: #797979;
   border-width: 2px;
   background-color: #84848426;
-  corner-radius: 50%;
+  border-radius: 50%;
   transition: background-color 100ms;
 }
 
-switch:checked .switch-handle-bg {
+param-switch switch:checked .switch-handle-bg {
   background-color: #0cc0c0;
 }
 
-switch:checked .switch-handle {
+param-switch switch:checked .switch-handle {
   left: 35px;
   transition: left 100ms;
   background-color: #797979;
 }
 
-switch:hover .switch-handle {
+param-switch switch:hover .switch-handle {
   background-color: #a7a7a7;
 }
 
-switch:checked:hover .switch-handle {
+param-switch switch:checked:hover .switch-handle {
   background-color: #2f2f2f;
 }
 
@@ -204,17 +207,17 @@ param-number-input textbox {
   color: #0cf2f2;
   background-color: #797979;
   border-width: 0px;
-  corner-radius: 8px;
+  border-radius: 8px;
 }
 
 param-number-input textbox:hover {
   border-width: 0px;
-  background-color: #2c2c2c;
+  background-color: #8e8e8e;
 }
 
 param-number-input textbox:checked {
   border-width: 0px;
-  background-color: #2c2c2c;
+  background-color: #8e8e8e;
 }
 
 param-number-input textbox:checked.caret {
@@ -224,19 +227,19 @@ param-number-input textbox:checked.caret {
 /* FOOTSWITCH */
 param-footswitch .footswitch {
   size: 64px;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #797979;
 }
 
 param-footswitch .footswitch-light {
   size: 16px;
-  corner-radius: 50%;
+  border-radius: 50%;
   top: 1s;
   bottom: 1s;
   left: -24px;
   background-color: #ae1111;
-  shadow: inset 0px 4px 4px #00000040;
-  position-type: absolute;
+  box-shadow: inset 0px 4px 4px #00000040;
+  position-type: self-directed;
   transition: 100ms background-color;
 }
 
@@ -248,8 +251,8 @@ param-footswitch .footswitch-light.active {
 param-footswitch .footswitch-beam {
   width: 1s;
   height: 1s;
-  corner-radius: 50%;
-  position-type: absolute;
+  border-radius: 50%;
+  position-type: self-directed;
   opacity: 0;
   transition: opacity 200ms;
 }
@@ -262,7 +265,7 @@ param-footswitch .footswitch-beam.active {
 param-footswitch .footswitch-bg {
   width: 1s;
   height: 1s;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #4f4f4f;
   border-color: #2f2f2f;
   border-width: 1px;
@@ -275,13 +278,17 @@ param-footswitch .footswitch-fg {
   left: 10px;
   right: 10px;
   bottom: 10px;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #797979;
-  shadow: 2px 2px 3px #0000004d;
+  box-shadow: 2px 2px 3px #0000004d;
   transition: top 100ms;
   transition: left 100ms;
   transition: right 100ms;
   transition: bottom 100ms;
+}
+
+param-footswitch .footswitch-fg:hover {
+  background-color: #8e8e8e;
 }
 
 param-footswitch .footswitch-shadow {
@@ -291,8 +298,8 @@ param-footswitch .footswitch-shadow {
   left: 10px;
   right: 10px;
   bottom: 10px;
-  corner-radius: 50%;
-  shadow: -2px 2px 3px #0000004d;
+  border-radius: 50%;
+  box-shadow: -2px 2px 3px #0000004d;
   transition: top 100ms;
   transition: left 100ms;
   transition: right 100ms;
@@ -304,7 +311,6 @@ param-footswitch .footswitch-fg.active {
   left: 5px;
   right: 5px;
   bottom: 5px;
-  background-color: #797979;
   transition: top 100ms;
   transition: left 100ms;
   transition: right 100ms;
@@ -323,37 +329,40 @@ param-footswitch .footswitch-shadow.active {
 }
 
 /* FILEDROP */
-button.filedrop {
+param-filedrop label.file-path {
+  overflow: hidden;
+}
+
+param-filedrop button.filedrop {
   width: 104px;
   border-color: #797979;
   border-width: 2px;
-  corner-radius: 8px;
+  border-radius: 8px;
   background-color: transparent;
   transition: background-color 100ms;
 }
 
-button.filedrop:hover {
+param-filedrop button.filedrop:hover {
   background-color: #2f2f2f;
   transition: background-color 100ms;
 }
 
-button.filedrop .icon {
+param-filedrop button.filedrop .icon {
+  position-type: self-directed;
   fill: #ececec;
 }
 
 /* TABS */
-param-tabs {
+param-tabs .tabs {
   width: 80px;
   height: 54px;
 }
 
 param-tabs label.tab {
   width: 80px;
-  min-width: 80px;
-  font-size: 10px;
-  font-weight: 700;
+  height: 1s;
   color: #ececec;
-  alignment: center;
+  child-space: 1s;
   background-color: transparent;
   transition: background-color 100ms;
 }
@@ -377,13 +386,13 @@ param-tabs label.tab:checked:hover {
 param-tabs label.tab:first-child {
   border-color: #797979;
   border-width: 2px;
-  corner-top-left-radius: 8px;
-  corner-top-right-radius: 8px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
 param-tabs label.tab:last-child {
   border-color: #797979;
   border-width: 2px;
-  corner-bottom-left-radius: 8px;
-  corner-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
