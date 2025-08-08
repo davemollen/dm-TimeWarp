@@ -86,18 +86,11 @@ param-knob knob .knob-tick {
   background-color: #797979;
 }
 
-param-knob knob:hover .knob-track {
-  background-color: #8e8e8e;
-}
-
-param-knob knob:hover .knob-tick {
-  background-color: #8e8e8e;
-}
-
 /* SLIDER */
 param-slider2 textbox {
   width: 56px;
 }
+
 param-slider2 slider {
   height: 16px;
   width: 1s;
@@ -124,17 +117,10 @@ param-slider2 slider:focus-visible {
   outline-offset: 3px;
   border-radius: 4px;
 }
+
 param-slider2 slider .active {
   background-color: #0cc0c0;
   border-radius: 50%;
-}
-
-param-slider2 slider .thumb:hover {
-  background-color: #0b9f9f;
-}
-
-param-slider2 slider .thumb:active {
-  background-color: #0b9f9f;
 }
 
 param-slider2 slider:disabled {
