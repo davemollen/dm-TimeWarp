@@ -85,6 +85,11 @@ impl DmTimeWarp {
         NoteEvent::NoteOff { note, .. } => {
           self.notes.note_off(note);
         }
+        NoteEvent::MidiCC { cc, value, .. } => {
+          if cc == 64 {
+            self.notes.sustain(value > 0.);
+          }
+        }
         _ => (),
       }
     }

@@ -120,6 +120,11 @@ impl DmTimeWarp {
       MidiMessage::NoteOff(_, note, _) => {
         self.notes.note_off(note.into());
       }
+      MidiMessage::ControlChange(_, cc, value) => {
+        if u8::from(cc) == 64 {
+          self.notes.sustain(u8::from(value) > 0);
+        }
+      }
       _ => (),
     };
   }

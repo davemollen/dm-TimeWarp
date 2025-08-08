@@ -4,7 +4,9 @@ pub use note::{ADSRStage, Note};
 pub struct Notes {
   notes: Vec<Note>,
   note_queue: Vec<(u8, f32)>,
+  note_off_queue: Vec<u8>,
   voice_count: usize,
+  is_sustained: bool,
 }
 
 impl Notes {
@@ -12,7 +14,9 @@ impl Notes {
     Self {
       notes: vec![Note::default(); 8],
       note_queue: Vec::with_capacity(128),
+      note_off_queue: Vec::with_capacity(128),
       voice_count: 1,
+      is_sustained: false,
     }
   }
 
@@ -53,6 +57,10 @@ impl Notes {
   }
 
   pub fn note_off(&mut self, note: u8) {
+    if self.is_sustained {
+      self.note_off_queue.push(note);
+      return;
+    }
     self.note_queue.retain(|(n, _)| *n != note);
 
     match self.notes.iter_mut().find(|n| {
@@ -73,6 +81,18 @@ impl Notes {
       }
       None => return,
     };
+  }
+
+  pub fn sustain(&mut self, sustain: bool) {
+    let prev_is_sustained = self.is_sustained;
+    self.is_sustained = sustain;
+
+    if prev_is_sustained && !self.is_sustained {
+      let notes_to_off = std::mem::take(&mut self.note_off_queue);
+      for note in notes_to_off {
+        self.note_off(note);
+      }
+    }
   }
 
   pub fn set_voice_count(&mut self, voice_count: usize) {
