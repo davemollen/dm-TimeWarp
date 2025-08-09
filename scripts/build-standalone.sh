@@ -5,4 +5,4 @@ move_to="/Library/Audio/Plug-Ins/VST3/dm-TimeWarp.vst3"
 
 cd nih-plug
 cargo xtask bundle $package_name --release
-open target/bundled/dm_time_warp.app
+open target/bundled/$package_name.app
