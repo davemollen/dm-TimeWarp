@@ -82,7 +82,16 @@ impl View for ParamFileDrop {
 
       ParamFileDropEvent::PickFileFromDialog => {
         cx.spawn(move |cx_proxy| {
-          if let Some(path_buf) = FileDialog::new().add_filter("wav", &["wav"]).pick_file() {
+          if let Some(path_buf) = FileDialog::new()
+            .add_filter(
+              "audio_file",
+              &[
+                "aac", "aif", "aiff", "caf", "flac", "m4a", "mka", "mkv", "mp1", "mp2", "mp3",
+                "mp4", "oga", "ogg", "opus", "raw", "wav", "wv", "webm",
+              ],
+            )
+            .pick_file()
+          {
             cx_proxy
               .emit(ParamFileDropEvent::SetFilePath(path_buf))
               .ok();

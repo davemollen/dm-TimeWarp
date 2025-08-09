@@ -3,7 +3,7 @@ mod time_warp_parameters;
 mod worker;
 use nih_plug::prelude::*;
 use std::sync::Arc;
-use time_warp::{Notes, Params as ProcessParams, RecordMode, TimeWarp, WavFileData};
+use time_warp::{AudioFileData, Notes, Params as ProcessParams, RecordMode, TimeWarp};
 use time_warp_parameters::{RecordMode as ParamRecordMode, TimeWarpParameters};
 use worker::{Worker, WorkerRequest, WorkerResponseData};
 
@@ -178,7 +178,7 @@ impl Plugin for DmTimeWarp {
 
     if let Some(worker_response_data) = self.worker.try_receive_data() {
       match worker_response_data {
-        WorkerResponseData::LoadFile(WavFileData {
+        WorkerResponseData::LoadFile(AudioFileData {
           samples,
           duration_in_samples,
           duration_in_ms,

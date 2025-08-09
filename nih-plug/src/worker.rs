@@ -1,7 +1,7 @@
 use crossbeam_channel::{Receiver, Sender}; // TODO: check other crates like omange, ringbuf or rtrb as an alternative
 use nih_plug::prelude::AtomicF32;
 use std::sync::{atomic::Ordering, Arc, Mutex};
-use time_warp::{WavFileData, WavProcessor};
+use time_warp::{AudioFileData, AudioFileProcessor};
 
 pub enum WorkerRequest {
   LoadFile(String, bool),
@@ -9,7 +9,7 @@ pub enum WorkerRequest {
 }
 
 pub enum WorkerResponseData {
-  LoadFile(WavFileData),
+  LoadFile(AudioFileData),
   FlushBuffer(Vec<(f32, f32)>),
 }
 
@@ -49,18 +49,23 @@ impl Worker {
         if file_path.is_empty() {
           return;
         }
-        let mut wav_file_data =
-          match WavProcessor::new(self.sample_rate.load(Ordering::Relaxed)).read_wav(&file_path) {
-            Ok(data) => data,
-            Err(_) => {
-              return;
-            }
-          };
-        wav_file_data.samples.resize(self.delay_line_size, (0., 0.));
+        let mut audio_file_data = match AudioFileProcessor::new(
+          self.sample_rate.load(Ordering::Relaxed),
+        )
+        .read(&file_path)
+        {
+          Ok(data) => data,
+          Err(_) => {
+            return;
+          }
+        };
+        audio_file_data
+          .samples
+          .resize(self.delay_line_size, (0., 0.));
 
         match self
           .sender
-          .try_send(WorkerResponseData::LoadFile(wav_file_data))
+          .try_send(WorkerResponseData::LoadFile(audio_file_data))
         {
           Ok(_) => {
             if should_update_file_path {

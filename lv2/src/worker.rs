@@ -2,7 +2,7 @@ use {
   crate::DmTimeWarp,
   lv2::prelude::*,
   std::string::String,
-  time_warp::{WavFileData, WavProcessor},
+  time_warp::{AudioFileData, AudioFileProcessor},
 };
 
 pub enum WorkRequest {
@@ -11,7 +11,7 @@ pub enum WorkRequest {
 }
 
 pub enum WorkResponseData {
-  LoadFile(WavFileData),
+  LoadFile(AudioFileData),
   FlushBuffer(Vec<(f32, f32)>),
 }
 
@@ -28,13 +28,13 @@ impl Worker for DmTimeWarp {
         if file_path.is_empty() {
           return Err(WorkerError::Unknown);
         }
-        let mut wav_file_data = WavProcessor::new(sample_rate)
-          .read_wav(&file_path)
+        let mut audio_file_data = AudioFileProcessor::new(sample_rate)
+          .read(&file_path)
           .or(Err(WorkerError::Unknown))?;
-        wav_file_data.samples.resize(size, (0., 0.));
+        audio_file_data.samples.resize(size, (0., 0.));
 
         response_handler
-          .respond(WorkResponseData::LoadFile(wav_file_data))
+          .respond(WorkResponseData::LoadFile(audio_file_data))
           .or(Err(WorkerError::Unknown))
       }
       WorkRequest::FlushBuffer(size) => response_handler
@@ -49,7 +49,7 @@ impl Worker for DmTimeWarp {
     _features: &mut Self::AudioFeatures,
   ) -> Result<(), WorkerError> {
     match data {
-      WorkResponseData::LoadFile(WavFileData {
+      WorkResponseData::LoadFile(AudioFileData {
         samples,
         duration_in_samples,
         duration_in_ms,

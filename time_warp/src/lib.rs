@@ -10,17 +10,17 @@ pub mod shared {
   pub mod phasor;
   pub mod tuple_ext;
 }
-mod wav_processor;
+mod audio_file_processor;
 
-use {
-  filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::tuple_ext::TupleExt,
-  voices::Voices,
-};
 pub use {
+  audio_file_processor::{AudioFileData, AudioFileProcessor},
   notes::Notes,
   params::{Params, RecordMode},
   stereo_delay_line::{Interpolation, StereoDelayLine},
-  wav_processor::{WavFileData, WavProcessor},
+};
+use {
+  filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::tuple_ext::TupleExt,
+  voices::Voices,
 };
 
 pub const MIN_DELAY_TIME: f32 = 2.5;
