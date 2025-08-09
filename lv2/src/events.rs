@@ -19,7 +19,11 @@ impl DmTimeWarp {
       self.time_stamp = time_stamp.as_frames().unwrap_or(0);
       self.read_patch_get_events(atom, ports);
       self.read_patch_set_events(atom, features, should_read_patch_value);
-      self.read_midi_events(atom);
+      if self.params.midi_enabled {
+        self.read_midi_events(atom);
+      } else {
+        self.notes.remove_notes();
+      }
     }
   }
 
@@ -120,10 +124,15 @@ impl DmTimeWarp {
       MidiMessage::NoteOff(_, note, _) => {
         self.notes.note_off(note.into());
       }
-      MidiMessage::ControlChange(_, cc, value) => {
-        if u8::from(cc) == 64 {
-          self.notes.sustain(u8::from(value) > 0);
-        }
+      MidiMessage::ControlChange(_, cc, value) => match u8::from(cc) {
+        64 => self.notes.sustain(u8::from(value) > 0),
+        120 => self.notes.remove_notes(),
+        123 => self.notes.release_notes(),
+        _ => (),
+      },
+      MidiMessage::PitchBendChange(_, pitch_bend) => {
+        let pitch_bend_factor = 2_f32.powf((u16::from(pitch_bend) as f32 - 8192.0) / 8192.0);
+        self.params.set_pitch_bend_factor(pitch_bend_factor);
       }
       _ => (),
     };

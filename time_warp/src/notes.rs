@@ -99,8 +99,19 @@ impl Notes {
     if voice_count == self.voice_count {
       return;
     }
-    self.notes.iter_mut().for_each(|v| v.reset_note());
+    self.remove_notes();
     self.voice_count = voice_count;
+  }
+
+  pub fn remove_notes(&mut self) {
+    self.notes.iter_mut().for_each(|v| v.reset_note());
+  }
+
+  pub fn release_notes(&mut self) {
+    self
+      .notes
+      .iter_mut()
+      .for_each(|v| v.set_adsr_stage(ADSRStage::Release));
   }
 }
 

@@ -44,6 +44,7 @@ pub struct Params {
   prev_erase: bool,
   is_erasing_buffer: bool,
   prev_record_mode: RecordMode,
+  pitch_bend_factor: f32,
 }
 
 impl Params {
@@ -79,6 +80,7 @@ impl Params {
       prev_erase: false,
       is_erasing_buffer: false,
       prev_record_mode: RecordMode::Delay,
+      pitch_bend_factor: 1.,
     }
   }
 
@@ -113,7 +115,12 @@ impl Params {
     self.scan = scan;
     self.spray = spray;
     self.size = size.cbrt();
-    self.speed = speed;
+    self.speed = speed
+      * if midi_enabled {
+        self.pitch_bend_factor
+      } else {
+        1.
+      };
     self.density = density;
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
@@ -190,6 +197,10 @@ impl Params {
 
   pub fn get_feedback_is_enabled(&self) -> bool {
     !(self.prev_record_mode == RecordMode::Looper && self.loop_duration.is_none())
+  }
+
+  pub fn set_pitch_bend_factor(&mut self, pitch_bend_factor: f32) {
+    self.pitch_bend_factor = pitch_bend_factor;
   }
 
   fn override_play(&mut self, play: bool, record_mode: &RecordMode) -> bool {

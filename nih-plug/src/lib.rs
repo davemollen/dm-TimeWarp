@@ -74,29 +74,38 @@ impl DmTimeWarp {
       *self.params.file_path.lock().unwrap() = "".to_string();
       context.execute_background(WorkerRequest::FlushBuffer);
     }
-  }
-
-  pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
-    while let Some(event) = context.next_event() {
-      match event {
-        NoteEvent::NoteOn { note, velocity, .. } => {
-          self.notes.note_on(note, velocity);
-        }
-        NoteEvent::NoteOff { note, .. } => {
-          self.notes.note_off(note);
-        }
-        NoteEvent::MidiCC { cc, value, .. } => {
-          if cc == 64 {
-            self.notes.sustain(value > 0.);
-          }
-        }
-        _ => (),
-      }
-    }
 
     self
       .notes
       .set_voice_count(self.params.voices.value() as usize);
+  }
+
+  pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
+    if self.process_params.midi_enabled {
+      while let Some(event) = context.next_event() {
+        match event {
+          NoteEvent::NoteOn { note, velocity, .. } => {
+            self.notes.note_on(note, velocity);
+          }
+          NoteEvent::NoteOff { note, .. } => {
+            self.notes.note_off(note);
+          }
+          NoteEvent::MidiCC { cc, value, .. } => match cc {
+            64 => self.notes.sustain(value > 0.),
+            120 => self.notes.remove_notes(),
+            123 => self.notes.release_notes(),
+            _ => (),
+          },
+          NoteEvent::MidiPitchBend { value, .. } => {
+            let pitchbend_factor = 2f32.powf(value * 2. - 1.);
+            self.process_params.set_pitch_bend_factor(pitchbend_factor);
+          }
+          _ => (),
+        }
+      }
+    } else {
+      self.notes.remove_notes();
+    }
   }
 }
 
@@ -112,7 +121,7 @@ impl Plugin for DmTimeWarp {
     main_output_channels: NonZeroU32::new(2),
     ..AudioIOLayout::const_default()
   }];
-  const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
+  const MIDI_INPUT: MidiConfig = MidiConfig::MidiCCs;
   const SAMPLE_ACCURATE_AUTOMATION: bool = true;
 
   type BackgroundTask = WorkerRequest;
