@@ -64,7 +64,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:index 2 ;
 		lv2:symbol "size" ;
 		lv2:name "Size" ;
-		lv2:default 0.0 ;
+		lv2:default 1.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [

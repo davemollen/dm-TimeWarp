@@ -125,7 +125,7 @@ impl Default for TimeWarpParameters {
       .with_value_to_string(v2s_f32_ms_then_s())
       .with_string_to_value(s2v_f32_ms_then_s()),
 
-      size: FloatParam::new("Size", 0., FloatRange::Linear { min: 0., max: 1. })
+      size: FloatParam::new("Size", 1., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),

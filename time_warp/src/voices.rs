@@ -54,7 +54,7 @@ impl Voices {
     release: f32,
     reset_playback: bool,
   ) -> (f32, f32) {
-    let duration = (1. - size) * (time - self.fade_time) + self.fade_time; // range from fade_time to time
+    let duration = size * (time - self.fade_time) + self.fade_time; // range from fade_time to time
     let grain_density = density * 7. + 1.; // range from 1 to 8
 
     if reset_playback {
