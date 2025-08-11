@@ -17,10 +17,10 @@ pub struct Params {
   pub scan: f32,
   pub spray: f32,
   pub size: f32,
-  pub speed: f32,
   pub density: f32,
-  pub stretch: f32,
   pub stereo: f32,
+  pub speed: f32,
+  pub stretch: f32,
   pub recording_gain: LinearSmooth,
   pub playback_gain: LinearSmooth,
   pub time: LogarithmicSmooth,
@@ -54,10 +54,10 @@ impl Params {
       scan: 0.,
       spray: 0.,
       size: 1.,
-      speed: 1.,
       density: 0.,
-      stretch: 0.,
       stereo: 1.,
+      speed: 1.,
+      stretch: 0.,
       recording_gain: LinearSmooth::new(sample_rate, 100.),
       playback_gain: LinearSmooth::new(sample_rate, 100.),
       time: LogarithmicSmooth::new(sample_rate, 0.3),
@@ -91,10 +91,10 @@ impl Params {
     scan: f32,
     spray: f32,
     size: f32,
-    pitch: f32,
     density: f32,
-    stretch: f32,
     stereo: f32,
+    pitch: f32,
+    stretch: f32,
     record: bool,
     play: bool,
     record_mode: RecordMode,
@@ -118,15 +118,15 @@ impl Params {
     self.scan = scan;
     self.spray = spray;
     self.size = size.cbrt();
+    self.density = density;
+    self.stereo = stereo;
     self.speed = 2_f32.powf(pitch / 12.)
       * if midi_enabled {
         self.pitch_bend_factor * stretch.signum()
       } else {
         stretch.signum()
       };
-    self.density = density;
     self.stretch = stretch;
-    self.stereo = stereo;
     self.midi_enabled = midi_enabled;
 
     let record_mode_has_changed = record_mode != self.prev_record_mode;

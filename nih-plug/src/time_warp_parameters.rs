@@ -33,17 +33,17 @@ pub struct TimeWarpParameters {
   #[id = "size"]
   pub size: FloatParam,
 
-  #[id = "pitch"]
-  pub pitch: FloatParam,
-
   #[id = "density"]
   pub density: FloatParam,
 
-  #[id = "stretch"]
-  pub stretch: FloatParam,
-
   #[id = "stereo"]
   pub stereo: FloatParam,
+
+  #[id = "pitch"]
+  pub pitch: FloatParam,
+
+  #[id = "stretch"]
+  pub stretch: FloatParam,
 
   #[id = "record"]
   pub record: BoolParam,
@@ -130,6 +130,16 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
+      density: FloatParam::new("Density", 0., FloatRange::Linear { min: 0., max: 1. })
+        .with_unit(" %")
+        .with_value_to_string(v2s_f32_percentage(2))
+        .with_string_to_value(s2v_f32_percentage()),
+
+      stereo: FloatParam::new("Stereo", 0., FloatRange::Linear { min: 0., max: 1. })
+        .with_unit(" %")
+        .with_value_to_string(v2s_f32_percentage(2))
+        .with_string_to_value(s2v_f32_percentage()),
+
       pitch: FloatParam::new(
         "Pitch",
         0.,
@@ -141,17 +151,7 @@ impl Default for TimeWarpParameters {
       .with_unit(" st")
       .with_value_to_string(v2s_f32_rounded(2)),
 
-      density: FloatParam::new("Density", 0., FloatRange::Linear { min: 0., max: 1. })
-        .with_unit(" %")
-        .with_value_to_string(v2s_f32_percentage(2))
-        .with_string_to_value(s2v_f32_percentage()),
-
-      stretch: FloatParam::new("Stretch", 1., FloatRange::Linear { min: -2., max: 2. })
-        .with_unit(" %")
-        .with_value_to_string(v2s_f32_percentage(2))
-        .with_string_to_value(s2v_f32_percentage()),
-
-      stereo: FloatParam::new("Stereo", 0., FloatRange::Linear { min: 0., max: 1. })
+      stretch: FloatParam::new("Stretch", 0., FloatRange::Linear { min: -2., max: 2. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),

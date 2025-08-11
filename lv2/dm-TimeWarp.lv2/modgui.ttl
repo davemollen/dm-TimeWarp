@@ -25,20 +25,20 @@
             lv2:name "Size" ;
         ] , [
             lv2:index 3 ;
-            lv2:symbol "pitch" ;
-            lv2:name "Pitch" ;
-        ] , [
-            lv2:index 4 ;
             lv2:symbol "density" ;
             lv2:name "Density" ;
         ] , [
-            lv2:index 5 ;
-            lv2:symbol "stretch" ;
-            lv2:name "Stretch" ;
-        ] , [
-            lv2:index 6 ;
+            lv2:index 4 ;
             lv2:symbol "stereo" ;
             lv2:name "Stereo" ;
+        ] , [
+            lv2:index 5 ;
+            lv2:symbol "pitch" ;
+            lv2:name "Pitch" ;
+        ] , [
+            lv2:index 6 ;
+            lv2:symbol "stretch" ;
+            lv2:name "Stretch" ;
         ] , [
             lv2:index 7 ;
             lv2:symbol "record" ;
