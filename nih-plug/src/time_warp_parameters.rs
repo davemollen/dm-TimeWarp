@@ -33,8 +33,8 @@ pub struct TimeWarpParameters {
   #[id = "size"]
   pub size: FloatParam,
 
-  #[id = "speed"]
-  pub speed: FloatParam,
+  #[id = "pitch"]
+  pub pitch: FloatParam,
 
   #[id = "density"]
   pub density: FloatParam,
@@ -130,15 +130,23 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      speed: FloatParam::new("Speed", 1., FloatRange::Linear { min: -4., max: 4. })
-        .with_value_to_string(v2s_f32_rounded(2)),
+      pitch: FloatParam::new(
+        "Pitch",
+        0.,
+        FloatRange::Linear {
+          min: -24.,
+          max: 24.,
+        },
+      )
+      .with_unit(" st")
+      .with_value_to_string(v2s_f32_rounded(2)),
 
       density: FloatParam::new("Density", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      stretch: FloatParam::new("Stretch", 1., FloatRange::Linear { min: 0., max: 2. })
+      stretch: FloatParam::new("Stretch", 1., FloatRange::Linear { min: -2., max: 2. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),

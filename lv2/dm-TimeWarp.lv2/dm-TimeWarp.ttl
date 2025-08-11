@@ -70,11 +70,12 @@ A granular delay, looper & sampler with time stretch capabilities.
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 3 ;
-		lv2:symbol "speed" ;
-		lv2:name "Speed" ;
-		lv2:default 1.0 ;
-		lv2:minimum -4.0 ;
-		lv2:maximum 4.0 ;
+		lv2:symbol "pitch" ;
+		lv2:name "Pitch" ;
+		lv2:default 0.0 ;
+		lv2:minimum -24.0 ;
+		lv2:maximum 24.0 ;
+		units:unit units:semitone12TET
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 4 ;
@@ -89,7 +90,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:symbol "stretch" ;
 		lv2:name "Stretch" ;
 		lv2:default 1.0 ;
-		lv2:minimum 0.0 ;
+		lv2:minimum -2.0 ;
 		lv2:maximum 2.0 ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;

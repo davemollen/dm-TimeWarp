@@ -41,7 +41,7 @@ impl DmTimeWarp {
       self.params.scan.value(),
       self.params.spray.value(),
       self.params.size.value(),
-      self.params.speed.value(),
+      self.params.pitch.value(),
       self.params.density.value(),
       self.params.stretch.value(),
       self.params.stereo.value(),

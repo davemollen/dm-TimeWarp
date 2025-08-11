@@ -25,8 +25,8 @@
             lv2:name "Size" ;
         ] , [
             lv2:index 3 ;
-            lv2:symbol "speed" ;
-            lv2:name "Speed" ;
+            lv2:symbol "pitch" ;
+            lv2:name "Pitch" ;
         ] , [
             lv2:index 4 ;
             lv2:symbol "density" ;

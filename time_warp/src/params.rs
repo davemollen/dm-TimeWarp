@@ -54,7 +54,7 @@ impl Params {
       scan: 0.,
       spray: 0.,
       size: 1.,
-      speed: 0.,
+      speed: 1.,
       density: 0.,
       stretch: 0.,
       stereo: 1.,
@@ -91,7 +91,7 @@ impl Params {
     scan: f32,
     spray: f32,
     size: f32,
-    speed: f32,
+    pitch: f32,
     density: f32,
     stretch: f32,
     stereo: f32,
@@ -118,11 +118,11 @@ impl Params {
     self.scan = scan;
     self.spray = spray;
     self.size = size.cbrt();
-    self.speed = speed
+    self.speed = 2_f32.powf(pitch / 12.)
       * if midi_enabled {
-        self.pitch_bend_factor
+        self.pitch_bend_factor * stretch.signum()
       } else {
-        1.
+        stretch.signum()
       };
     self.density = density;
     self.stretch = stretch;
