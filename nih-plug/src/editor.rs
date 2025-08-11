@@ -85,6 +85,7 @@ pub(crate) fn create(
             ParamKnob::new(cx, Data::params, |params| &params.speed).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.density).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.stretch).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.stereo).size(Auto);
           })
           .width(Stretch(1.0))
           .height(Auto)
@@ -131,8 +132,8 @@ pub(crate) fn create(
               );
             ParamKnob::new(cx, Data::params, |params| &params.highpass).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.lowpass).size(Auto);
-            ParamKnob::new(cx, Data::params, |params| &params.feedback).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.recycle).size(Auto);
+            ParamKnob::new(cx, Data::params, |params| &params.feedback).size(Auto);
           })
           .width(Stretch(1.0))
           .height(Auto)

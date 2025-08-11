@@ -1,8 +1,8 @@
+mod delay_line;
 mod filter;
 mod mix;
 mod notes;
 mod params;
-mod stereo_delay_line;
 mod voices;
 pub mod shared {
   pub mod delta;
@@ -14,20 +14,20 @@ mod audio_file_processor;
 
 pub use {
   audio_file_processor::{AudioFileData, AudioFileProcessor},
+  delay_line::{DelayLine, Interpolation},
   notes::Notes,
   params::{Params, RecordMode},
-  stereo_delay_line::{Interpolation, StereoDelayLine},
 };
 use {
   filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::tuple_ext::TupleExt,
-  voices::Voices,
+  std::f32::consts::FRAC_1_SQRT_2, voices::Voices,
 };
 
 pub const MIN_DELAY_TIME: f32 = 2.5;
 const MAX_DELAY_TIME: f32 = 60000.;
 
 pub struct TimeWarp {
-  delay_line: StereoDelayLine,
+  delay_line: DelayLine,
   voices: Voices,
   filter: Filter,
   mix: Mix,
@@ -38,7 +38,7 @@ impl TimeWarp {
 
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      delay_line: StereoDelayLine::new(
+      delay_line: DelayLine::new(
         (sample_rate * (MAX_DELAY_TIME + Self::FADE_TIME) / 1000.) as usize,
         sample_rate,
       ),
@@ -60,6 +60,7 @@ impl TimeWarp {
       size,
       density,
       stretch,
+      stereo,
       speed,
       midi_enabled,
       reset_playback,
@@ -69,8 +70,8 @@ impl TimeWarp {
     let recording_gain = params.recording_gain.next();
     let playback_gain = params.playback_gain.next();
     let time = params.time.next();
-    let feedback = params.feedback.next();
     let recycle = params.recycle.next();
+    let feedback = params.feedback.next();
     let dry = params.dry.next();
     let wet = params.wet.next();
     let attack = params.attack.next();
@@ -89,6 +90,7 @@ impl TimeWarp {
         density,
         speed,
         stretch,
+        stereo,
         scan,
         spray,
         midi_enabled,
@@ -104,8 +106,8 @@ impl TimeWarp {
       input,
       time,
       grains_out,
-      feedback,
       recycle,
+      feedback,
       recording_gain,
       feedback_is_enabled,
     );
@@ -117,7 +119,7 @@ impl TimeWarp {
     self.delay_line.get_size()
   }
 
-  pub fn set_delay_line_values(&mut self, values: Vec<(f32, f32)>, write_pointer_index: usize) {
+  pub fn set_delay_line_values(&mut self, values: Vec<f32>, write_pointer_index: usize) {
     self.delay_line.set_values(values);
     self.delay_line.set_write_pointer(write_pointer_index);
   }
@@ -131,38 +133,28 @@ impl TimeWarp {
     input: (f32, f32),
     time: f32,
     grains_out: (f32, f32),
-    feedback: f32,
     recycle: f32,
+    feedback: f32,
     recording_gain: f32,
     feedback_is_enabled: bool,
   ) {
+    let input = input.0 + input.1;
+    let grains_out = grains_out.0 + grains_out.1;
+
     let delay_out = self.delay_line.read(time, Interpolation::Linear);
     let delay_in = if feedback_is_enabled {
       let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
       self
         .mix
-        .process(delay_out, input.add(feedback), recording_gain)
+        .process(delay_out, input + feedback, recording_gain)
     } else {
       self.mix.process(delay_out, input, recording_gain)
     };
     self.delay_line.write(delay_in);
   }
 
-  fn get_feedback(
-    &mut self,
-    delay_out: (f32, f32),
-    grains_out: (f32, f32),
-    recycle: f32,
-    feedback: f32,
-  ) -> (f32, f32) {
-    let feedback = delay_out
-      .multiply((1. - recycle) * feedback)
-      .add(grains_out.multiply(recycle * feedback));
-    let feedback = Self::clip(feedback);
-    self.filter.process(feedback)
-  }
-
-  fn clip(x: (f32, f32)) -> (f32, f32) {
-    (x.0.clamp(-1., 1.), x.1.clamp(-1., 1.))
+  fn get_feedback(&mut self, delay_out: f32, grains_out: f32, recycle: f32, feedback: f32) -> f32 {
+    let feedback_signal = delay_out * (1. - recycle) * feedback + grains_out * recycle * feedback;
+    self.filter.process(feedback_signal.clamp(-1., 1.))
   }
 }

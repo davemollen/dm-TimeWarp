@@ -10,7 +10,7 @@ pub enum WorkerRequest {
 
 pub enum WorkerResponseData {
   LoadFile(AudioFileData),
-  FlushBuffer(Vec<(f32, f32)>),
+  FlushBuffer(Vec<f32>),
 }
 
 #[derive(Clone)]
@@ -59,9 +59,7 @@ impl Worker {
             return;
           }
         };
-        audio_file_data
-          .samples
-          .resize(self.delay_line_size, (0., 0.));
+        audio_file_data.samples.resize(self.delay_line_size, 0.);
 
         match self
           .sender
@@ -77,7 +75,7 @@ impl Worker {
         }
       }
       WorkerRequest::FlushBuffer => {
-        let empty_buffer = vec![(0., 0.); self.delay_line_size];
+        let empty_buffer = vec![0.; self.delay_line_size];
         self
           .sender
           .try_send(WorkerResponseData::FlushBuffer(empty_buffer))

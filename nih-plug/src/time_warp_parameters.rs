@@ -42,6 +42,9 @@ pub struct TimeWarpParameters {
   #[id = "stretch"]
   pub stretch: FloatParam,
 
+  #[id = "stereo"]
+  pub stereo: FloatParam,
+
   #[id = "record"]
   pub record: BoolParam,
 
@@ -63,11 +66,11 @@ pub struct TimeWarpParameters {
   #[id = "lowpass"]
   pub lowpass: FloatParam,
 
-  #[id = "feedback"]
-  pub feedback: FloatParam,
-
   #[id = "recycle"]
   pub recycle: FloatParam,
+
+  #[id = "feedback"]
+  pub feedback: FloatParam,
 
   #[id = "midi_enabled"]
   pub midi_enabled: BoolParam,
@@ -140,9 +143,14 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
+      stereo: FloatParam::new("Stereo", 0., FloatRange::Linear { min: 0., max: 1. })
+        .with_unit(" %")
+        .with_value_to_string(v2s_f32_percentage(2))
+        .with_string_to_value(s2v_f32_percentage()),
+
       record: BoolParam::new("● / Dub", true),
 
-      play: BoolParam::new("▶ / ◼️", true),
+      play: BoolParam::new("▶ / ◼", true),
 
       record_mode: EnumParam::new("Record Mode", RecordMode::Delay),
 
@@ -187,12 +195,12 @@ impl Default for TimeWarpParameters {
       .with_value_to_string(v2s_f32_hz_then_khz(2))
       .with_string_to_value(s2v_f32_hz_then_khz()),
 
-      feedback: FloatParam::new("Feedback", 1., FloatRange::Linear { min: 0., max: 1. })
+      recycle: FloatParam::new("Recycle", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      recycle: FloatParam::new("Recycle", 0., FloatRange::Linear { min: 0., max: 1. })
+      feedback: FloatParam::new("Feedback", 1., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),

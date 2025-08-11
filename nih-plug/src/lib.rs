@@ -44,6 +44,7 @@ impl DmTimeWarp {
       self.params.speed.value(),
       self.params.density.value(),
       self.params.stretch.value(),
+      self.params.stereo.value(),
       self.params.record.value(),
       self.params.play.value(),
       match self.params.record_mode.value() {
@@ -52,8 +53,8 @@ impl DmTimeWarp {
       },
       self.params.time.value(),
       self.params.length.value(),
-      self.params.feedback.value(),
       self.params.recycle.value(),
+      self.params.feedback.value(),
       self.params.dry.value(),
       self.params.wet.value(),
       self.params.midi_enabled.value(),

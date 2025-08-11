@@ -20,12 +20,13 @@ pub struct Params {
   pub speed: f32,
   pub density: f32,
   pub stretch: f32,
+  pub stereo: f32,
   pub recording_gain: LinearSmooth,
   pub playback_gain: LinearSmooth,
   pub time: LogarithmicSmooth,
   pub filter_coefficients: ([f32; 3], [f32; 3]),
-  pub feedback: LinearSmooth,
   pub recycle: LinearSmooth,
+  pub feedback: LinearSmooth,
   pub dry: LinearSmooth,
   pub wet: LinearSmooth,
   pub midi_enabled: bool,
@@ -52,16 +53,17 @@ impl Params {
     Self {
       scan: 0.,
       spray: 0.,
-      size: 0.,
+      size: 1.,
       speed: 0.,
       density: 0.,
       stretch: 0.,
+      stereo: 1.,
       recording_gain: LinearSmooth::new(sample_rate, 100.),
       playback_gain: LinearSmooth::new(sample_rate, 100.),
       time: LogarithmicSmooth::new(sample_rate, 0.3),
       filter_coefficients: ([0.; 3], [0.; 3]),
-      feedback: LinearSmooth::new(sample_rate, 20.),
       recycle: LinearSmooth::new(sample_rate, 20.),
+      feedback: LinearSmooth::new(sample_rate, 20.),
       dry: LinearSmooth::new(sample_rate, 20.),
       wet: LinearSmooth::new(sample_rate, 20.),
       midi_enabled: false,
@@ -92,13 +94,14 @@ impl Params {
     speed: f32,
     density: f32,
     stretch: f32,
+    stereo: f32,
     record: bool,
     play: bool,
     record_mode: RecordMode,
     time: f32,
     length: f32,
-    feedback: f32,
     recycle: f32,
+    feedback: f32,
     dry: f32,
     wet: f32,
     midi_enabled: bool,
@@ -123,6 +126,7 @@ impl Params {
       };
     self.density = density;
     self.stretch = stretch;
+    self.stereo = stereo;
     self.midi_enabled = midi_enabled;
 
     let record_mode_has_changed = record_mode != self.prev_record_mode;
@@ -154,8 +158,8 @@ impl Params {
       self.recording_gain.set_target(recording_gain);
       self.playback_gain.set_target(playback_gain);
       self.set_time(record_mode, record, play, time, length, buffer_size);
-      self.feedback.set_target(feedback);
       self.recycle.set_target(recycle);
+      self.feedback.set_target(feedback);
       self.dry.set_target(dry);
       self.wet.set_target(wet);
       self.attack.set_target(attack);
@@ -166,8 +170,8 @@ impl Params {
       self.recording_gain.reset(recording_gain);
       self.playback_gain.reset(playback_gain);
       self.reset_time(time, length);
-      self.feedback.reset(feedback);
       self.recycle.reset(recycle);
+      self.feedback.reset(feedback);
       self.dry.reset(dry);
       self.wet.reset(wet);
       self.attack.reset(attack);

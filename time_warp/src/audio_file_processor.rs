@@ -17,7 +17,7 @@ pub enum AudioFileProcessingError {
 }
 
 pub struct AudioFileData {
-  pub samples: Vec<(f32, f32)>,
+  pub samples: Vec<f32>,
   pub duration_in_samples: usize,
   pub duration_in_ms: f32,
 }
@@ -73,7 +73,7 @@ impl AudioFileProcessor {
 
     let mut sample_buf = None;
     let mut channels = 0;
-    let mut stereo_samples: Vec<(f32, f32)> = Vec::new();
+    let mut samples: Vec<f32> = Vec::new();
 
     loop {
       // Get the next packet from the format reader.
@@ -126,32 +126,32 @@ impl AudioFileProcessor {
       if let Some(buf) = &mut sample_buf {
         buf.copy_interleaved_ref(audio_buf);
         let interleaved_samples = &buf.samples()[..frames * channels];
-        let deinterleaved_samples: Vec<(f32, f32)> = match channels {
+        let deinterleaved_samples: Vec<f32> = match channels {
           1 => Ok(
             interleaved_samples
               .into_iter()
-              .map(|sample| (*sample, *sample))
+              .map(|sample| *sample)
               .collect(),
           ),
           2 => Ok(
             interleaved_samples
               .chunks_exact(2)
-              .map(|chunk| (chunk[0], chunk[1]))
+              .map(|chunk| chunk[0] * 0.5 + chunk[1] * 0.5)
               .collect(),
           ),
           _ => Err(AudioFileProcessingError::ReadError(
             "Only mono and stereo audio files are supported".to_string(),
           )),
         }?;
-        stereo_samples.extend_from_slice(&deinterleaved_samples);
+        samples.extend_from_slice(&deinterleaved_samples);
       };
     }
 
-    let duration_in_samples = stereo_samples.len();
+    let duration_in_samples = samples.len();
     let duration_in_ms = duration_in_samples as f32 / self.sample_rate * 1000.;
 
     return Ok(AudioFileData {
-      samples: stereo_samples,
+      samples,
       duration_in_samples,
       duration_in_ms,
     });
@@ -174,10 +174,9 @@ mod tests {
       Ok(r) => {
         r.samples
           .iter()
-          .zip([(-0.61001587, -0.61001587), (0.049987793, 0.049987793)])
+          .zip([-0.61001587, 0.049987793])
           .for_each(|(actual, expected)| {
-            assert_eq!(actual.0, expected.0);
-            assert_eq!(actual.1, expected.1);
+            assert_eq!(*actual, expected);
           });
         assert_eq!(r.duration_in_ms, 0.36281177);
       }

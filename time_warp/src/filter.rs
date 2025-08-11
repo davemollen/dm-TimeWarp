@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 pub struct Filter {
   coefficients: ([f32; 3], [f32; 3]),
-  z: [(f32, f32); 2],
+  z: [f32; 2],
   double_sample_rate: f32,
   freq_multiplier: f32,
 }
@@ -12,7 +12,7 @@ impl Filter {
     let double_sample_rate = sample_rate * 2.;
     Self {
       coefficients: ([0.; 3], [0.; 3]),
-      z: [(0., 0.); 2],
+      z: [0.; 2],
       double_sample_rate,
       freq_multiplier: sample_rate.recip() * PI,
     }
@@ -24,11 +24,11 @@ impl Filter {
     self.coefficients = self.get_z_domain_coefficients(w1, w2);
   }
 
-  pub fn process(&mut self, x: (f32, f32)) -> (f32, f32) {
+  pub fn process(&mut self, x: f32) -> f32 {
     let (b, a) = self.coefficients;
-    let y = (x.0 * b[0] + self.z[0].0, x.1 * b[0] + self.z[0].1);
-    self.z[0] = (self.z[1].0 - a[1] * y.0, self.z[1].1 - a[1] * y.1);
-    self.z[1] = (x.0 * b[2] - a[2] * y.0, x.1 * b[2] - a[2] * y.1);
+    let y = x * b[0] + self.z[0];
+    self.z[0] = self.z[1] - a[1] * y;
+    self.z[1] = x * b[2] - a[2] * y;
 
     y
   }

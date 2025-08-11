@@ -1,7 +1,7 @@
 use {
   crate::{
-    shared::{float_ext::FloatExt, tuple_ext::TupleExt},
-    stereo_delay_line::{Interpolation, StereoDelayLine},
+    delay_line::{DelayLine, Interpolation},
+    shared::float_ext::FloatExt,
   },
   std::f32::consts::FRAC_PI_2,
 };
@@ -10,6 +10,7 @@ use {
 pub struct Grain {
   phase: f32,
   position: f32,
+  gain: (f32, f32),
   sample_factor: f32,
   is_active: bool,
 }
@@ -19,6 +20,7 @@ impl Grain {
     Self {
       phase: 0.,
       position: 0.,
+      gain: (0.5, 0.5),
       sample_factor: 1000. / sample_rate,
       is_active: false,
     }
@@ -26,7 +28,7 @@ impl Grain {
 
   pub fn process(
     &mut self,
-    delay_line: &StereoDelayLine,
+    delay_line: &DelayLine,
     time: f32,
     phase_step_size: f32,
     speed: f32,
@@ -58,7 +60,7 @@ impl Grain {
       position_b_fade,
     );
 
-    (delay_out.0, delay_out.1, grain_fade)
+    (delay_out * self.gain.0, delay_out * self.gain.1, grain_fade)
   }
 
   pub fn reset(&mut self) {
@@ -67,12 +69,20 @@ impl Grain {
     self.is_active = false;
   }
 
-  pub fn set_parameters(&mut self, scan: f32, spray: f32, time: f32, start_phase: f32) {
+  pub fn set_parameters(
+    &mut self,
+    scan: f32,
+    spray: f32,
+    stereo: f32,
+    time: f32,
+    start_phase: f32,
+  ) {
     let spray = fastrand::f32() * spray / time;
 
     self.phase = 0.;
     self.position = (1. - (scan + spray + start_phase).fract()) * 0.5;
     self.is_active = true;
+    self.set_panning(stereo);
   }
 
   pub fn is_active(&self) -> bool {
@@ -80,30 +90,30 @@ impl Grain {
   }
 
   fn read_from_delay(
-    delay_line: &StereoDelayLine,
+    delay_line: &DelayLine,
     time: f32,
     position_a: f32,
     position_b: f32,
     grain_fade: f32,
     position_a_fade: f32,
     position_b_fade: f32,
-  ) -> (f32, f32) {
+  ) -> f32 {
     match (position_a_fade > 0., position_b_fade > 0.) {
-      (true, true) => delay_line
+      (true, true) => {
+        delay_line
         .read(position_a * time, Interpolation::Linear)
-        .multiply(position_a_fade.min(grain_fade)) // take the minimum of both fades to prevent audible decreasing gain
-        .add(
-          delay_line
+         * position_a_fade.min(grain_fade) // take the minimum of both fades to prevent audible decreasing gain
+         + delay_line
             .read(position_b * time, Interpolation::Linear)
-            .multiply(position_b_fade.min(grain_fade)),
-        ),
-      (true, false) => delay_line
-        .read(position_a * time, Interpolation::Linear)
-        .multiply(position_a_fade.min(grain_fade)),
-      (false, true) => delay_line
-        .read(position_b * time, Interpolation::Linear)
-        .multiply(position_b_fade.min(grain_fade)),
-      _ => (0., 0.),
+            * position_b_fade.min(grain_fade)
+      }
+      (true, false) => {
+        delay_line.read(position_a * time, Interpolation::Linear) * position_a_fade.min(grain_fade)
+      }
+      (false, true) => {
+        delay_line.read(position_b * time, Interpolation::Linear) * position_b_fade.min(grain_fade)
+      }
+      _ => 0.,
     }
   }
 
@@ -137,5 +147,25 @@ impl Grain {
     } else {
       x.fract()
     }
+  }
+
+  fn set_panning(&mut self, stereo: f32) {
+    if stereo == 0. {
+      self.gain = (0.5, 0.5);
+      return;
+    }
+    if stereo == 1. {
+      self.gain = if fastrand::bool() { (1., 0.) } else { (0., 1.) };
+      return;
+    }
+
+    let stereo_factor = if stereo > 0.8 {
+      let upper_range = stereo - 0.8 * 5.;
+      upper_range * upper_range * 10. + 1.
+    } else {
+      stereo * 1.25
+    };
+    let panning = ((fastrand::f32() - 0.5) * stereo_factor + 0.5).clamp(0., 1.);
+    self.gain = (panning, 1. - panning);
   }
 }

@@ -1,6 +1,6 @@
 mod grain;
 use {
-  crate::{shared::tuple_ext::TupleExt, stereo_delay_line::StereoDelayLine},
+  crate::{delay_line::DelayLine, shared::tuple_ext::TupleExt},
   grain::Grain,
 };
 
@@ -18,10 +18,11 @@ impl Grains {
 
   pub fn process(
     &mut self,
-    delay_line: &StereoDelayLine,
+    delay_line: &DelayLine,
     trigger: bool,
     scan: f32,
     spray: f32,
+    stereo: f32,
     time: f32,
     start_phase: f32,
     phase_step_size: f32,
@@ -35,7 +36,7 @@ impl Grains {
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
       match inactive_grain {
-        Some(grain) => grain.set_parameters(scan, spray, time, start_phase),
+        Some(grain) => grain.set_parameters(scan, spray, stereo, time, start_phase),
         _ => {}
       }
     }

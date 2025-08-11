@@ -9,7 +9,7 @@ pub struct Mix {
 }
 
 impl Mix {
-  pub fn process(&mut self, dry: (f32, f32), wet: (f32, f32), mix: f32) -> (f32, f32) {
+  pub fn process(&mut self, dry: f32, wet: f32, mix: f32) -> f32 {
     if mix != self.mix {
       let factor = mix * FRAC_PI_2;
       self.mix = mix;
@@ -18,9 +18,6 @@ impl Mix {
       self.wet_gain = factor.fast_sin_bhaskara();
       self.wet_gain *= self.wet_gain;
     }
-    (
-      dry.0 * self.dry_gain + wet.0 * self.wet_gain,
-      dry.1 * self.dry_gain + wet.1 * self.wet_gain,
-    )
+    dry * self.dry_gain + wet * self.wet_gain
   }
 }

@@ -4,9 +4,9 @@ mod linear_adsr;
 mod start_phasor;
 use {
   crate::{
+    delay_line::DelayLine,
     notes::{ADSRStage, Note},
     shared::float_ext::FloatExt,
-    stereo_delay_line::StereoDelayLine,
   },
   grain_trigger::GrainTrigger,
   grains::Grains,
@@ -37,13 +37,14 @@ impl Voices {
 
   pub fn process(
     &mut self,
-    delay_line: &StereoDelayLine,
+    delay_line: &DelayLine,
     notes: &mut Vec<Note>,
     size: f32,
     time: f32,
     density: f32,
     speed: f32,
     stretch: f32,
+    stereo: f32,
     scan: f32,
     spray: f32,
     midi_enabled: bool,
@@ -53,7 +54,7 @@ impl Voices {
     release: f32,
     reset_playback: bool,
   ) -> (f32, f32) {
-    let duration = (1. - size) * (time - self.fade_time) + self.fade_time; // range from time to fade_time
+    let duration = (1. - size) * (time - self.fade_time) + self.fade_time; // range from fade_time to time
     let grain_density = density * 7. + 1.; // range from 1 to 8
 
     if reset_playback {
@@ -93,6 +94,7 @@ impl Voices {
             trigger,
             scan,
             spray,
+            stereo,
             time,
             start_phase,
             phase_step_size,
@@ -118,6 +120,7 @@ impl Voices {
         trigger,
         scan,
         spray,
+        stereo,
         time,
         start_phase,
         phase_step_size,
