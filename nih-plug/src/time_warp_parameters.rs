@@ -1,17 +1,23 @@
 mod custom_formatters;
-use crate::editor;
-use custom_formatters::{s2v_f32_ms_then_s, v2s_f32_ms_then_s};
-use nih_plug::{
-  formatters::{
-    s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
-    v2s_f32_rounded,
+use {
+  crate::{
+    editor,
+    time_warp_parameters::custom_formatters::{
+      s2v_f32_ms_then_s, s2v_f32_synced_time, v2s_f32_ms_then_s, v2s_f32_synced_time,
+    },
   },
-  params::{BoolParam, EnumParam, IntParam},
-  prelude::{Enum, FloatParam, FloatRange, IntRange, Params},
+  nih_plug::{
+    formatters::{
+      s2v_f32_hz_then_khz, s2v_f32_percentage, v2s_f32_hz_then_khz, v2s_f32_percentage,
+      v2s_f32_rounded,
+    },
+    params::{BoolParam, EnumParam, IntParam},
+    prelude::{Enum, FloatParam, FloatRange, IntRange, Params},
+  },
+  nih_plug_vizia::ViziaState,
+  std::sync::{Arc, Mutex},
+  time_warp::MIN_DELAY_TIME,
 };
-use nih_plug_vizia::ViziaState;
-use std::sync::{Arc, Mutex};
-use time_warp::MIN_DELAY_TIME;
 
 #[derive(Enum, PartialEq)]
 pub enum RecordMode {
@@ -54,8 +60,14 @@ pub struct TimeWarpParameters {
   #[id = "record_mode"]
   pub record_mode: EnumParam<RecordMode>,
 
+  #[id = "sync"]
+  pub sync: BoolParam,
+
   #[id = "time"]
   pub time: FloatParam,
+
+  #[id = "division"]
+  pub division: IntParam,
 
   #[id = "length"]
   pub length: FloatParam,
@@ -162,6 +174,8 @@ impl Default for TimeWarpParameters {
 
       record_mode: EnumParam::new("Record Mode", RecordMode::Delay),
 
+      sync: BoolParam::new("Sync", false),
+
       time: FloatParam::new(
         "Time",
         2000.,
@@ -173,6 +187,10 @@ impl Default for TimeWarpParameters {
       )
       .with_value_to_string(v2s_f32_ms_then_s())
       .with_string_to_value(s2v_f32_ms_then_s()),
+
+      division: IntParam::new("Time", 15, IntRange::Linear { min: 0, max: 20 })
+        .with_value_to_string(v2s_f32_synced_time())
+        .with_string_to_value(s2v_f32_synced_time()),
 
       length: FloatParam::new("Length", 1., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")

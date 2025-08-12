@@ -51,7 +51,7 @@ impl DmTimeWarp {
         ParamRecordMode::Delay => RecordMode::Delay,
         ParamRecordMode::Looper => RecordMode::Looper,
       },
-      self.params.time.value(),
+      self.get_time(context),
       self.params.length.value(),
       self.params.recycle.value(),
       self.params.feedback.value(),
@@ -106,6 +106,41 @@ impl DmTimeWarp {
       }
     } else {
       self.notes.remove_notes();
+    }
+  }
+
+  fn get_time(&self, context: &mut impl ProcessContext<Self>) -> f32 {
+    let bpm = context.transport().tempo.unwrap_or(120.) as f32;
+    let beat_time = 60000. / bpm;
+
+    if self.params.sync.value() {
+      let factor = match self.params.division.value() {
+        0 => 0.125,
+        1 => 0.16666667,
+        2 => 0.1875,
+        3 => 0.25,
+        4 => 0.33333334,
+        5 => 0.375,
+        6 => 0.5,
+        7 => 0.6666667,
+        8 => 0.75,
+        9 => 1.,
+        10 => 1.3333334,
+        11 => 1.5,
+        12 => 2.,
+        13 => 2.6666667,
+        14 => 3.,
+        15 => 4.,
+        16 => 5.3333335,
+        17 => 6.,
+        18 => 8.,
+        19 => 10.666667,
+        20 => 12.,
+        _ => panic!("synced_time value is out of range."),
+      };
+      beat_time * factor
+    } else {
+      self.params.time.value()
     }
   }
 }

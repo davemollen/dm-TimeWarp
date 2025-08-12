@@ -365,12 +365,14 @@ param-tabs label.tab {
   color: #ececec;
   child-space: 1s;
   background-color: transparent;
+  transition: color 100ms;
   transition: background-color 100ms;
 }
 
 param-tabs label.tab:checked {
   color: #211f24;
   background-color: #00dbdb;
+  transition: color 100ms;
   transition: background-color 100ms;
 }
 
@@ -396,4 +398,48 @@ param-tabs label.tab:last-child {
   border-width: 2px;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
+}
+
+/* BUTTON */
+param-button2 {
+  position-type: self-directed;
+  top: 82px;
+  left: -36px;
+}
+
+param-button2 label {
+  width: 36px;
+  height: 18px;
+  color: #ececec;
+  background-color: #797979;
+  border-radius: 4px;
+  transition: color 100ms;
+  transition: background-color 100ms;
+}
+
+param-button2 label:hover {
+  background-color: #8e8e8e;
+  transition: background-color 100ms;
+}
+
+param-button2 label:checked {
+  color: #211f24;
+  background-color: #00dbdb;
+  transition: color 100ms;
+  transition: background-color 100ms;
+}
+
+param-button2 label:checked:hover {
+  background-color: #16f1f1;
+  border-width: 0px;
+  transition: background-color 100ms;
+}
+
+param-button2 .line {
+  width: 8px;
+  height: 2px;
+  top: 1s;
+  bottom: 1s;
+  background-color: #797979;
+  transition: background-color 100ms;
 }

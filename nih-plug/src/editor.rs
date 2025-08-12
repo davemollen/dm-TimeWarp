@@ -1,4 +1,5 @@
 mod assets;
+mod param_button;
 mod param_file_drop;
 mod param_footswitch;
 mod param_knob;
@@ -8,6 +9,7 @@ mod param_switch;
 mod param_tabs;
 use {
   crate::{
+    editor::param_footswitch::ParamFootswitchHandle,
     time_warp_parameters::{RecordMode, TimeWarpParameters},
     DmTimeWarp,
   },
@@ -18,6 +20,7 @@ use {
     vizia::{image, prelude::*},
     ViziaState, ViziaTheming,
   },
+  param_button::ParamButton,
   param_file_drop::ParamFileDrop,
   param_footswitch::ParamFootswitch,
   param_knob::ParamKnob,
@@ -110,16 +113,42 @@ pub(crate) fn create(
               &params.record_mode
             })
             .size(Auto);
-            ParamKnob::new(cx, Data::params, |params| &params.time)
-              .size(Auto)
-              .class("show")
-              .toggle_class(
-                "hide",
-                Data::params.map(|p| {
-                  p.record_mode.value() != RecordMode::Delay
-                    || !p.file_path.lock().unwrap().is_empty()
-                }),
-              );
+
+            VStack::new(cx, |cx| {
+              ParamButton::new(cx, Data::params, |params| &params.sync)
+                .size(Auto)
+                .class("show")
+                .toggle_class(
+                  "hide",
+                  Data::params.map(|p| {
+                    p.record_mode.value() != RecordMode::Delay
+                      || !p.file_path.lock().unwrap().is_empty()
+                  }),
+                );
+              ParamKnob::new(cx, Data::params, |params| &params.time)
+                .size(Auto)
+                .class("show")
+                .toggle_class(
+                  "hide",
+                  Data::params.map(|p| {
+                    p.sync.value()
+                      || p.record_mode.value() != RecordMode::Delay
+                      || !p.file_path.lock().unwrap().is_empty()
+                  }),
+                );
+              ParamKnob::new(cx, Data::params, |params| &params.division)
+                .size(Auto)
+                .class("show")
+                .toggle_class(
+                  "hide",
+                  Data::params.map(|p| {
+                    !p.sync.value()
+                      || p.record_mode.value() != RecordMode::Delay
+                      || !p.file_path.lock().unwrap().is_empty()
+                  }),
+                );
+            })
+            .size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.length)
               .size(Auto)
               .class("show")
@@ -209,6 +238,7 @@ pub(crate) fn create(
           .left(Stretch(1.0))
           .right(Stretch(1.0));
         ParamFootswitch::new(cx, Data::params, |params| &params.erase)
+          .is_momentary(true)
           .size(Auto)
           .left(Stretch(1.0))
           .right(Stretch(1.0));
