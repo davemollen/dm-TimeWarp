@@ -26,6 +26,10 @@ label {
   font-weight: 600;
 }
 
+label:disabled {
+  color: #646464;
+}
+
 /* TEXTBOX */
 textbox {
   text-align: center;
@@ -49,6 +53,11 @@ textbox:checked {
 
 textbox:checked.caret {
   caret-color: #ececec;
+}
+
+textbox:disabled {
+  color: #646464;
+  transition: color 100ms;
 }
 
 /* KNOB */
@@ -125,15 +134,15 @@ param-slider2 slider .active {
 }
 
 param-slider2 slider:disabled {
-  background-color: #404040;
+  background-color: #646464;
 }
 
 param-slider2 slider:disabled .active {
-  background-color: #404040;
+  background-color: #1b9494;
 }
 
 param-slider2 slider:disabled .thumb {
-  background-color: #404040;
+  background-color: #1b9494;
 }
 
 /* SWITCH */
@@ -209,6 +218,11 @@ param-number-input textbox:checked {
 
 param-number-input textbox:checked.caret {
   caret-color: #ececec;
+}
+
+param-number-input textbox:disabled {
+  background-color: #84848426;
+  color: #1b9494;
 }
 
 /* FOOTSWITCH */

@@ -150,15 +150,24 @@ pub(crate) fn create(
         VStack::new(cx, |cx| {
           HStack::new(cx, |cx| {
             HStack::new(cx, |cx| {
-              ParamSlider::new(cx, Data::params, |params| &params.attack).size(Auto);
-              ParamSlider::new(cx, Data::params, |params| &params.decay).size(Auto);
-              ParamSlider::new(cx, Data::params, |params| &params.sustain).size(Auto);
-              ParamSlider::new(cx, Data::params, |params| &params.release).size(Auto);
+              ParamSlider::new(cx, Data::params, |params| &params.attack)
+                .size(Auto)
+                .disabled(Data::params.map(|p| !p.midi_enabled.value()));
+              ParamSlider::new(cx, Data::params, |params| &params.decay)
+                .size(Auto)
+                .disabled(Data::params.map(|p| !p.midi_enabled.value()));
+              ParamSlider::new(cx, Data::params, |params| &params.sustain)
+                .size(Auto)
+                .disabled(Data::params.map(|p| !p.midi_enabled.value()));
+              ParamSlider::new(cx, Data::params, |params| &params.release)
+                .size(Auto)
+                .disabled(Data::params.map(|p| !p.midi_enabled.value()));
               VStack::new(cx, |cx| {
                 ParamSwitch::new(cx, Data::params, |params| &params.midi_enabled).size(Auto);
                 ParamNumberInput::new(cx, Data::params, |params| &params.voices)
                   .size(Auto)
-                  .top(Stretch(1.0));
+                  .top(Stretch(1.0))
+                  .disabled(Data::params.map(|p| !p.midi_enabled.value()));
               })
               .child_left(Stretch(1.0))
               .child_right(Stretch(1.0))
