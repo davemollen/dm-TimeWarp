@@ -1,11 +1,13 @@
 mod editor;
 mod time_warp_parameters;
 mod worker;
-use nih_plug::prelude::*;
-use std::sync::Arc;
-use time_warp::{AudioFileData, Notes, Params as ProcessParams, RecordMode, TimeWarp};
-use time_warp_parameters::{RecordMode as ParamRecordMode, TimeWarpParameters};
-use worker::{Worker, WorkerRequest, WorkerResponseData};
+use {
+  nih_plug::prelude::*,
+  std::sync::{atomic::Ordering, Arc},
+  time_warp::{AudioFileData, Notes, Params as ProcessParams, RecordMode, TimeWarp},
+  time_warp_parameters::{RecordMode as ParamRecordMode, TimeWarpParameters},
+  worker::{Worker, WorkerRequest, WorkerResponseData},
+};
 
 pub struct DmTimeWarp {
   params: Arc<TimeWarpParameters>,
@@ -83,7 +85,7 @@ impl DmTimeWarp {
 
   pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
     if self.process_params.midi_enabled {
-      while let Some(event) = context.next_event() {
+      if let Some(event) = context.next_event() {
         match event {
           NoteEvent::NoteOn { note, velocity, .. } => {
             self.notes.note_on(note, velocity);
@@ -211,6 +213,11 @@ impl Plugin for DmTimeWarp {
   ) -> ProcessStatus {
     self.set_param_values(buffer.samples(), context);
     self.process_midi_events(context);
+
+    self
+      .params
+      .max_size
+      .store(self.process_params.get_target_time(), Ordering::Release);
 
     if let Some(worker_response_data) = self.worker.try_receive_data() {
       match worker_response_data {

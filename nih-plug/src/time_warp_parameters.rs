@@ -3,7 +3,8 @@ use {
   crate::{
     editor,
     time_warp_parameters::custom_formatters::{
-      s2v_f32_ms_then_s, s2v_f32_synced_time, v2s_f32_ms_then_s, v2s_f32_synced_time,
+      s2v_f32_ms_then_s, s2v_f32_synced_time, s2v_size, v2s_f32_ms_then_s, v2s_f32_synced_time,
+      v2s_size,
     },
   },
   nih_plug::{
@@ -12,7 +13,7 @@ use {
       v2s_f32_rounded,
     },
     params::{BoolParam, EnumParam, IntParam},
-    prelude::{Enum, FloatParam, FloatRange, IntRange, Params},
+    prelude::{AtomicF32, Enum, FloatParam, FloatRange, IntRange, Params},
   },
   nih_plug_vizia::ViziaState,
   std::sync::{Arc, Mutex},
@@ -113,10 +114,15 @@ pub struct TimeWarpParameters {
 
   #[persist = "file_path"]
   pub file_path: Arc<Mutex<String>>,
+
+  #[persist = "max_size"]
+  pub max_size: Arc<AtomicF32>,
 }
 
 impl Default for TimeWarpParameters {
   fn default() -> Self {
+    let max_size = Arc::new(AtomicF32::new(-1.));
+
     Self {
       editor_state: editor::default_state(),
 
@@ -138,9 +144,8 @@ impl Default for TimeWarpParameters {
       .with_string_to_value(s2v_f32_ms_then_s()),
 
       size: FloatParam::new("Size", 1., FloatRange::Linear { min: 0., max: 1. })
-        .with_unit(" %")
-        .with_value_to_string(v2s_f32_percentage(2))
-        .with_string_to_value(s2v_f32_percentage()),
+        .with_value_to_string(v2s_size(max_size.clone()))
+        .with_string_to_value(s2v_size(max_size.clone())),
 
       density: FloatParam::new("Density", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
@@ -313,6 +318,8 @@ impl Default for TimeWarpParameters {
       erase: BoolParam::new("Erase", false),
 
       file_path: Arc::new(Mutex::new("".to_string())),
+
+      max_size,
     }
   }
 }

@@ -207,6 +207,10 @@ impl Params {
     self.pitch_bend_factor = pitch_bend_factor;
   }
 
+  pub fn get_target_time(&self) -> f32 {
+    self.time.get_target()
+  }
+
   fn override_play(&mut self, play: bool, record_mode: &RecordMode) -> bool {
     match (play, record_mode, self.loop_duration, self.file_duration) {
       (true, RecordMode::Looper, None, None) => false,

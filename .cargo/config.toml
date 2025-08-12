@@ -3,5 +3,4 @@
 [profile.release]
 opt-level = 3
 lto = true
-debug = true
 panic = "abort"

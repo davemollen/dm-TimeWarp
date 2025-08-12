@@ -1,4 +1,6 @@
-use std::sync::Arc;
+use nih_plug::prelude::AtomicF32;
+use std::sync::{atomic::Ordering, Arc};
+use time_warp::MIN_DELAY_TIME;
 
 pub fn v2s_f32_ms_then_s() -> Arc<dyn Fn(f32) -> String + Send + Sync> {
   Arc::new(move |value| {
@@ -18,15 +20,14 @@ pub fn v2s_f32_ms_then_s() -> Arc<dyn Fn(f32) -> String + Send + Sync> {
 
 pub fn s2v_f32_ms_then_s() -> Arc<dyn Fn(&str) -> Option<f32> + Send + Sync> {
   Arc::new(move |string| {
-    let string = string.trim();
-    let mut segments = string.split(',');
-    let segments = (segments.next(), segments.next(), segments.next());
+    let time_segment = string.trim().to_ascii_lowercase();
 
-    let time_segment = segments.0?;
-    let cleaned_string = time_segment.trim_end_matches([' ', 's', 'S']).parse().ok();
-    match time_segment.get(time_segment.len().saturating_sub(3)..) {
-      Some(unit) if unit.eq_ignore_ascii_case("s") => cleaned_string.map(|x| x * 1000.0),
-      _ => cleaned_string,
+    if let Some(val) = time_segment.strip_suffix("ms") {
+      val.trim().parse::<f32>().ok()
+    } else if let Some(val) = time_segment.strip_suffix('s') {
+      val.trim().parse::<f32>().ok().map(|x| x * 1000.0)
+    } else {
+      time_segment.parse::<f32>().ok()
     }
   })
 }
@@ -85,5 +86,54 @@ pub fn s2v_f32_synced_time() -> Arc<dyn Fn(&str) -> Option<i32> + Send + Sync> {
     "4T" => Some(19),
     "2." => Some(20),
     _ => None,
+  })
+}
+
+pub fn v2s_size(size_max: Arc<AtomicF32>) -> Arc<dyn Fn(f32) -> String + Send + Sync> {
+  Arc::new(move |value| {
+    let range = size_max.load(Ordering::Relaxed) - MIN_DELAY_TIME;
+    let value = value * value * range + MIN_DELAY_TIME;
+    if value >= 10000. {
+      format!("{:.1} s", value / 1000.0)
+    } else if value >= 1000. {
+      format!("{:.2} s", value / 1000.0)
+    } else if value >= 100. {
+      format!("{value:.0} ms")
+    } else if value >= 10. {
+      format!("{value:.1} ms")
+    } else {
+      format!("{value:.2} ms")
+    }
+  })
+}
+
+pub fn s2v_size(size_max: Arc<AtomicF32>) -> Arc<dyn Fn(&str) -> Option<f32> + Send + Sync> {
+  Arc::new(move |string| {
+    let time_segment = string.trim().to_ascii_lowercase();
+
+    let plain_value = if let Some(val) = time_segment.strip_suffix("ms") {
+      val.trim().parse::<f32>().ok()
+    } else if let Some(val) = time_segment.strip_suffix('s') {
+      val.trim().parse::<f32>().ok().map(|x| x * 1000.0)
+    } else {
+      time_segment.parse::<f32>().ok()
+    };
+
+    match plain_value {
+      Some(plain_val) => {
+        let max = size_max.load(Ordering::Relaxed);
+        let range = max - MIN_DELAY_TIME;
+        let val = if plain_val < MIN_DELAY_TIME {
+          MIN_DELAY_TIME
+        } else if plain_val > max {
+          max
+        } else {
+          plain_val
+        };
+        let y = (val - MIN_DELAY_TIME) / range;
+        Some(y.sqrt())
+      }
+      _ => None,
+    }
   })
 }
