@@ -168,7 +168,7 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      record: BoolParam::new("● / Dub", true),
+      record: BoolParam::new("● / Dub", false),
 
       play: BoolParam::new("▶ / ◼", true),
 
@@ -237,7 +237,7 @@ impl Default for TimeWarpParameters {
 
       attack: FloatParam::new(
         "Attack",
-        10.,
+        1.,
         FloatRange::Skewed {
           min: 0.1,
           max: 5000.,
@@ -249,7 +249,7 @@ impl Default for TimeWarpParameters {
 
       decay: FloatParam::new(
         "Decay",
-        300.,
+        5.,
         FloatRange::Skewed {
           min: 1.,
           max: 15000.,
@@ -264,7 +264,7 @@ impl Default for TimeWarpParameters {
 
       release: FloatParam::new(
         "Release",
-        2000.,
+        5.,
         FloatRange::Skewed {
           min: 1.,
           max: 15000.,

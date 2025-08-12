@@ -106,7 +106,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:symbol "record" ;
 		lv2:name "Rec / Dub" ;
 		lv2:portProperty lv2:integer, lv2:toggled;
-		lv2:default 1 ;
+		lv2:default 0 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
 	] , [
@@ -226,7 +226,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:symbol "attack" ;
 		lv2:name "Attack" ;
 		lv2:portProperty pprops:logarithmic ;
-		lv2:default 10.0 ;
+		lv2:default 1.0 ;
 		lv2:minimum 0.1 ;
 		lv2:maximum 5000.0 ;
 		units:unit units:ms
@@ -236,7 +236,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:symbol "decay" ;
 		lv2:name "Decay" ;
 		lv2:portProperty pprops:logarithmic ;
-		lv2:default 300.0 ;
+		lv2:default 5.0 ;
 		lv2:minimum 1.0 ;
 		lv2:maximum 15000.0 ;
 		units:unit units:ms
@@ -254,7 +254,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:symbol "release" ;
 		lv2:name "Release" ;
 		lv2:portProperty pprops:logarithmic ;
-		lv2:default 2000.0 ;
+		lv2:default 5.0 ;
 		lv2:minimum 1.0 ;
 		lv2:maximum 15000.0 ;
 		units:unit units:ms
