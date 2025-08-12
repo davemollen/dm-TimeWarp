@@ -23,7 +23,8 @@ use {
   voices::Voices,
 };
 
-pub const MIN_DELAY_TIME: f32 = 2.5;
+const FADE_TIME: f32 = 5.;
+pub const MIN_DELAY_TIME: f32 = 10.; // double of FADE_TIME
 const MAX_DELAY_TIME: f32 = 60000.;
 
 pub struct TimeWarp {
@@ -34,15 +35,13 @@ pub struct TimeWarp {
 }
 
 impl TimeWarp {
-  const FADE_TIME: f32 = MIN_DELAY_TIME * 2.;
-
   pub fn new(sample_rate: f32) -> Self {
     Self {
       delay_line: DelayLine::new(
-        (sample_rate * (MAX_DELAY_TIME + Self::FADE_TIME) / 1000.) as usize,
+        (sample_rate * (MAX_DELAY_TIME + FADE_TIME) / 1000.) as usize,
         sample_rate,
       ),
-      voices: Voices::new(sample_rate, Self::FADE_TIME),
+      voices: Voices::new(sample_rate, FADE_TIME),
       filter: Filter::new(sample_rate),
       mix: Mix::default(),
     }
