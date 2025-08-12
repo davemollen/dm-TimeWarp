@@ -12,7 +12,7 @@ pub enum WorkRequest {
 
 pub enum WorkResponseData {
   LoadFile(AudioFileData),
-  FlushBuffer(Vec<(f32, f32)>),
+  FlushBuffer(Vec<f32>),
 }
 
 impl Worker for DmTimeWarp {
@@ -31,14 +31,14 @@ impl Worker for DmTimeWarp {
         let mut audio_file_data = AudioFileProcessor::new(sample_rate)
           .read(&file_path)
           .or(Err(WorkerError::Unknown))?;
-        audio_file_data.samples.resize(size, (0., 0.));
+        audio_file_data.samples.resize(size, 0.);
 
         response_handler
           .respond(WorkResponseData::LoadFile(audio_file_data))
           .or(Err(WorkerError::Unknown))
       }
       WorkRequest::FlushBuffer(size) => response_handler
-        .respond(WorkResponseData::FlushBuffer(vec![(0., 0.); size]))
+        .respond(WorkResponseData::FlushBuffer(vec![0.; size]))
         .or(Err(WorkerError::Unknown)),
     }
   }
@@ -66,10 +66,6 @@ impl Worker for DmTimeWarp {
       }
     }
 
-    Ok(())
-  }
-
-  fn end_run(&mut self, _features: &mut Self::AudioFeatures) -> Result<(), WorkerError> {
     Ok(())
   }
 }

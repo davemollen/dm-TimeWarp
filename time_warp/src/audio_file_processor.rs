@@ -1,4 +1,5 @@
 use {
+  rubato::{FftFixedIn, Resampler},
   std::{fs::File, path::Path},
   symphonia::core::{
     audio::SampleBuffer, codecs::DecoderOptions, formats::FormatOptions, io::MediaSourceStream,
@@ -14,6 +15,12 @@ pub enum AudioFileProcessingError {
 
   #[error("Read error: {0}")]
   ReadError(String),
+
+  #[error("Resample error: {0}")]
+  ResamplerConstructionError(#[from] rubato::ResamplerConstructionError),
+
+  #[error("Resample error: {0}")]
+  ResampleError(#[from] rubato::ResampleError),
 }
 
 pub struct AudioFileData {
@@ -71,9 +78,11 @@ impl AudioFileProcessor {
     // Store the track identifier, we'll use it to filter packets.
     let track_id = track.id;
 
+    let chunk_size = 1024;
     let mut sample_buf = None;
-    let mut channels = 0;
     let mut samples: Vec<f32> = Vec::new();
+    let mut resampler: Option<FftFixedIn<f32>> = None;
+    let mut resample_buffer: Vec<f32> = Vec::new();
 
     loop {
       // Get the next packet from the format reader.
@@ -99,7 +108,9 @@ impl AudioFileProcessor {
       let audio_buf = decoder.decode(&packet)?;
 
       let frames = audio_buf.frames();
-      channels = audio_buf.spec().channels.count();
+      let spec = audio_buf.spec();
+      let channels = spec.channels.count();
+      let sample_rate = spec.rate as f32;
 
       // The decoded audio samples may now be accessed via the audio buffer if per-channel
       // slices of samples in their native decoded format is desired. Use-cases where
@@ -112,14 +123,11 @@ impl AudioFileProcessor {
       // If this is the *first* decoded packet, create a sample buffer matching the
       // decoded audio buffer format.
       if sample_buf.is_none() {
-        // Get the audio buffer specification.
-        let spec = *audio_buf.spec();
-
         // Get the capacity of the decoded buffer. Note: This is capacity, not length!
         let duration = audio_buf.capacity() as u64;
 
         // Create the f32 sample buffer.
-        sample_buf = Some(SampleBuffer::<f32>::new(duration, spec));
+        sample_buf = Some(SampleBuffer::<f32>::new(duration, *spec));
       }
 
       // Copy the decoded audio buffer into the sample buffer in an interleaved format.
@@ -127,26 +135,56 @@ impl AudioFileProcessor {
         buf.copy_interleaved_ref(audio_buf);
         let interleaved_samples = &buf.samples()[..frames * channels];
         let deinterleaved_samples: Vec<f32> = match channels {
-          1 => Ok(
-            interleaved_samples
-              .into_iter()
-              .map(|sample| *sample)
-              .collect(),
-          ),
+          1 => Ok(interleaved_samples.to_vec()),
           2 => Ok(
             interleaved_samples
               .chunks_exact(2)
-              .map(|chunk| chunk[0] * 0.5 + chunk[1] * 0.5)
+              .map(|chunk| (chunk[0] + chunk[1]) * 0.5)
               .collect(),
           ),
           _ => Err(AudioFileProcessingError::ReadError(
             "Only mono and stereo audio files are supported".to_string(),
           )),
         }?;
-        samples.extend_from_slice(&deinterleaved_samples);
+
+        if self.sample_rate != sample_rate {
+          // Initialize resampler
+          if resampler.is_none() {
+            resampler = Some(FftFixedIn::<f32>::new(
+              sample_rate as usize,
+              self.sample_rate as usize,
+              chunk_size,
+              2, // number of FFT blocks per processing call
+              1,
+            )?);
+          }
+
+          // Buffer input samples for chunked processing
+          resample_buffer.extend_from_slice(&deinterleaved_samples);
+
+          // Process full chunks from resample_buffer
+          if resample_buffer.len() >= chunk_size {
+            let chunk: Vec<f32> = resample_buffer.drain(..chunk_size).collect();
+            let resampled = resampler.as_mut().unwrap().process(&vec![chunk], None)?;
+            samples.extend_from_slice(&resampled[0]);
+          }
+        } else {
+          // No resampling needed
+          samples.extend_from_slice(&deinterleaved_samples);
+        }
       };
     }
 
+    // After finishing reading all packets, flush leftover samples in resample_buffer if resampling
+    if let Some(r) = &mut resampler {
+      if !resample_buffer.is_empty() {
+        // Pad the last chunk with zeros
+        resample_buffer.resize(chunk_size, 0.0);
+        let resampled = r.process(&vec![&resample_buffer], None)?;
+        samples.extend_from_slice(&resampled[0]);
+        resample_buffer.clear();
+      }
+    }
     let duration_in_samples = samples.len();
     let duration_in_ms = duration_in_samples as f32 / self.sample_rate * 1000.;
 

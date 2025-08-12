@@ -117,7 +117,7 @@ impl Params {
     }
     self.scan = scan;
     self.spray = spray;
-    self.size = size.cbrt();
+    self.size = size * size;
     self.density = density;
     self.stereo = stereo;
     self.speed = 2_f32.powf(pitch / 12.)
@@ -139,13 +139,10 @@ impl Params {
       self.loop_duration = None;
     }
 
-    if record_mode_has_changed {
-      self.prev_record_mode = record_mode;
-      if record_mode == RecordMode::Looper {
-        self.stopwatch.reset();
-        self.loop_duration = None;
-        self.playback_gain.reset(0.);
-      }
+    if record_mode_has_changed && record_mode == RecordMode::Looper {
+      self.stopwatch.reset();
+      self.loop_duration = None;
+      self.playback_gain.reset(0.);
     }
 
     let overridden_play = self.override_play(play, &record_mode);
@@ -180,10 +177,17 @@ impl Params {
       self.release.reset(release);
       self.is_initialized = true;
     }
+    if record_mode == RecordMode::Looper && self.loop_duration.is_none() {
+      self.feedback.reset(0.);
+    } else if self.prev_record_mode == RecordMode::Looper {
+      self.feedback.reset(feedback);
+    }
+
     self.prev_play = play;
     self.prev_erase = erase;
     self.prev_file_duration = self.file_duration;
     self.prev_reset_playback = self.reset_playback;
+    self.prev_record_mode = record_mode;
   }
 
   pub fn set_file_duration(&mut self, file_duration: f32) {
@@ -197,10 +201,6 @@ impl Params {
 
   pub fn should_erase_buffer(&mut self) -> bool {
     self.is_erasing_buffer
-  }
-
-  pub fn get_feedback_is_enabled(&self) -> bool {
-    !(self.prev_record_mode == RecordMode::Looper && self.loop_duration.is_none())
   }
 
   pub fn set_pitch_bend_factor(&mut self, pitch_bend_factor: f32) {

@@ -20,7 +20,7 @@ pub use {
 };
 use {
   filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::tuple_ext::TupleExt,
-  std::f32::consts::FRAC_1_SQRT_2, voices::Voices,
+  voices::Voices,
 };
 
 pub const MIN_DELAY_TIME: f32 = 2.5;
@@ -78,7 +78,6 @@ impl TimeWarp {
     let decay = params.decay.next();
     let sustain = params.sustain.next();
     let release = params.release.next();
-    let feedback_is_enabled = params.get_feedback_is_enabled();
 
     let grains_out = self
       .voices
@@ -102,15 +101,7 @@ impl TimeWarp {
       )
       .multiply(playback_gain);
 
-    self.write_to_delay(
-      input,
-      time,
-      grains_out,
-      recycle,
-      feedback,
-      recording_gain,
-      feedback_is_enabled,
-    );
+    self.write_to_delay(input, time, grains_out, recycle, feedback, recording_gain);
 
     input.multiply(dry).add(grains_out.multiply(wet))
   }
@@ -136,24 +127,23 @@ impl TimeWarp {
     recycle: f32,
     feedback: f32,
     recording_gain: f32,
-    feedback_is_enabled: bool,
   ) {
     let input = input.0 + input.1;
     let grains_out = grains_out.0 + grains_out.1;
 
     let delay_out = self.delay_line.read(time, Interpolation::Linear);
-    let delay_in = if feedback_is_enabled {
-      let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
-      self
-        .mix
-        .process(delay_out, input + feedback, recording_gain)
-    } else {
-      self.mix.process(delay_out, input, recording_gain)
-    };
+    let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
+    let delay_in = self
+      .mix
+      .process(delay_out, input + feedback, recording_gain);
+
     self.delay_line.write(delay_in);
   }
 
   fn get_feedback(&mut self, delay_out: f32, grains_out: f32, recycle: f32, feedback: f32) -> f32 {
+    if feedback == 0. {
+      return 0.;
+    }
     let feedback_signal = delay_out * (1. - recycle) * feedback + grains_out * recycle * feedback;
     self.filter.process(feedback_signal.clamp(-1., 1.))
   }
