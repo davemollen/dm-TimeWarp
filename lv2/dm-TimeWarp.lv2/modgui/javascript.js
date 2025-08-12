@@ -45,11 +45,24 @@ function(event) {
         break;
       case "midi_enabled":
         const midi = event.icon.find("[mod-port-symbol=midi_enabled]");
+        const attack = event.icon.find("[mod-port-symbol=attack]").parent();
+        const decay = event.icon.find("[mod-port-symbol=decay]").parent();
+        const sustain = event.icon.find("[mod-port-symbol=sustain]").parent();
+        const release = event.icon.find("[mod-port-symbol=release]").parent();
+        const voices = event.icon.find("[mod-port-symbol=voices]").parent();
+        const midi_controls = [attack, decay, sustain, release, voices];
         if(value == 1) {
           midi.addClass("on");
         } else {
           midi.removeClass("on");
         }
+        midi_controls.forEach(function(midi_control) {
+          if(value == 1) {
+            midi_control.removeClass("disabled");
+          } else {
+            midi_control.addClass("disabled");
+          }
+        })
         break;
       default:
         break;

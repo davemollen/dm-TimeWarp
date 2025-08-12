@@ -115,6 +115,10 @@
     line-height: 15px;
 }
 
+.mod-pedal{{{cns}}} .disabled {
+    opacity: 0.5;
+}
+
 /* = CONTAINER
 ================================================ */
 .mod-pedal{{{cns}}} {
