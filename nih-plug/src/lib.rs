@@ -38,7 +38,7 @@ impl Default for DmTimeWarp {
 }
 
 impl DmTimeWarp {
-  pub fn set_param_values(&mut self, buffer_size: usize, context: &mut impl ProcessContext<Self>) {
+  fn set_param_values(&mut self, buffer_size: usize, context: &mut impl ProcessContext<Self>) {
     self.process_params.set(
       self.params.scan.value(),
       self.params.spray.value(),
@@ -83,7 +83,7 @@ impl DmTimeWarp {
       .set_voice_count(self.params.voices.value() as usize);
   }
 
-  pub fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
+  fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
     if self.process_params.midi_enabled {
       if let Some(event) = context.next_event() {
         match event {
@@ -143,6 +143,13 @@ impl DmTimeWarp {
       beat_time * factor
     } else {
       self.params.time.value()
+    }
+  }
+
+  fn update_max_size_param(&mut self) {
+    let target_time = self.process_params.get_target_time();
+    if target_time != self.params.max_size.load(Ordering::Relaxed) {
+      self.params.max_size.store(target_time, Ordering::Relaxed);
     }
   }
 }
@@ -213,11 +220,7 @@ impl Plugin for DmTimeWarp {
   ) -> ProcessStatus {
     self.set_param_values(buffer.samples(), context);
     self.process_midi_events(context);
-
-    self
-      .params
-      .max_size
-      .store(self.process_params.get_target_time(), Ordering::Release);
+    self.update_max_size_param();
 
     if let Some(worker_response_data) = self.worker.try_receive_data() {
       match worker_response_data {
