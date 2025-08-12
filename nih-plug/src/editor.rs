@@ -9,7 +9,6 @@ mod param_switch;
 mod param_tabs;
 use {
   crate::{
-    editor::param_footswitch::ParamFootswitchHandle,
     time_warp_parameters::{RecordMode, TimeWarpParameters},
     DmTimeWarp,
   },
@@ -22,7 +21,7 @@ use {
   },
   param_button::ParamButton,
   param_file_drop::ParamFileDrop,
-  param_footswitch::ParamFootswitch,
+  param_footswitch::{ParamFootswitch, ParamFootswitchHandle},
   param_knob::ParamKnob,
   param_number_input::ParamNumberInput,
   param_slider::ParamSlider,

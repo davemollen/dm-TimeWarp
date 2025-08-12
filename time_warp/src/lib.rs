@@ -43,7 +43,7 @@ impl TimeWarp {
       ),
       voices: Voices::new(sample_rate, FADE_TIME),
       filter: Filter::new(sample_rate),
-      mix: Mix::default(),
+      mix: Mix::new(),
     }
   }
 
