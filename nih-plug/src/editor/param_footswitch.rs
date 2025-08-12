@@ -2,11 +2,15 @@ use nih_plug::params::Param;
 use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamFootswitchEvent {
+  Pressed,
   Toggle,
+  MomentaryTrigger,
+  Reset,
 }
 
 pub struct ParamFootswitch {
   param_base: ParamWidgetBase,
+  is_momentary: bool,
 }
 
 impl ParamFootswitch {
@@ -23,6 +27,7 @@ impl ParamFootswitch {
   {
     Self {
       param_base: ParamWidgetBase::new(cx, params, params_to_param),
+      is_momentary: false,
     }
     .build(
       cx,
@@ -77,7 +82,7 @@ impl ParamFootswitch {
               Element::new(cx)
                 .class("footswitch-fg")
                 .toggle_class("active", value)
-                .on_press(|cx| cx.emit(ParamFootswitchEvent::Toggle));
+                .on_press(|cx| cx.emit(ParamFootswitchEvent::Pressed));
             })
             .row_between(Pixels(8.0))
             .class("footswitch");
@@ -99,6 +104,14 @@ impl View for ParamFootswitch {
 
   fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
     event.map(|param_event, meta| match param_event {
+      ParamFootswitchEvent::Pressed => {
+        if self.is_momentary {
+          cx.emit(ParamFootswitchEvent::MomentaryTrigger);
+        } else {
+          cx.emit(ParamFootswitchEvent::Toggle);
+        }
+      }
+
       ParamFootswitchEvent::Toggle => {
         let normalized_value = self.param_base.modulated_normalized_value();
         self.param_base.begin_set_parameter(cx);
@@ -109,6 +122,40 @@ impl View for ParamFootswitch {
 
         meta.consume();
       }
+
+      ParamFootswitchEvent::MomentaryTrigger => {
+        self.param_base.begin_set_parameter(cx);
+        self.param_base.set_normalized_value(cx, 1.0);
+        self.param_base.end_set_parameter(cx);
+
+        let entity = cx.current();
+        cx.spawn(move |cx_proxy| {
+          std::thread::sleep(std::time::Duration::from_millis(100));
+          cx_proxy.emit_to(entity, ParamFootswitchEvent::Reset).ok();
+        });
+
+        meta.consume();
+      }
+
+      ParamFootswitchEvent::Reset => {
+        self.param_base.begin_set_parameter(cx);
+        self.param_base.set_normalized_value(cx, 0.0);
+        self.param_base.end_set_parameter(cx);
+
+        meta.consume();
+      }
     });
+  }
+}
+
+pub trait ParamFootswitchHandle {
+  fn is_momentary(self, flag: bool) -> Self;
+}
+
+impl<'a> ParamFootswitchHandle for Handle<'a, ParamFootswitch> {
+  fn is_momentary(self, flag: bool) -> Self {
+    self.modify(|footswitch| {
+      footswitch.is_momentary = flag;
+    })
   }
 }
