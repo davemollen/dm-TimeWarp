@@ -147,18 +147,18 @@ pub(crate) fn create(
                       || !p.file_path.lock().unwrap().is_empty()
                   }),
                 );
+              ParamKnob::new(cx, Data::params, |params| &params.length)
+                .size(Auto)
+                .class("show")
+                .toggle_class(
+                  "hide",
+                  Data::params.map(|p| {
+                    p.record_mode.value() == RecordMode::Delay
+                      && p.file_path.lock().unwrap().is_empty()
+                  }),
+                );
             })
             .size(Auto);
-            ParamKnob::new(cx, Data::params, |params| &params.length)
-              .size(Auto)
-              .class("show")
-              .toggle_class(
-                "hide",
-                Data::params.map(|p| {
-                  p.record_mode.value() == RecordMode::Delay
-                    && p.file_path.lock().unwrap().is_empty()
-                }),
-              );
             ParamKnob::new(cx, Data::params, |params| &params.highpass).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.lowpass).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.recycle).size(Auto);
