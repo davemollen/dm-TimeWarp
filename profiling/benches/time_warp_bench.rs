@@ -34,12 +34,18 @@ fn time_warp_bench(c: &mut Criterion) {
     512,
   );
   time_warp.get_filter().set_coefficients(200., 3000.);
+  let derived_params = params.get_derived_params();
   let signal_stream = generate_stereo_signal_stream(44100);
 
   c.bench_function("time_warp", |b| {
     b.iter(|| {
       for signal in &signal_stream {
-        time_warp.process(*signal, &mut params, &mut notes.get_notes());
+        time_warp.process(
+          *signal,
+          &mut params,
+          &mut notes.get_notes(),
+          &derived_params,
+        );
       }
     })
   });

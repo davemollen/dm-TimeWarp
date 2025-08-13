@@ -24,7 +24,7 @@ impl Grains {
     spray: f32,
     stereo: f32,
     time: f32,
-    start_phase: f32,
+    start_position_phase: f32,
     phase_step_size: f32,
     speed: f32,
     window_factor: f32,
@@ -36,7 +36,7 @@ impl Grains {
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
       match inactive_grain {
-        Some(grain) => grain.set_parameters(scan, spray, stereo, time, start_phase),
+        Some(grain) => grain.set_parameters(scan, spray, stereo, time, start_position_phase),
         _ => {}
       }
     }

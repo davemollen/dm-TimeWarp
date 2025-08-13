@@ -3,6 +3,7 @@ mod filter;
 mod mix;
 mod notes;
 mod params;
+mod start_position_phasor;
 mod voices;
 pub mod shared {
   pub mod delta;
@@ -17,17 +18,19 @@ pub use {
   delay_line::{DelayLine, Interpolation},
   notes::Notes,
   params::{Params, RecordMode},
+  start_position_phasor::StartPositionPhasor,
 };
 use {
-  filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::tuple_ext::TupleExt,
-  voices::Voices,
+  filter::Filter, mix::Mix, notes::Note, params::DerivedParams, params::Smoother,
+  shared::tuple_ext::TupleExt, voices::Voices,
 };
 
-const FADE_TIME: f32 = 5.;
+pub const FADE_TIME: f32 = 5.;
 pub const MIN_DELAY_TIME: f32 = 10.; // double of FADE_TIME
 const MAX_DELAY_TIME: f32 = 60000.;
 
 pub struct TimeWarp {
+  start_position_phasor: StartPositionPhasor,
   delay_line: DelayLine,
   voices: Voices,
   filter: Filter,
@@ -37,6 +40,7 @@ pub struct TimeWarp {
 impl TimeWarp {
   pub fn new(sample_rate: f32) -> Self {
     Self {
+      start_position_phasor: StartPositionPhasor::new(sample_rate),
       delay_line: DelayLine::new(
         (sample_rate * (MAX_DELAY_TIME + FADE_TIME) / 1000.) as usize,
         sample_rate,
@@ -52,6 +56,7 @@ impl TimeWarp {
     input: (f32, f32),
     params: &mut Params,
     notes: &mut Vec<Note>,
+    derived_params: &DerivedParams,
   ) -> (f32, f32) {
     let Params {
       scan,
@@ -78,17 +83,22 @@ impl TimeWarp {
     let sustain = params.sustain.next();
     let release = params.release.next();
 
+    if reset_playback {
+      self.start_position_phasor.reset();
+    }
+    let start_position_phase = self
+      .start_position_phasor
+      .process(speed, time, size, density, stretch);
+
     let grains_out = self
       .voices
       .process(
         &self.delay_line,
         notes,
-        size,
         time,
         density,
         stereo,
         speed,
-        stretch,
         scan,
         spray,
         midi_enabled,
@@ -97,6 +107,8 @@ impl TimeWarp {
         sustain,
         release,
         reset_playback,
+        start_position_phase,
+        derived_params,
       )
       .multiply(playback_gain);
 

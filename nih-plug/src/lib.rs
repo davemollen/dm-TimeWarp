@@ -221,6 +221,7 @@ impl Plugin for DmTimeWarp {
     self.set_param_values(buffer.samples(), context);
     self.process_midi_events(context);
     self.update_max_size_param();
+    let derived_params = self.process_params.get_derived_params();
 
     if let Some(worker_response_data) = self.worker.try_receive_data() {
       match worker_response_data {
@@ -250,6 +251,7 @@ impl Plugin for DmTimeWarp {
         (*left_channel, *right_channel),
         &mut self.process_params,
         &mut self.notes.get_notes(),
+        &derived_params,
       );
     });
     ProcessStatus::Normal

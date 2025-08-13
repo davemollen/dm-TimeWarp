@@ -75,12 +75,12 @@ impl Grain {
     spray: f32,
     stereo: f32,
     time: f32,
-    start_phase: f32,
+    start_position_phase: f32,
   ) {
     let spray = fastrand::f32() * spray / time;
 
     self.phase = 0.;
-    self.position = (1. - (scan + spray + start_phase).fract()) * 0.5;
+    self.position = (1. - (scan + spray + start_position_phase).fract()) * 0.5;
     self.is_active = true;
     self.set_panning(stereo);
   }

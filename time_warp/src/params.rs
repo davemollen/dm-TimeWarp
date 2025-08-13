@@ -1,6 +1,8 @@
 mod smooth;
 mod stopwatch;
+use crate::FADE_TIME;
 pub use smooth::Smoother;
+
 use {
   crate::shared::float_ext::FloatExt,
   smooth::{LinearSmooth, LogarithmicSmooth},
@@ -11,6 +13,14 @@ use {
 pub enum RecordMode {
   Delay,
   Looper,
+}
+
+pub struct DerivedParams {
+  pub duration: f32,
+  pub phase_step_size: f32,
+  pub window_factor: f32,
+  pub fade_factor: f32,
+  pub fade_offset: f32,
 }
 
 pub struct Params {
@@ -46,6 +56,7 @@ pub struct Params {
   is_erasing_buffer: bool,
   prev_record_mode: RecordMode,
   pitch_bend_factor: f32,
+  sample_rate: f32,
 }
 
 impl Params {
@@ -83,6 +94,7 @@ impl Params {
       is_erasing_buffer: false,
       prev_record_mode: RecordMode::Delay,
       pitch_bend_factor: 1.,
+      sample_rate,
     }
   }
 
@@ -188,6 +200,23 @@ impl Params {
     self.prev_file_duration = self.file_duration;
     self.prev_reset_playback = self.reset_playback;
     self.prev_record_mode = record_mode;
+  }
+
+  pub fn get_derived_params(&self) -> DerivedParams {
+    let time = self.time.get_target();
+    let duration = self.size * (time - FADE_TIME) + FADE_TIME; // range from fade_time to time
+    let grain_duration = duration + FADE_TIME * self.density;
+    let min_window_factor = 2.;
+    let max_window_factor = grain_duration / FADE_TIME;
+    let fade_factor = time / FADE_TIME;
+
+    DerivedParams {
+      duration,
+      phase_step_size: grain_duration.mstosamps(self.sample_rate).recip(),
+      window_factor: max_window_factor - (self.density * (max_window_factor - min_window_factor)),
+      fade_factor,
+      fade_offset: fade_factor.recip() + 1.,
+    }
   }
 
   pub fn set_file_duration(&mut self, file_duration: f32) {

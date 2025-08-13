@@ -32,9 +32,10 @@ fn main() {
     512,
   );
   time_warp.get_filter().set_coefficients(200., 3000.);
+  let derived_params = params.get_derived_params();
 
   loop {
     let input = (generate_signal(), generate_signal());
-    time_warp.process(input, &mut params, &mut notes.get_notes());
+    time_warp.process(input, &mut params, &mut notes.get_notes(), &derived_params);
   }
 }

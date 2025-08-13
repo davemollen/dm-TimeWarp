@@ -1,12 +1,12 @@
 use crate::shared::phasor::Phasor;
 
 #[derive(Clone)]
-pub struct StartPhasor {
+pub struct StartPositionPhasor {
   phasor: Phasor,
   prev_speed: f32,
 }
 
-impl StartPhasor {
+impl StartPositionPhasor {
   pub fn new(sample_rate: f32) -> Self {
     Self {
       phasor: Phasor::new(sample_rate),
