@@ -147,10 +147,16 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_size(max_size.clone()))
         .with_string_to_value(s2v_size(max_size.clone())),
 
-      density: FloatParam::new("Density", 0., FloatRange::Linear { min: 0., max: 1. })
-        .with_unit(" %")
-        .with_value_to_string(v2s_f32_percentage(2))
-        .with_string_to_value(s2v_f32_percentage()),
+      density: FloatParam::new(
+        "Density",
+        0.,
+        FloatRange::Skewed {
+          min: 1.,
+          max: 8.,
+          factor: 0.5,
+        },
+      )
+      .with_value_to_string(v2s_f32_rounded(2)),
 
       stereo: FloatParam::new("Stereo", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")

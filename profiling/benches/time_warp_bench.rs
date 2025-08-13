@@ -12,7 +12,7 @@ fn time_warp_bench(c: &mut Criterion) {
     0.,
     0.1,
     0.75,
-    0.75,
+    6.25,
     0.,
     1.,
     1.,

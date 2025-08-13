@@ -72,9 +72,10 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:index 3 ;
 		lv2:symbol "density" ;
 		lv2:name "Density" ;
-		lv2:default 0.0 ;
-		lv2:minimum 0.0 ;
-		lv2:maximum 1.0 ;
+		lv2:portProperty pprops:logarithmic ;
+		lv2:default 1.0 ;
+		lv2:minimum 1.0 ;
+		lv2:maximum 8.0 ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 4 ;

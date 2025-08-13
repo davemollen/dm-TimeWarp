@@ -15,7 +15,8 @@ impl StartPhasor {
   }
 
   pub fn process(&mut self, speed: f32, time: f32, size: f32, density: f32, stretch: f32) -> f32 {
-    let freq = if size < 1. || density > 0. {
+    // Go into granular mode when size is smaller than time or density will result in overlap
+    let freq = if size < 1. || density > 1. {
       1000. / time * (stretch - 1.)
     } else {
       if speed != self.prev_speed && speed == 1. {
