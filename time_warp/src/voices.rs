@@ -1,7 +1,7 @@
 mod grain_trigger;
 mod grains;
 mod linear_adsr;
-mod start_phasor;
+mod start_position_phasor;
 use {
   crate::{
     delay_line::DelayLine,
@@ -11,14 +11,14 @@ use {
   grain_trigger::GrainTrigger,
   grains::Grains,
   linear_adsr::ADSR,
-  start_phasor::StartPhasor,
+  start_position_phasor::StartPositionPhasor,
 };
 
 pub struct Voices {
   grains: Vec<Grains>,
   adsr: Vec<ADSR>,
   grain_trigger: GrainTrigger,
-  start_phasor: StartPhasor,
+  start_position_phasor: StartPositionPhasor,
   fade_time: f32,
   sample_rate: f32,
 }
@@ -29,7 +29,7 @@ impl Voices {
       grains: vec![Grains::new(sample_rate); 8],
       adsr: vec![ADSR::new(sample_rate, 5.); 8],
       grain_trigger: GrainTrigger::new(sample_rate),
-      start_phasor: StartPhasor::new(sample_rate),
+      start_position_phasor: StartPositionPhasor::new(sample_rate),
       fade_time,
       sample_rate,
     }
@@ -57,10 +57,10 @@ impl Voices {
     let duration = size * (time - self.fade_time) + self.fade_time; // range from fade_time to time
 
     if reset_playback {
-      self.start_phasor.reset();
+      self.start_position_phasor.reset();
     }
-    let start_phase = self
-      .start_phasor
+    let start_position_phase = self
+      .start_position_phasor
       .process(speed, time, size, density, stretch);
 
     let grain_duration = duration + self.fade_time * density;
@@ -94,7 +94,7 @@ impl Voices {
             spray,
             stereo,
             time,
-            start_phase,
+            start_position_phase,
             phase_step_size,
             speed * adsr.get_speed(),
             window_factor,
@@ -120,7 +120,7 @@ impl Voices {
         spray,
         stereo,
         time,
-        start_phase,
+        start_position_phase,
         phase_step_size,
         speed,
         window_factor,
