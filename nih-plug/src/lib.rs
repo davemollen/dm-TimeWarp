@@ -85,7 +85,8 @@ impl DmTimeWarp {
 
   fn process_midi_events(&mut self, context: &mut impl ProcessContext<Self>) {
     if self.process_params.midi_enabled {
-      if let Some(event) = context.next_event() {
+      // while is needed because events come in batches
+      while let Some(event) = context.next_event() {
         match event {
           NoteEvent::NoteOn { note, velocity, .. } => {
             self.notes.note_on(note, velocity);

@@ -163,7 +163,8 @@ impl AudioFileProcessor {
           resample_buffer.extend_from_slice(&deinterleaved_samples);
 
           // Process full chunks from resample_buffer
-          if resample_buffer.len() >= chunk_size {
+          // while is needed here to avoid unnecessary latency when multiple chunks are ready at once.
+          while resample_buffer.len() >= chunk_size {
             let chunk: Vec<f32> = resample_buffer.drain(..chunk_size).collect();
             let resampled = resampler.as_mut().unwrap().process(&vec![chunk], None)?;
             samples.extend_from_slice(&resampled[0]);
