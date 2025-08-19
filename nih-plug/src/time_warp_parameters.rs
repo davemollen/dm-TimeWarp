@@ -17,7 +17,7 @@ use {
   },
   nih_plug_vizia::ViziaState,
   std::sync::{Arc, Mutex},
-  time_warp::MIN_DELAY_TIME,
+  time_warp::{MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY},
 };
 
 #[derive(Enum, PartialEq)]
@@ -149,10 +149,10 @@ impl Default for TimeWarpParameters {
 
       density: FloatParam::new(
         "Density",
-        0.,
+        MIN_DENSITY,
         FloatRange::Skewed {
-          min: 1.,
-          max: 8.,
+          min: MIN_DENSITY,
+          max: MAX_DENSITY,
           factor: 0.5,
         },
       )

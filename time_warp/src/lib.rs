@@ -26,6 +26,8 @@ use {
 const FADE_TIME: f32 = 5.;
 pub const MIN_DELAY_TIME: f32 = 10.; // double of FADE_TIME
 const MAX_DELAY_TIME: f32 = 60000.;
+pub const MIN_DENSITY: f32 = 1.;
+pub const MAX_DENSITY: f32 = 8.;
 
 pub struct TimeWarp {
   delay_line: DelayLine,

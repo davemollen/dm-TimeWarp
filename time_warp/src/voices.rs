@@ -7,6 +7,7 @@ use {
     delay_line::DelayLine,
     notes::{ADSRStage, Note},
     shared::float_ext::FloatExt,
+    MAX_DENSITY, MIN_DENSITY,
   },
   grain_trigger::GrainTrigger,
   grains::Grains,
@@ -67,7 +68,9 @@ impl Voices {
     let phase_step_size = grain_duration.mstosamps(self.sample_rate).recip();
     let min_window_factor = 2.;
     let max_window_factor = grain_duration / self.fade_time;
-    let window_factor = max_window_factor - (density * (max_window_factor - min_window_factor));
+    let normalized_density = density / MAX_DENSITY - MIN_DENSITY;
+    let window_factor =
+      max_window_factor - (normalized_density * (max_window_factor - min_window_factor));
     let fade_factor = time / self.fade_time;
     let fade_offset = fade_factor.recip() + 1.;
 
