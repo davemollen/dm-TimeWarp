@@ -159,13 +159,16 @@ impl Grain {
       return;
     }
 
-    let stereo_factor = if stereo > 0.8 {
-      let upper_range = stereo - 0.8 * 5.;
-      upper_range * upper_range * 10. + 1.
+    if stereo > 0.8 {
+      let stereo_factor = (stereo - 0.8) * 2.5;
+      let hard_panning = if fastrand::bool() { 1. } else { 0. };
+      let random_panning = (fastrand::f32() - 0.5) + 0.5;
+      let panning = random_panning.mix(hard_panning, stereo_factor);
+      self.gain = (panning, 1. - panning)
     } else {
-      stereo * 1.25
-    };
-    let panning = ((fastrand::f32() - 0.5) * stereo_factor + 0.5).clamp(0., 1.);
-    self.gain = (panning, 1. - panning);
+      let stereo_factor = stereo * 1.25;
+      let panning = (fastrand::f32() - 0.5) * stereo_factor + 0.5;
+      self.gain = (panning, 1. - panning);
+    }
   }
 }
