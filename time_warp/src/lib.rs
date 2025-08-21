@@ -16,7 +16,7 @@ pub use {
   audio_file_processor::{AudioFileData, AudioFileProcessor},
   delay_line::{DelayLine, Interpolation},
   notes::Notes,
-  params::{Params, RecordMode},
+  params::{Params, SampleMode},
 };
 use {
   filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::tuple_ext::TupleExt,

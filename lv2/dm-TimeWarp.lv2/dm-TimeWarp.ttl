@@ -81,7 +81,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:index 4 ;
 		lv2:symbol "stereo" ;
 		lv2:name "Stereo" ;
-		lv2:default 1.0 ;
+		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -122,15 +122,16 @@ A granular delay, looper & sampler with time stretch capabilities.
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 9 ;
-		lv2:symbol "record_mode" ;
+		lv2:symbol "sample_mode" ;
 		lv2:name "Record Mode" ;
 		lv2:portProperty lv2:integer;
 		lv2:portProperty lv2:enumeration ;
 		lv2:default 1 ;
 		lv2:minimum 1 ;
-		lv2:maximum 2 ;
+		lv2:maximum 3 ;
 		lv2:scalePoint [rdfs:label "delay"; rdf:value 1];
 		lv2:scalePoint [rdfs:label "looper"; rdf:value 2];
+		lv2:scalePoint [rdfs:label "sampler"; rdf:value 3];
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 10 ;

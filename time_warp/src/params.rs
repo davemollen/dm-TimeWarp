@@ -8,9 +8,10 @@ use {
 };
 
 #[derive(Clone, Copy, PartialEq)]
-pub enum RecordMode {
+pub enum SampleMode {
   Delay,
   Looper,
+  Sampler,
 }
 
 pub struct Params {
@@ -44,7 +45,7 @@ pub struct Params {
   prev_play: bool,
   prev_erase: bool,
   is_erasing_buffer: bool,
-  prev_record_mode: RecordMode,
+  prev_sample_mode: SampleMode,
   pitch_bend_factor: f32,
 }
 
@@ -81,7 +82,7 @@ impl Params {
       prev_play: true,
       prev_erase: false,
       is_erasing_buffer: false,
-      prev_record_mode: RecordMode::Delay,
+      prev_sample_mode: SampleMode::Delay,
       pitch_bend_factor: 1.,
     }
   }
@@ -97,7 +98,7 @@ impl Params {
     stretch: f32,
     record: bool,
     play: bool,
-    record_mode: RecordMode,
+    sample_mode: SampleMode,
     time: f32,
     length: f32,
     recycle: f32,
@@ -129,9 +130,9 @@ impl Params {
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
-    let record_mode_has_changed = record_mode != self.prev_record_mode;
+    let sample_mode_has_changed = sample_mode != self.prev_sample_mode;
     let erase_has_changed = erase && !self.prev_erase;
-    self.is_erasing_buffer = record_mode_has_changed || erase_has_changed;
+    self.is_erasing_buffer = sample_mode_has_changed || erase_has_changed;
 
     if erase_has_changed {
       self.file_duration = None;
@@ -139,13 +140,13 @@ impl Params {
       self.loop_duration = None;
     }
 
-    if record_mode_has_changed && record_mode == RecordMode::Looper {
+    if sample_mode_has_changed && sample_mode == SampleMode::Looper {
       self.stopwatch.reset();
       self.loop_duration = None;
       self.playback_gain.reset(0.);
     }
 
-    let overridden_play = self.override_play(play, &record_mode);
+    let overridden_play = self.override_play(play, &sample_mode);
     let recording_gain = if record { 1. } else { 0. };
     let playback_gain = if overridden_play { 1. } else { 0. };
     let dry = dry.fast_dbtoa();
@@ -154,7 +155,7 @@ impl Params {
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
       self.playback_gain.set_target(playback_gain);
-      self.set_time(record_mode, record, play, time, length, buffer_size);
+      self.set_time(sample_mode, record, play, time, length, buffer_size);
       self.recycle.set_target(recycle);
       self.feedback.set_target(feedback);
       self.dry.set_target(dry);
@@ -177,9 +178,9 @@ impl Params {
       self.release.reset(release);
       self.is_initialized = true;
     }
-    if record_mode == RecordMode::Looper && self.loop_duration.is_none() {
+    if sample_mode == SampleMode::Looper && self.loop_duration.is_none() {
       self.feedback.reset(0.);
-    } else if self.prev_record_mode == RecordMode::Looper {
+    } else if self.prev_sample_mode == SampleMode::Looper {
       self.feedback.reset(feedback);
     }
 
@@ -187,7 +188,7 @@ impl Params {
     self.prev_erase = erase;
     self.prev_file_duration = self.file_duration;
     self.prev_reset_playback = self.reset_playback;
-    self.prev_record_mode = record_mode;
+    self.prev_sample_mode = sample_mode;
   }
 
   pub fn set_file_duration(&mut self, file_duration: f32) {
@@ -211,9 +212,9 @@ impl Params {
     self.time.get_target()
   }
 
-  fn override_play(&mut self, play: bool, record_mode: &RecordMode) -> bool {
-    match (play, record_mode, self.loop_duration, self.file_duration) {
-      (true, RecordMode::Looper, None, None) => false,
+  fn override_play(&mut self, play: bool, sample_mode: &SampleMode) -> bool {
+    match (play, sample_mode, self.loop_duration, self.file_duration) {
+      (true, SampleMode::Looper, None, None) => false,
       (true, _, _, _) => {
         // reset playback to beginning if play was off previously and reset playback isn't activated already
         if !self.reset_playback {
@@ -227,7 +228,7 @@ impl Params {
 
   fn set_time(
     &mut self,
-    record_mode: RecordMode,
+    sample_mode: SampleMode,
     record: bool,
     play: bool,
     time: f32,
@@ -238,7 +239,7 @@ impl Params {
       self.file_duration,
       self.prev_file_duration,
       self.loop_duration,
-      record_mode,
+      sample_mode,
     ) {
       (Some(file_duration), Some(prev_file_duration), _, _) => {
         if file_duration == prev_file_duration {
@@ -250,7 +251,7 @@ impl Params {
       (Some(file_duration), None, _, _) => {
         self.time.reset(file_duration * length);
       }
-      (None, _, None, RecordMode::Looper) => {
+      (None, _, None, SampleMode::Looper) => {
         // stop stopwatch if play changed from false to true
         let start = record && !(!self.prev_play && play);
         if let Some(loop_duration) = self.stopwatch.process(start, buffer_size) {
@@ -259,7 +260,7 @@ impl Params {
           self.reset_playback = true;
         }
       }
-      (_, _, Some(loop_duration), RecordMode::Looper) => {
+      (_, _, Some(loop_duration), SampleMode::Looper) => {
         self.time.set_target(loop_duration * length);
       }
       _ => {

@@ -49,7 +49,7 @@
             lv2:name "Play / Stop" ;
         ] , [
             lv2:index 9 ;
-            lv2:symbol "record_mode" ;
+            lv2:symbol "sample_mode" ;
             lv2:name "Record Mode" ;
         ] , [
             lv2:index 10 ;

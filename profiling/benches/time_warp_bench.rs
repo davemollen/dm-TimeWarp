@@ -18,7 +18,7 @@ fn time_warp_bench(c: &mut Criterion) {
     1.,
     true,
     true,
-    time_warp::RecordMode::Delay,
+    time_warp::SampleMode::Delay,
     250.,
     1.,
     0.75,

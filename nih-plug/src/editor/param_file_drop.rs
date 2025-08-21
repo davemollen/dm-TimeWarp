@@ -81,6 +81,11 @@ impl View for ParamFileDrop {
       }
 
       ParamFileDropEvent::PickFileFromDialog => {
+        if cx.is_disabled() {
+          meta.consume();
+          return;
+        }
+
         cx.spawn(move |cx_proxy| {
           if let Some(path_buf) = FileDialog::new()
             .add_filter(

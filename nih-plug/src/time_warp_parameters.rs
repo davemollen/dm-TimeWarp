@@ -21,9 +21,10 @@ use {
 };
 
 #[derive(Enum, PartialEq)]
-pub enum RecordMode {
+pub enum SampleMode {
   Delay,
   Looper,
+  Sampler,
 }
 
 #[derive(Params)]
@@ -58,8 +59,8 @@ pub struct TimeWarpParameters {
   #[id = "play"]
   pub play: BoolParam,
 
-  #[id = "record_mode"]
-  pub record_mode: EnumParam<RecordMode>,
+  #[id = "sample_mode"]
+  pub sample_mode: EnumParam<SampleMode>,
 
   #[id = "sync"]
   pub sync: BoolParam,
@@ -183,7 +184,7 @@ impl Default for TimeWarpParameters {
 
       play: BoolParam::new("▶ / ◼", true),
 
-      record_mode: EnumParam::new("Record Mode", RecordMode::Delay),
+      sample_mode: EnumParam::new("Sample Mode", SampleMode::Delay),
 
       sync: BoolParam::new("Sync", false),
 

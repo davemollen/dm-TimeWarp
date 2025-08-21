@@ -9,7 +9,7 @@ mod param_switch;
 mod param_tabs;
 use {
   crate::{
-    time_warp_parameters::{RecordMode, TimeWarpParameters},
+    time_warp_parameters::{SampleMode, TimeWarpParameters},
     DmTimeWarp,
   },
   assets::{register_roboto, register_roboto_bold, ROBOTO_FONT_NAME},
@@ -40,7 +40,7 @@ pub struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-  ViziaState::new(|| (1124, 426))
+  ViziaState::new(|| (1156, 426))
 }
 
 pub(crate) fn create(
@@ -107,54 +107,45 @@ pub(crate) fn create(
               Data::params.map(|p| p.file_path.lock().unwrap().clone()),
               "Sample".to_string(),
             )
-            .size(Auto);
-            ParamTabs::new(cx, RecordMode::variants(), Data::params, |params| {
-              &params.record_mode
+            .size(Auto)
+            .top(Stretch(1.0))
+            .bottom(Stretch(1.0))
+            .disabled(Data::params.map(|p| p.sample_mode.value() != SampleMode::Sampler));
+            ParamTabs::new(cx, SampleMode::variants(), Data::params, |params| {
+              &params.sample_mode
             })
-            .size(Auto);
+            .size(Auto)
+            .top(Stretch(1.0))
+            .bottom(Stretch(1.0))
+            .right(Pixels(48.0));
 
             VStack::new(cx, |cx| {
               ParamButton::new(cx, Data::params, |params| &params.sync)
                 .size(Auto)
                 .class("show")
-                .toggle_class(
-                  "hide",
-                  Data::params.map(|p| {
-                    p.record_mode.value() != RecordMode::Delay
-                      || !p.file_path.lock().unwrap().is_empty()
-                  }),
-                );
+                .disabled(Data::params.map(|p| p.sample_mode.value() != SampleMode::Delay));
               ParamKnob::new(cx, Data::params, |params| &params.time)
                 .size(Auto)
                 .class("show")
                 .toggle_class(
                   "hide",
-                  Data::params.map(|p| {
-                    p.sync.value()
-                      || p.record_mode.value() != RecordMode::Delay
-                      || !p.file_path.lock().unwrap().is_empty()
-                  }),
+                  Data::params
+                    .map(|p| p.sync.value() || p.sample_mode.value() != SampleMode::Delay),
                 );
               ParamKnob::new(cx, Data::params, |params| &params.division)
                 .size(Auto)
                 .class("show")
                 .toggle_class(
                   "hide",
-                  Data::params.map(|p| {
-                    !p.sync.value()
-                      || p.record_mode.value() != RecordMode::Delay
-                      || !p.file_path.lock().unwrap().is_empty()
-                  }),
+                  Data::params
+                    .map(|p| !p.sync.value() || p.sample_mode.value() != SampleMode::Delay),
                 );
               ParamKnob::new(cx, Data::params, |params| &params.length)
                 .size(Auto)
                 .class("show")
                 .toggle_class(
                   "hide",
-                  Data::params.map(|p| {
-                    p.record_mode.value() == RecordMode::Delay
-                      && p.file_path.lock().unwrap().is_empty()
-                  }),
+                  Data::params.map(|p| p.sample_mode.value() == SampleMode::Delay),
                 );
             })
             .size(Auto);

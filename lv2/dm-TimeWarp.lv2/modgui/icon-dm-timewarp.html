@@ -61,7 +61,7 @@
         </div>
       </div>
       <div class="buffer-controls">
-        <div class="mod-control-group mod-enumerated-group bottom clearfix">
+        <div class="mod-control-group mod-enumerated-group disabled">
           {{#effect.parameters}} {{#path}}
           <div
             class="mod-enumerated"
@@ -93,7 +93,7 @@
           <div
             class="mod-tabs"
             mod-role="input-control-port"
-            mod-port-symbol="record_mode"
+            mod-port-symbol="sample_mode"
             mod-widget="custom-select"
           >
             <div
@@ -110,8 +110,15 @@
             >
               LOOPER
             </div>
+            <div
+              class="mod-tab"
+              mod-role="enumeration-option"
+              mod-port-value="3"
+            >
+              SAMPLER
+            </div>
           </div>
-          <div class="mod-param-title">RECORD MODE</div>
+          <div class="mod-param-title">SAMPLE MODE</div>
         </div>
         <div class="mod-knob">
           <div

@@ -356,13 +356,15 @@ param-filedrop button.filedrop .icon {
 /* TABS */
 param-tabs .tabs {
   width: 80px;
-  height: 54px;
+  height: 72px;
 }
 
 param-tabs label.tab {
   width: 80px;
   height: 1s;
   color: #ececec;
+  border-color: #797979;
+  border-width: 2px;
   child-space: 1s;
   background-color: transparent;
   transition: color 100ms;
@@ -386,16 +388,12 @@ param-tabs label.tab:checked:hover {
   transition: background-color 100ms;
 }
 
-param-tabs label.tab:first-child {
-  border-color: #797979;
-  border-width: 2px;
+param-tabs label.tab:nth-child(1) {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
 }
 
-param-tabs label.tab:last-child {
-  border-color: #797979;
-  border-width: 2px;
+param-tabs label.tab:nth-child(3) {
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
 }
@@ -415,6 +413,7 @@ param-button2 label {
   border-radius: 4px;
   transition: color 100ms;
   transition: background-color 100ms;
+  box-shadow: 0px 3px 3px #00000026;
 }
 
 param-button2 label:hover {
@@ -441,5 +440,33 @@ param-button2 .line {
   top: 1s;
   bottom: 1s;
   background-color: #797979;
+  transition: background-color 100ms;
+}
+
+param-button2:disabled label {
+  background-color: #84848426;
+  color: #646464;
+  transition: background-color 100ms;
+}
+
+param-button2:disabled .line {
+  background-color: #84848426;
+  color: #646464;
+  transition: background-color 100ms;
+}
+
+param-button2:disabled label:hover {
+  background-color: #84848426;
+  color: #646464;
+  transition: background-color 100ms;
+}
+param-button2:disabled label:checked {
+  background-color: #84848426;
+  color: #646464;
+  transition: background-color 100ms;
+}
+param-button2:disabled label:checked:hover {
+  background-color: #84848426;
+  color: #646464;
   transition: background-color 100ms;
 }

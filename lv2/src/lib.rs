@@ -3,7 +3,7 @@ mod state;
 mod worker;
 use lv2::prelude::*;
 use std::string::String;
-use time_warp::{Notes, Params, RecordMode, TimeWarp};
+use time_warp::{Notes, Params, SampleMode, TimeWarp};
 use worker::*;
 
 #[derive(PortCollection)]
@@ -17,7 +17,7 @@ struct Ports {
   stretch: InputPort<InPlaceControl>,
   record: InputPort<InPlaceControl>,
   play: InputPort<InPlaceControl>,
-  record_mode: InputPort<InPlaceControl>,
+  sample_mode: InputPort<InPlaceControl>,
   time: InputPort<InPlaceControl>,
   length: InputPort<InPlaceControl>,
   highpass: InputPort<InPlaceControl>,
@@ -95,9 +95,10 @@ impl DmTimeWarp {
       ports.stretch.get(),
       ports.record.get() == 1.,
       ports.play.get() == 1.,
-      match ports.record_mode.get() {
-        1. => RecordMode::Delay,
-        _ => RecordMode::Looper,
+      match ports.sample_mode.get() {
+        1. => SampleMode::Delay,
+        2. => SampleMode::Looper,
+        _ => SampleMode::Sampler,
       },
       ports.time.get(),
       ports.length.get(),

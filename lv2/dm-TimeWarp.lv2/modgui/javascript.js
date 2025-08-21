@@ -21,9 +21,17 @@ function(event) {
           record.removeClass("on");
         }
         break;
-      case "record_mode":
+      case "sample_mode":
         show_correct_time_control_knob(value)
-        record_mode = value;
+        const sample = event.icon.find("[mod-role=input-parameter]").parent();
+        if(value == 3) {
+          sample.removeClass("disabled");
+          sample.removeClass("prevent-clicks");
+        } else {
+          sample.addClass("disabled");
+          sample.addClass("prevent-clicks");
+        }
+        break;
       case "play":
         const play = event.icon.find("[mod-port-symbol=play]");
         if(value == 1) {
@@ -37,8 +45,8 @@ function(event) {
         if(value == 1) {
           erase.addClass("on");
           event.icon.find("#sample-parameter").text("");
-          const record_mode = event.icon.find(".mod-tab.selected").attr('mod-port-value');
-          show_correct_time_control_knob(record_mode)
+          const sample_mode = event.icon.find(".mod-tab.selected").attr('mod-port-value');
+          show_correct_time_control_knob(sample_mode)
         } else {
           erase.removeClass("on");
         }

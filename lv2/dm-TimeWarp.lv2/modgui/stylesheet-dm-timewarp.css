@@ -15,7 +15,6 @@
     flex-direction: row;
     padding: 16px;
     border-bottom-left-radius: 8px;
-    border-top: 2px solid #797979;
     border-left: 2px solid #797979;
     border-bottom: 2px solid #797979;
 }
@@ -25,10 +24,6 @@
     flex-direction: column;
     justify-content: space-between;
     margin: 8px 0px 0px -8px;
-}
-
-.mod-pedal{{{cns}}} .grain-controls, .buffer-controls {
-    height: 114px;
 }
 
 .mod-pedal{{{cns}}} .grain-controls {
@@ -119,6 +114,10 @@
     opacity: 0.5;
 }
 
+.mod-pedal{{{cns}}} .prevent-clicks {
+    pointer-events: none;
+}
+
 /* = CONTAINER
 ================================================ */
 .mod-pedal{{{cns}}} {
@@ -126,7 +125,7 @@
     display: flex;
     flex-direction: column;
     width: 1114px;
-    height: 426px;
+    height: 442px;
     border-radius: 8px;
 }
 
@@ -257,7 +256,7 @@
     border-radius: 50%;
 }
 .mod-pedal{{{cns}}} .mod-switch .mod-param-title {
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 /* = NUMBER INPUT
@@ -272,7 +271,7 @@
 }
 
 .mod-pedal{{{cns}}} .mod-number-input > .mod-param-title {
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 /* = ENUMERATED LIST
@@ -343,7 +342,7 @@
 }
 
 .mod-pedal{{{cns}}} .mod-enumerated-group .mod-param-title {
-    margin-top: 11px;
+    margin-top: 14px;
 }
 
 /* = TABS
@@ -358,16 +357,16 @@
     flex-direction: column;
     justify-content: center;
     position: relative;
-    height: 64px;
 }
 
 .mod-pedal{{{cns}}} .mod-tabs > .mod-tab {
     width: 80px;
-    height: 28px;
-    line-height: 25px;
+    height: 24px;
     border: 2px solid #797979;
+    border-bottom: none;
     font-size: 10px;
     font-weight: bold;
+    line-height: 21px;
     text-align: center;
     color: #ECECEC;
     cursor: default;
@@ -376,17 +375,21 @@
 .mod-pedal{{{cns}}} .mod-tabs > .mod-tab:nth-child(1) {
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
-    border-bottom: none;
 }
 
-.mod-pedal{{{cns}}} .mod-tabs > .mod-tab:nth-child(2) {
+.mod-pedal{{{cns}}} .mod-tabs > .mod-tab:nth-child(3) {
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
+    border-bottom: 2px solid #797979;
 }
 
 .mod-pedal{{{cns}}} .mod-tabs > .mod-tab.selected {
     color: #211F24;
     background-color: #0CC0C0;
+}
+
+.mod-pedal{{{cns}}} .mod-tabs-container > .mod-param-title {
+    margin-top: 4px;
 }
 
 /* = BACKGROUND IMAGES - Background of the pedal

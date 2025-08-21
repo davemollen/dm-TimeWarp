@@ -4,8 +4,8 @@ mod worker;
 use {
   nih_plug::prelude::*,
   std::sync::{atomic::Ordering, Arc},
-  time_warp::{AudioFileData, Notes, Params as ProcessParams, RecordMode, TimeWarp},
-  time_warp_parameters::{RecordMode as ParamRecordMode, TimeWarpParameters},
+  time_warp::{AudioFileData, Notes, Params as ProcessParams, SampleMode, TimeWarp},
+  time_warp_parameters::{SampleMode as ParamSampleMode, TimeWarpParameters},
   worker::{Worker, WorkerRequest, WorkerResponseData},
 };
 
@@ -49,9 +49,10 @@ impl DmTimeWarp {
       self.params.stretch.value(),
       self.params.record.value(),
       self.params.play.value(),
-      match self.params.record_mode.value() {
-        ParamRecordMode::Delay => RecordMode::Delay,
-        ParamRecordMode::Looper => RecordMode::Looper,
+      match self.params.sample_mode.value() {
+        ParamSampleMode::Delay => SampleMode::Delay,
+        ParamSampleMode::Looper => SampleMode::Looper,
+        ParamSampleMode::Sampler => SampleMode::Sampler,
       },
       self.get_time(context),
       self.params.length.value(),
