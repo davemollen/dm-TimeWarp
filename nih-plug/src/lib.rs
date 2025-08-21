@@ -158,7 +158,7 @@ impl DmTimeWarp {
 
 impl Plugin for DmTimeWarp {
   const NAME: &'static str = "dm-TimeWarp";
-  const VENDOR: &'static str = "DM";
+  const VENDOR: &'static str = "Dave Mollen";
   const URL: &'static str = "https://github.com/davemollen/dm-TimeWarp";
   const EMAIL: &'static str = "davemollen@gmail.com";
   const VERSION: &'static str = env!("CARGO_PKG_VERSION");
