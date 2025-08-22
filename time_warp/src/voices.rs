@@ -64,11 +64,11 @@ impl Voices {
       .start_position_phasor
       .process(speed, time, size, density, stretch);
 
-    let grain_duration = duration + self.fade_time * density;
+    let normalized_density = density / MAX_DENSITY - MIN_DENSITY;
+    let grain_duration = duration + self.fade_time * normalized_density;
     let phase_step_size = grain_duration.mstosamps(self.sample_rate).recip();
     let min_window_factor = 2.;
     let max_window_factor = grain_duration / self.fade_time;
-    let normalized_density = density / MAX_DENSITY - MIN_DENSITY;
     let window_factor =
       max_window_factor - (normalized_density * (max_window_factor - min_window_factor));
     let fade_factor = time / self.fade_time;
