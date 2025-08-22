@@ -1,1 +1,0 @@
-To install the plugin, copy the .lv2 folder to your plugin folder.

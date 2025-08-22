@@ -9,7 +9,10 @@ To install the VST3 plugins, copy the .vst3 bundles to:
 To install the CLAP plugins, copy the .clap bundles to:
 ~/Library/Audio/Plug-Ins/CLAP
 
-You will need to create these directories yourself it they do not yet exist.
+To install the AUv2 plugins, copy the .component bundles to:
+~/Library/Audio/Plug-Ins/Components
 
-See https://github.com/free-audio/clap#hosts for instructions on how to enable
-CLAP support in your DAW.
+To install the LV2 plugins, copy the .component bundles to:
+~/Library/Audio/Plug-Ins/LV2
+
+You will need to create these directories yourself it they do not yet exist.
