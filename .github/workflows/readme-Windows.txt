@@ -4,7 +4,7 @@ C:/Program Files/Common Files/VST3/
 To install the CLAP plugins, copy the .clap files to:
 C:/Program Files/Common Files/CLAP/
 
-You will need to create these directories yourself it they do not yet exist.
+To install the LV2 plugins, copy the .lv2 _directories_ to:
+C:/Program Files/Common Files/LV2/
 
-See https://github.com/free-audio/clap#hosts for instructions on how to enable
-CLAP support in your DAW.
+You will need to create these directories yourself it they do not yet exist.

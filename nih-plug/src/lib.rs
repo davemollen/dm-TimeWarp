@@ -157,8 +157,8 @@ impl DmTimeWarp {
 }
 
 impl Plugin for DmTimeWarp {
-  const NAME: &'static str = "dm-TimeWarp";
-  const VENDOR: &'static str = "Dave Mollen";
+  const NAME: &'static str = "TimeWarp";
+  const VENDOR: &'static str = "DM";
   const URL: &'static str = "https://github.com/davemollen/dm-TimeWarp";
   const EMAIL: &'static str = "davemollen@gmail.com";
   const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -270,7 +270,7 @@ impl ClapPlugin for DmTimeWarp {
   const CLAP_FEATURES: &'static [ClapFeature] = &[
     ClapFeature::AudioEffect,
     ClapFeature::Stereo,
-    ClapFeature::Mono,
+    ClapFeature::Instrument,
     ClapFeature::Granular,
     ClapFeature::PitchShifter,
     ClapFeature::Delay,
