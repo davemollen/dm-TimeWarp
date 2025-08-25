@@ -13,8 +13,9 @@ impl Phasor {
   }
 
   pub fn process(&mut self, freq: f32) -> f32 {
+    let y = self.x;
     self.x = self.wrap(self.x + freq * self.sample_period);
-    self.x
+    y
   }
 
   pub fn reset(&mut self) {
