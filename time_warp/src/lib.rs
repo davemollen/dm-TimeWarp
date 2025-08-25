@@ -1,5 +1,6 @@
 mod delay_line;
 mod filter;
+mod mix;
 mod notes;
 mod params;
 mod voices;
@@ -18,7 +19,7 @@ pub use {
   params::{Params, SampleMode},
 };
 use {
-  filter::Filter, notes::Note, params::Smoother, shared::float_ext::FloatExt,
+  filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::float_ext::FloatExt,
   shared::tuple_ext::TupleExt, voices::Voices,
 };
 
@@ -32,6 +33,7 @@ pub struct TimeWarp {
   delay_line: DelayLine,
   voices: Voices,
   filter: Filter,
+  mix: Mix,
 }
 
 impl TimeWarp {
@@ -43,6 +45,7 @@ impl TimeWarp {
       ),
       voices: Voices::new(sample_rate, FADE_TIME),
       filter: Filter::new(sample_rate),
+      mix: Mix::new(),
     }
   }
 
@@ -130,7 +133,9 @@ impl TimeWarp {
     let grains_out = grains_out.0 + grains_out.1;
     let delay_out = self.delay_line.read(time, Interpolation::Linear);
     let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
-    let delay_in = delay_out.mix(input + feedback, recording_gain);
+    let delay_in = self
+      .mix
+      .process(delay_out, input + feedback, recording_gain);
     self.delay_line.write(delay_in);
   }
 
