@@ -113,9 +113,6 @@ impl Params {
     erase: bool,
     buffer_size: usize,
   ) {
-    if self.prev_reset_playback {
-      self.reset_playback = false;
-    }
     self.scan = scan;
     self.spray = spray;
     self.size = size * size;
@@ -189,6 +186,12 @@ impl Params {
     self.prev_file_duration = self.file_duration;
     self.prev_reset_playback = self.reset_playback;
     self.prev_sample_mode = sample_mode;
+  }
+
+  pub fn settle(&mut self) {
+    if self.prev_reset_playback {
+      self.reset_playback = false;
+    }
   }
 
   pub fn set_file_duration(&mut self, file_duration: f32) {

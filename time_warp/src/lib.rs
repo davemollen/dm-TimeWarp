@@ -79,6 +79,7 @@ impl TimeWarp {
     let decay = params.decay.next();
     let sustain = params.sustain.next();
     let release = params.release.next();
+    params.settle();
 
     let grains_out = self
       .voices
