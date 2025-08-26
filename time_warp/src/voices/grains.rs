@@ -31,7 +31,7 @@ impl Grains {
     fade_factor: f32,
     fade_offset: f32,
   ) -> (f32, f32) {
-    let speed = (1. - speed) * 0.5;
+    let speed = speed * 0.5;
 
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());

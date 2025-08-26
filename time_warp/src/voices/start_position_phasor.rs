@@ -19,11 +19,11 @@ impl StartPositionPhasor {
     let freq = if size < 1. || density > 1. {
       1000. / time * (stretch - 1.)
     } else {
-      if speed != self.prev_speed && speed == 1. {
+      if speed != self.prev_speed && speed == 0. {
         self.phasor.reset();
       }
       self.prev_speed = speed;
-      1000. / time * (speed - 1.)
+      1000. / time * speed
     };
 
     self.phasor.process(freq)

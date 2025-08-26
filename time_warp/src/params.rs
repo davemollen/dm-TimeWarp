@@ -118,12 +118,17 @@ impl Params {
     self.size = size * size;
     self.density = density;
     self.stereo = stereo;
-    self.speed = 2_f32.powf(pitch / 12.)
+    let speed = 2_f32.powf(pitch / 12.)
       * if midi_enabled {
-        self.pitch_bend_factor * stretch.signum()
+        self.pitch_bend_factor
       } else {
-        stretch.signum()
+        1.
       };
+    self.speed = if stretch.is_sign_positive() {
+      1. - speed
+    } else {
+      1. + speed
+    };
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
