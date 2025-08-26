@@ -118,7 +118,7 @@ impl DmTimeWarp {
     self
       .time_warp
       .get_filter()
-      .set_coefficients(ports.highpass.get(), ports.lowpass.get());
+      .set_cutoff_frequencies(ports.highpass.get(), ports.lowpass.get());
 
     if self.params.should_erase_buffer() {
       self.file_path = "".to_string();

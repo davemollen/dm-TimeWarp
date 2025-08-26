@@ -33,7 +33,7 @@ fn time_warp_bench(c: &mut Criterion) {
     false,
     512,
   );
-  time_warp.get_filter().set_coefficients(200., 3000.);
+  time_warp.get_filter().set_cutoff_frequencies(200., 3000.);
   let signal_stream = generate_stereo_signal_stream(44100);
 
   c.bench_function("time_warp", |b| {

@@ -72,7 +72,7 @@ impl DmTimeWarp {
     self
       .time_warp
       .get_filter()
-      .set_coefficients(self.params.highpass.value(), self.params.lowpass.value());
+      .set_cutoff_frequencies(self.params.highpass.value(), self.params.lowpass.value());
 
     if self.process_params.should_erase_buffer() {
       *self.params.file_path.lock().unwrap() = "".to_string();

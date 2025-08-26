@@ -31,7 +31,7 @@ fn main() {
     false,
     512,
   );
-  time_warp.get_filter().set_coefficients(200., 3000.);
+  time_warp.get_filter().set_cutoff_frequencies(200., 3000.);
 
   loop {
     let input = (generate_signal(), generate_signal());
