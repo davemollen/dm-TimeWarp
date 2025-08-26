@@ -25,7 +25,7 @@ impl Phasor {
   fn wrap(&self, input: f32) -> f32 {
     if input >= 1. {
       input - 1.
-    } else if input <= 0. {
+    } else if input < 0. {
       input + 1.
     } else {
       input
