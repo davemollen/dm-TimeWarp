@@ -13,4 +13,8 @@ impl Delta {
     self.z = input;
     output
   }
+
+  pub fn reset(&mut self) {
+    self.z = 0.;
+  }
 }
