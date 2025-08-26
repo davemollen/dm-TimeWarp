@@ -1,5 +1,6 @@
 mod delay_line;
 mod filter;
+mod looper;
 mod mix;
 mod notes;
 mod params;
@@ -19,7 +20,7 @@ pub use {
   params::{Params, SampleMode},
 };
 use {
-  filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::float_ext::FloatExt,
+  filter::Filter, looper::Looper, mix::Mix, notes::Note, params::Smoother,
   shared::tuple_ext::TupleExt, voices::Voices,
 };
 
@@ -31,6 +32,7 @@ pub const MAX_DENSITY: f32 = 8.;
 
 pub struct TimeWarp {
   delay_line: DelayLine,
+  looper: Looper,
   voices: Voices,
   filter: Filter,
   mix: Mix,
@@ -43,6 +45,7 @@ impl TimeWarp {
         (sample_rate * (MAX_DELAY_TIME + FADE_TIME) / 1000.) as usize,
         sample_rate,
       ),
+      looper: Looper::new(sample_rate),
       voices: Voices::new(sample_rate),
       filter: Filter::new(sample_rate),
       mix: Mix::new(),
@@ -65,6 +68,8 @@ impl TimeWarp {
       stretch,
       midi_enabled,
       reset_playback,
+      sample_mode,
+      loop_duration,
       ..
     } = *params;
 
@@ -100,10 +105,21 @@ impl TimeWarp {
         sustain,
         release,
         reset_playback,
+        sample_mode,
       )
       .multiply(playback_gain * 2.);
 
-    self.write_to_delay(input, time, grains_out, recycle, feedback, recording_gain);
+    self.write_to_delay(
+      input,
+      time,
+      (0., 0.),
+      recycle,
+      feedback,
+      recording_gain,
+      sample_mode,
+      loop_duration,
+      reset_playback,
+    );
 
     input.multiply(dry).add(grains_out.multiply(wet))
   }
@@ -129,22 +145,49 @@ impl TimeWarp {
     recycle: f32,
     feedback: f32,
     recording_gain: f32,
+    sample_mode: SampleMode,
+    loop_duration: Option<f32>,
+    reset_playback: bool,
   ) {
     let input = input.0 + input.1;
     let grains_out = grains_out.0 + grains_out.1;
-    let delay_out = self.delay_line.read(time, Interpolation::Linear);
-    let feedback = self.get_feedback(delay_out, grains_out, recycle, feedback);
-    let delay_in = self
-      .mix
-      .process(delay_out, input + feedback, recording_gain);
-    self.delay_line.write(delay_in);
-  }
 
-  fn get_feedback(&mut self, delay_out: f32, grains_out: f32, recycle: f32, feedback: f32) -> f32 {
-    if feedback == 0. {
-      return 0.;
+    match sample_mode {
+      SampleMode::Delay => {
+        let delay_out = self.delay_line.read(time, Interpolation::Linear);
+        let feedback = if feedback == 0. {
+          0.
+        } else {
+          let feedback_signal =
+            delay_out * (1. - recycle) * feedback + grains_out * recycle * feedback;
+          self.filter.process(feedback_signal.clamp(-1., 1.))
+        };
+        let delay_in = self
+          .mix
+          .process(delay_out, input + feedback, recording_gain);
+
+        self.delay_line.write(delay_in);
+      }
+      SampleMode::Looper => {
+        // let recycled = if feedback == 0. {
+        //   0.
+        // } else {
+        //   let feedback_signal = grains_out * recycle * feedback;
+        //   self.filter.process(feedback_signal.clamp(-1., 1.))
+        // };
+        if reset_playback {
+          self.looper.reset();
+        }
+
+        self.looper.process(
+          input,
+          &mut self.delay_line,
+          loop_duration,
+          recording_gain,
+          1. - recycle * feedback,
+        );
+      }
+      _ => (),
     }
-    let feedback_signal = delay_out.mix(grains_out, recycle) * feedback;
-    self.filter.process(feedback_signal.clamp(-1., 1.))
   }
 }

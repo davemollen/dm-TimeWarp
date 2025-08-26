@@ -39,12 +39,13 @@ pub struct Params {
   pub reset_playback: bool,
   prev_reset_playback: bool,
   file_duration: Option<f32>,
-  loop_duration: Option<f32>,
+  pub loop_duration: Option<f32>,
   stopwatch: Stopwatch,
   prev_file_duration: Option<f32>,
   prev_play: bool,
   prev_erase: bool,
   is_erasing_buffer: bool,
+  pub sample_mode: SampleMode,
   prev_sample_mode: SampleMode,
   pitch_bend_factor: f32,
 }
@@ -83,6 +84,7 @@ impl Params {
       prev_erase: false,
       is_erasing_buffer: false,
       prev_sample_mode: SampleMode::Delay,
+      sample_mode: SampleMode::Delay,
       pitch_bend_factor: 1.,
     }
   }
@@ -126,6 +128,7 @@ impl Params {
       };
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
+    self.sample_mode = sample_mode;
 
     let sample_mode_has_changed = sample_mode != self.prev_sample_mode;
     let erase_has_changed = erase && !self.prev_erase;

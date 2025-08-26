@@ -1,6 +1,6 @@
 mod grain;
 use {
-  crate::{delay_line::DelayLine, shared::tuple_ext::TupleExt},
+  crate::{delay_line::DelayLine, shared::tuple_ext::TupleExt, SampleMode},
   grain::Grain,
 };
 
@@ -29,8 +29,21 @@ impl Grains {
     speed: f32,
     is_reversed: bool,
     window_factor: f32,
+    sample_mode: SampleMode,
   ) -> (f32, f32) {
-    let speed = if is_reversed { 1. + speed } else { 1. - speed };
+    let speed = if sample_mode == SampleMode::Looper {
+      if is_reversed {
+        speed * -1.
+      } else {
+        speed
+      }
+    } else {
+      if is_reversed {
+        1. + speed
+      } else {
+        1. - speed
+      }
+    };
 
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
@@ -47,8 +60,14 @@ impl Grains {
       .fold(
         (0., 0., 0.),
         |(left_output, right_output, acc_gain), grain| {
-          let (left_grain, right_grain, grain_gain) =
-            grain.process(delay_line, time, phase_step_size, speed, window_factor);
+          let (left_grain, right_grain, grain_gain) = grain.process(
+            delay_line,
+            time,
+            phase_step_size,
+            speed,
+            window_factor,
+            sample_mode,
+          );
           (
             left_output + left_grain,
             right_output + right_grain,

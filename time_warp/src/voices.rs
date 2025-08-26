@@ -7,7 +7,7 @@ use {
     delay_line::DelayLine,
     notes::{ADSRStage, Note},
     shared::float_ext::FloatExt,
-    FADE_TIME, MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY,
+    SampleMode, FADE_TIME, MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY,
   },
   grain_trigger::GrainTrigger,
   grains::Grains,
@@ -52,6 +52,7 @@ impl Voices {
     sustain: f32,
     release: f32,
     reset_playback: bool,
+    sample_mode: SampleMode,
   ) -> (f32, f32) {
     let duration = size * (time - MIN_DELAY_TIME) + MIN_DELAY_TIME; // range from min delay time to time
     let normalized_density = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY);
@@ -63,9 +64,10 @@ impl Voices {
     if reset_playback {
       self.start_position_phasor.reset();
     }
-    let start_position_phase = self
-      .start_position_phasor
-      .process(time, size, density, stretch);
+    let start_position_phase =
+      self
+        .start_position_phasor
+        .process(time, size, density, stretch, sample_mode);
 
     if midi_enabled {
       notes
@@ -95,6 +97,7 @@ impl Voices {
             speed * adsr.get_speed(),
             stretch < 0.,
             window_factor,
+            sample_mode,
           );
           (
             result.0 + grains_out.0 * gain,
@@ -120,6 +123,7 @@ impl Voices {
         speed,
         stretch < 0.,
         window_factor,
+        sample_mode,
       )
     }
   }

@@ -2,6 +2,7 @@ use {
   crate::{
     delay_line::{DelayLine, Interpolation},
     shared::float_ext::FloatExt,
+    SampleMode,
   },
   std::f32::consts::FRAC_PI_2,
 };
@@ -33,6 +34,7 @@ impl Grain {
     phase_step_size: f32,
     speed: f32,
     window_factor: f32,
+    sample_mode: SampleMode,
   ) -> (f32, f32, f32) {
     let grain_fade = self.get_grain_fade(window_factor);
 
@@ -43,7 +45,8 @@ impl Grain {
       self.is_active = false;
     }
     self.position = Self::wrap(self.position + self.sample_factor / time * speed);
-    let delay_out = delay_line.read(self.position * time, Interpolation::Linear) * grain_fade;
+    let delay_out = self.read_from_delay(delay_line, time, grain_fade, sample_mode);
+
     (delay_out * self.gain.0, delay_out * self.gain.1, grain_fade)
   }
 
@@ -64,13 +67,28 @@ impl Grain {
     let spray = fastrand::f32() * spray / time;
 
     self.phase = 0.;
-    self.position = 1. - (scan + spray + start_position_phase).fract();
+    self.position = (scan + spray + start_position_phase).fract();
+    // self.position = 1. - (scan + spray + start_position_phase).fract();
     self.is_active = true;
     self.set_panning(stereo);
   }
 
   pub fn is_active(&self) -> bool {
     self.is_active
+  }
+
+  fn read_from_delay(
+    &self,
+    delay_line: &DelayLine,
+    time: f32,
+    grain_fade: f32,
+    sample_mode: SampleMode,
+  ) -> f32 {
+    if sample_mode == SampleMode::Looper {
+      return delay_line.loop_read(self.position * time, time) * grain_fade;
+    }
+
+    delay_line.read(self.position * time, Interpolation::Linear) * grain_fade
   }
 
   fn get_grain_fade(&self, window_factor: f32) -> f32 {

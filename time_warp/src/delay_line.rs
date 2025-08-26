@@ -44,6 +44,37 @@ impl DelayLine {
     self.write_pointer = self.write_pointer + 1 & self.wrap;
   }
 
+  pub fn loop_write(&mut self, time: f32, value: f32, max_time: f32) {
+    let write_pointer = self.mstosamps(time);
+    let max_time_in_samples = self.mstosamps(max_time);
+    let index = write_pointer.trunc();
+    let mix = write_pointer - index;
+
+    self.buffer[Self::loop_wrap(index, max_time_in_samples)] += value * (1. - mix);
+    self.buffer[Self::loop_wrap(index + 1., max_time_in_samples)] += value * mix;
+  }
+
+  pub fn loop_read(&self, time: f32, max_time: f32) -> f32 {
+    let read_pointer = self.mstosamps(time);
+    let max_time_in_samples = self.mstosamps(max_time);
+    let index = read_pointer.trunc();
+    let mix = read_pointer - index;
+
+    let x = self.buffer[Self::loop_wrap(index, max_time_in_samples)];
+    let y = self.buffer[Self::loop_wrap(index + 1., max_time_in_samples)];
+    x + (y - x) * mix
+  }
+
+  pub fn loop_wrap(index: f32, max_time_in_samples: f32) -> usize {
+    (if index >= max_time_in_samples {
+      index - max_time_in_samples
+    } else if index < 0. {
+      index + max_time_in_samples
+    } else {
+      index
+    }) as usize
+  }
+
   pub fn set_values(&mut self, mut values: Vec<f32>) {
     mem::swap(&mut self.buffer, &mut values);
   }
