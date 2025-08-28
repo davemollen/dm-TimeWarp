@@ -27,11 +27,12 @@ impl Grains {
     start_position_phase: f32,
     phase_step_size: f32,
     speed: f32,
+    is_reversed: bool,
     window_factor: f32,
     fade_factor: f32,
     fade_offset: f32,
   ) -> (f32, f32) {
-    let speed = speed * 0.5;
+    let speed = if is_reversed { 1. + speed } else { 1. - speed } * 0.5;
 
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
