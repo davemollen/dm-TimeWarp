@@ -16,6 +16,7 @@ pub struct ParamFootswitch {
 impl ParamFootswitch {
   pub fn new<L, Params, P, FMap>(
     cx: &mut Context,
+    label_text: String,
     params: L,
     params_to_param: FMap,
   ) -> Handle<'_, Self>
@@ -35,7 +36,7 @@ impl ParamFootswitch {
         let value = param_data.make_lens(|param| param.modulated_plain_value());
 
         VStack::new(cx, |cx| {
-          Label::new(cx, param_data.param().name())
+          Label::new(cx, &label_text)
             .font_size(13.0)
             .font_weight(FontWeightKeyword::SemiBold)
             .child_space(Stretch(1.0));

@@ -180,9 +180,9 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      record: BoolParam::new("● / Dub", false),
+      record: BoolParam::new("Record / Dub", false),
 
-      play: BoolParam::new("▶ / ◼", true),
+      play: BoolParam::new("Play / Stop", true),
 
       sample_mode: EnumParam::new("Sample Mode", SampleMode::Delay),
 

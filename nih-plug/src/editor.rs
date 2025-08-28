@@ -219,19 +219,25 @@ pub(crate) fn create(
         .right(Pixels(0.0));
       });
       HStack::new(cx, |cx| {
-        ParamFootswitch::new(cx, Data::params, |params| &params.record)
-          .size(Auto)
-          .left(Stretch(1.0))
-          .right(Stretch(1.0));
-        ParamFootswitch::new(cx, Data::params, |params| &params.play)
-          .size(Auto)
-          .left(Stretch(1.0))
-          .right(Stretch(1.0));
-        ParamFootswitch::new(cx, Data::params, |params| &params.erase)
-          .is_momentary(true)
-          .size(Auto)
-          .left(Stretch(1.0))
-          .right(Stretch(1.0));
+        ParamFootswitch::new(cx, "● / Dub".to_string(), Data::params, |params| {
+          &params.record
+        })
+        .size(Auto)
+        .left(Stretch(1.0))
+        .right(Stretch(1.0));
+        ParamFootswitch::new(cx, "▶ / ◼".to_string(), Data::params, |params| {
+          &params.play
+        })
+        .size(Auto)
+        .left(Stretch(1.0))
+        .right(Stretch(1.0));
+        ParamFootswitch::new(cx, "Erase".to_string(), Data::params, |params| {
+          &params.erase
+        })
+        .is_momentary(true)
+        .size(Auto)
+        .left(Stretch(1.0))
+        .right(Stretch(1.0));
       })
       .width(Stretch(1.0))
       .height(Auto)
