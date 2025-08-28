@@ -62,7 +62,7 @@ impl Voices {
     }
     let start_position_phase = self
       .start_position_phasor
-      .process(speed, time, size, density, stretch);
+      .process(time, size, density, stretch);
 
     let normalized_density = density / MAX_DENSITY - MIN_DENSITY;
     let grain_duration = duration + self.fade_time * normalized_density;
