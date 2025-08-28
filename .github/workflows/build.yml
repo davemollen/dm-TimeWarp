@@ -13,8 +13,6 @@ env:
   binary_name: dm_time_warp
   plugin_name: dm-TimeWarp
   mod_package_name: dm-timewarp
-  auv2_instrument_type: aumf
-  auv2_subtype: tiwa
 
 jobs:
   package-plugin:
@@ -100,7 +98,7 @@ jobs:
       - name: Build AUv2 plugin from CLAP plugin
         if: startsWith(matrix.os, 'macos')
         run: |
-          git clone https://github.com/free-audio/clap-wrapper.git
+          git clone --branch feature/auv2-musiceffect-support https://github.com/davemollen/clap-wrapper.git
           cp .github/workflows/AUv2/top_level_default.cmake clap-wrapper/cmake/top_level_default.cmake
           version=$(perl -pe 's/[^0-9.]//g' <<< ${{ github.event.release.tag_name }})
           cmake -S ./clap-wrapper -B build \
@@ -109,8 +107,6 @@ jobs:
             -DCLAP_WRAPPER_DOWNLOAD_DEPENDENCIES=TRUE \
             -DCLAP_WRAPPER_OUTPUT_NAME="$plugin_name" \
             -DCLAP_WRAPPER_BUNDLE_VERSION="$version" \
-            -DCLAP_WRAPPER_AUV2_INSTRUMENT_TYPE="$auv2_instrument_type" \
-            -DCLAP_WRAPPER_AUV2_SUBTYPE="$auv2_subtype" \
             -DCLAP_WRAPPER_CLAP_LOCATION="${{ github.workspace }}/$ARCHIVE_NAME/$plugin_name.clap"
           cmake --build ./build --config Release
           codesign -f -s - build/$plugin_name.component
