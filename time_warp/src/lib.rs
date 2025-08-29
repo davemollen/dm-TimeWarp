@@ -43,7 +43,7 @@ impl TimeWarp {
         (sample_rate * (MAX_DELAY_TIME + FADE_TIME) / 1000.) as usize,
         sample_rate,
       ),
-      voices: Voices::new(sample_rate, FADE_TIME),
+      voices: Voices::new(sample_rate),
       filter: Filter::new(sample_rate),
       mix: Mix::new(),
     }
@@ -101,7 +101,7 @@ impl TimeWarp {
         release,
         reset_playback,
       )
-      .multiply(playback_gain);
+      .multiply(playback_gain * 2.);
 
     self.write_to_delay(input, time, grains_out, recycle, feedback, recording_gain);
 

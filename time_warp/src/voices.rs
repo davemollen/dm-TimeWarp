@@ -7,7 +7,7 @@ use {
     delay_line::DelayLine,
     notes::{ADSRStage, Note},
     shared::float_ext::FloatExt,
-    MAX_DENSITY, MIN_DENSITY,
+    FADE_TIME, MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY,
   },
   grain_trigger::GrainTrigger,
   grains::Grains,
@@ -20,18 +20,16 @@ pub struct Voices {
   adsr: Vec<ADSR>,
   grain_trigger: GrainTrigger,
   start_position_phasor: StartPositionPhasor,
-  fade_time: f32,
   sample_rate: f32,
 }
 
 impl Voices {
-  pub fn new(sample_rate: f32, fade_time: f32) -> Self {
+  pub fn new(sample_rate: f32) -> Self {
     Self {
       grains: vec![Grains::new(sample_rate); 8],
       adsr: vec![ADSR::new(sample_rate, 5.); 8],
       grain_trigger: GrainTrigger::new(sample_rate),
       start_position_phasor: StartPositionPhasor::new(sample_rate),
-      fade_time,
       sample_rate,
     }
   }
@@ -55,24 +53,19 @@ impl Voices {
     release: f32,
     reset_playback: bool,
   ) -> (f32, f32) {
-    let duration = size * (time - self.fade_time) + self.fade_time; // range from fade_time to time
-
+    let duration = size * (time - MIN_DELAY_TIME) + MIN_DELAY_TIME; // range from min delay time to time
+    let normalized_density = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY);
+    let grain_duration = duration + FADE_TIME * (1. - normalized_density);
+    let phase_step_size = grain_duration.mstosamps(self.sample_rate).recip();
+    let min_window_factor = 2.;
+    let max_window_factor = grain_duration / FADE_TIME;
+    let window_factor = max_window_factor.mix(min_window_factor, normalized_density);
     if reset_playback {
       self.start_position_phasor.reset();
     }
     let start_position_phase = self
       .start_position_phasor
       .process(time, size, density, stretch);
-
-    let normalized_density = density / MAX_DENSITY - MIN_DENSITY;
-    let grain_duration = duration + self.fade_time * normalized_density;
-    let phase_step_size = grain_duration.mstosamps(self.sample_rate).recip();
-    let min_window_factor = 2.;
-    let max_window_factor = grain_duration / self.fade_time;
-    let window_factor =
-      max_window_factor - (normalized_density * (max_window_factor - min_window_factor));
-    let fade_factor = time / self.fade_time;
-    let fade_offset = fade_factor.recip() + 1.;
 
     if midi_enabled {
       notes
@@ -102,8 +95,6 @@ impl Voices {
             speed * adsr.get_speed(),
             stretch < 0.,
             window_factor,
-            fade_factor,
-            fade_offset,
           );
           (
             result.0 + grains_out.0 * gain,
@@ -129,8 +120,6 @@ impl Voices {
         speed,
         stretch < 0.,
         window_factor,
-        fade_factor,
-        fade_offset,
       )
     }
   }
