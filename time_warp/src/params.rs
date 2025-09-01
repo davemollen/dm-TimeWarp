@@ -37,7 +37,6 @@ pub struct Params {
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
   pub reset_playback: bool,
-  prev_reset_playback: bool,
   file_duration: Option<f32>,
   loop_duration: Option<f32>,
   stopwatch: Stopwatch,
@@ -74,7 +73,6 @@ impl Params {
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
       reset_playback: false,
-      prev_reset_playback: false,
       file_duration: None,
       loop_duration: None,
       stopwatch: Stopwatch::new(sample_rate),
@@ -184,12 +182,11 @@ impl Params {
     self.prev_play = play;
     self.prev_erase = erase;
     self.prev_file_duration = self.file_duration;
-    self.prev_reset_playback = self.reset_playback;
     self.prev_sample_mode = sample_mode;
   }
 
   pub fn settle(&mut self) {
-    if self.prev_reset_playback {
+    if self.reset_playback {
       self.reset_playback = false;
     }
   }
