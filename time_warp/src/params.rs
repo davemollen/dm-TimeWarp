@@ -1,8 +1,10 @@
+mod phasor;
 mod smooth;
 mod stopwatch;
 pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,
+  phasor::Phasor,
   smooth::{LinearSmooth, LogarithmicSmooth},
   stopwatch::Stopwatch,
 };
@@ -22,7 +24,7 @@ pub struct Params {
   pub stereo: f32,
   pub speed: f32,
   pub stretch: f32,
-  pub should_reset_offset: bool,
+  pub should_reset_start_offset: bool,
   pub recording_gain: LinearSmooth,
   pub playback_gain: LinearSmooth,
   pub time: LogarithmicSmooth,
@@ -38,6 +40,7 @@ pub struct Params {
   pub sustain: LinearSmooth,
   pub release: LinearSmooth,
   pub reset_playback: bool,
+  pub start_offset_phase: f32,
   file_duration: Option<f32>,
   loop_duration: Option<f32>,
   has_delay_mode_recording: bool,
@@ -48,6 +51,7 @@ pub struct Params {
   is_erasing_buffer: bool,
   prev_sample_mode: SampleMode,
   pitch_bend_factor: f32,
+  start_offset_phasor: Phasor,
 }
 
 impl Params {
@@ -60,7 +64,7 @@ impl Params {
       stereo: 1.,
       speed: 1.,
       stretch: 0.,
-      should_reset_offset: false,
+      should_reset_start_offset: false,
       recording_gain: LinearSmooth::new(sample_rate, 55.),
       playback_gain: LinearSmooth::new(sample_rate, 55.),
       time: LogarithmicSmooth::new(sample_rate, 0.3),
@@ -76,6 +80,7 @@ impl Params {
       sustain: LinearSmooth::new(sample_rate, 20.),
       release: LinearSmooth::new(sample_rate, 20.),
       reset_playback: false,
+      start_offset_phase: 0.,
       file_duration: None,
       loop_duration: None,
       has_delay_mode_recording: false,
@@ -86,6 +91,7 @@ impl Params {
       is_erasing_buffer: false,
       prev_sample_mode: SampleMode::Delay,
       pitch_bend_factor: 1.,
+      start_offset_phasor: Phasor::new(sample_rate),
     }
   }
 
@@ -135,6 +141,8 @@ impl Params {
 
     if self.is_erasing_buffer {
       self.has_delay_mode_recording = false;
+      self.should_reset_start_offset = true;
+      self.reset_playback = true;
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
@@ -182,6 +190,8 @@ impl Params {
       self.feedback.reset(feedback);
     }
 
+    self.set_start_offset_phase(buffer_size);
+
     self.prev_play = play;
     self.prev_erase = erase;
     self.prev_file_duration = self.file_duration;
@@ -193,8 +203,8 @@ impl Params {
       self.reset_playback = false;
     }
 
-    if self.should_reset_offset {
-      self.should_reset_offset = false;
+    if self.should_reset_start_offset {
+      self.should_reset_start_offset = false;
     }
   }
 
@@ -253,12 +263,12 @@ impl Params {
           self.time.set_target(file_duration * length);
         } else {
           self.time.reset(file_duration * length);
-          self.should_reset_offset = true;
+          self.should_reset_start_offset = true;
         }
       }
       (Some(file_duration), None, _, _) => {
         self.time.reset(file_duration * length);
-        self.should_reset_offset = true;
+        self.should_reset_start_offset = true;
       }
       (None, _, None, SampleMode::Looper) => {
         // stop stopwatch if play changed from false to true
@@ -267,7 +277,7 @@ impl Params {
           self.time.reset(loop_duration * length);
           self.loop_duration = Some(loop_duration);
           self.reset_playback = true;
-          self.should_reset_offset = true;
+          self.should_reset_start_offset = true;
         }
       }
       (_, _, Some(loop_duration), SampleMode::Looper) => {
@@ -276,7 +286,7 @@ impl Params {
       _ => {
         if record && !self.has_delay_mode_recording {
           self.has_delay_mode_recording = true;
-          self.should_reset_offset = true;
+          self.should_reset_start_offset = true;
         }
         self.time.set_target(time);
       }
@@ -290,6 +300,18 @@ impl Params {
       _ => {
         self.time.reset(time);
       }
+    }
+  }
+
+  fn set_start_offset_phase(&mut self, buffer_size: usize) {
+    if self.should_reset_start_offset {
+      self.start_offset_phasor.reset();
+    }
+    let start_offset_phase = self
+      .start_offset_phasor
+      .process(1000. / self.time.get_target(), buffer_size);
+    if self.reset_playback {
+      self.start_offset_phase = start_offset_phase;
     }
   }
 }

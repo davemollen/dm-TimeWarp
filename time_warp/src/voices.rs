@@ -52,7 +52,7 @@ impl Voices {
     sustain: f32,
     release: f32,
     reset_playback: bool,
-    should_reset_offset: bool,
+    phase_offset: f32,
   ) -> (f32, f32) {
     let duration = size * (time - MIN_DELAY_TIME) + MIN_DELAY_TIME; // range from min delay time to time
     let normalized_density = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY);
@@ -67,7 +67,7 @@ impl Voices {
       density,
       stretch,
       reset_playback,
-      should_reset_offset,
+      phase_offset,
     );
 
     if midi_enabled {
@@ -125,9 +125,5 @@ impl Voices {
         window_factor,
       )
     }
-  }
-
-  pub fn reset(&mut self) {
-    self.start_position_phasor.reset();
   }
 }
