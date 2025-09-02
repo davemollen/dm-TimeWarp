@@ -18,8 +18,8 @@ use {
 pub struct Voices {
   grains: Vec<Grains>,
   adsr: Vec<ADSR>,
+  phasors: Vec<StartPositionPhasor>,
   grain_trigger: GrainTrigger,
-  start_position_phasor: StartPositionPhasor,
   sample_rate: f32,
 }
 
@@ -28,8 +28,8 @@ impl Voices {
     Self {
       grains: vec![Grains::new(sample_rate); 8],
       adsr: vec![ADSR::new(sample_rate, 5.); 8],
+      phasors: vec![StartPositionPhasor::new(sample_rate); 8],
       grain_trigger: GrainTrigger::new(sample_rate),
-      start_position_phasor: StartPositionPhasor::new(sample_rate),
       sample_rate,
     }
   }
@@ -61,14 +61,8 @@ impl Voices {
     let min_window_factor = 2.;
     let max_window_factor = grain_duration / FADE_TIME;
     let window_factor = max_window_factor.mix(min_window_factor, normalized_density);
-    let start_position_phase = self.start_position_phasor.process(
-      time,
-      size,
-      density,
-      stretch,
-      reset_playback,
-      phase_offset,
-    );
+    let is_in_granular_mode = size < 1. || density > 1.;
+    let start_phasor_freq = 1000. / time * (stretch - 1.);
 
     if midi_enabled {
       notes
@@ -76,16 +70,16 @@ impl Voices {
         .filter(|n| *n.get_adsr_stage() != ADSRStage::Idle)
         .zip(self.grains.iter_mut())
         .zip(self.adsr.iter_mut())
-        .fold((0., 0.), |result, ((note, grains), adsr)| {
+        .zip(self.phasors.iter_mut())
+        .fold((0., 0.), |result, (((note, grains), adsr), phasor)| {
           let gain = adsr.process(note, attack, decay, sustain, release);
-          if reset_playback {
+          let reset = adsr.get_trigger() || reset_playback;
+          if reset {
+            phasor.reset(phase_offset);
             grains.reset();
           }
-          let trigger =
-            self
-              .grain_trigger
-              .process(duration, density, adsr.get_trigger() || reset_playback);
-
+          let start_position_phase = phasor.process(is_in_granular_mode, start_phasor_freq);
+          let trigger = self.grain_trigger.process(duration, density, reset);
           let grains_out = grains.process(
             delay_line,
             trigger,
@@ -106,8 +100,10 @@ impl Voices {
         })
     } else {
       if reset_playback {
+        self.phasors[0].reset(phase_offset);
         self.grains[0].reset();
       }
+      let start_position_phase = self.phasors[0].process(is_in_granular_mode, start_phasor_freq);
       let trigger = self
         .grain_trigger
         .process(duration, density, reset_playback);

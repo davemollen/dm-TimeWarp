@@ -307,11 +307,10 @@ impl Params {
     if self.should_reset_start_offset {
       self.start_offset_phasor.reset();
     }
-    let start_offset_phase = self
-      .start_offset_phasor
-      .process(1000. / self.time.get_target(), buffer_size);
-    if self.reset_playback {
-      self.start_offset_phase = start_offset_phase;
-    }
+    let time = self.time.get_target();
+    self.start_offset_phase = 1.
+      - self
+        .start_offset_phasor
+        .process(if time == 0. { 0. } else { 1000. / time }, buffer_size);
   }
 }
