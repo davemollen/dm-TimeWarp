@@ -109,7 +109,6 @@ jobs:
             -DCLAP_WRAPPER_BUNDLE_VERSION="$version" \
             -DCLAP_WRAPPER_CLAP_LOCATION="${{ github.workspace }}/$ARCHIVE_NAME/$plugin_name.clap"
           cmake --build ./build --config Release
-          codesign -f -s - build/$plugin_name.component
           mv build/$plugin_name.component $ARCHIVE_NAME
 
       - name: Build LV2 / MOD Desktop plugin
