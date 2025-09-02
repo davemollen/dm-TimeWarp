@@ -52,6 +52,7 @@ impl Voices {
     sustain: f32,
     release: f32,
     reset_playback: bool,
+    should_reset_offset: bool,
   ) -> (f32, f32) {
     let duration = size * (time - MIN_DELAY_TIME) + MIN_DELAY_TIME; // range from min delay time to time
     let normalized_density = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY);
@@ -60,12 +61,14 @@ impl Voices {
     let min_window_factor = 2.;
     let max_window_factor = grain_duration / FADE_TIME;
     let window_factor = max_window_factor.mix(min_window_factor, normalized_density);
-    if reset_playback {
-      self.start_position_phasor.reset();
-    }
-    let start_position_phase = self
-      .start_position_phasor
-      .process(time, size, density, stretch);
+    let start_position_phase = self.start_position_phasor.process(
+      time,
+      size,
+      density,
+      stretch,
+      reset_playback,
+      should_reset_offset,
+    );
 
     if midi_enabled {
       notes
@@ -122,5 +125,9 @@ impl Voices {
         window_factor,
       )
     }
+  }
+
+  pub fn reset(&mut self) {
+    self.start_position_phasor.reset();
   }
 }

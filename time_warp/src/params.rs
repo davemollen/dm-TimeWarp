@@ -22,6 +22,7 @@ pub struct Params {
   pub stereo: f32,
   pub speed: f32,
   pub stretch: f32,
+  pub should_reset_offset: bool,
   pub recording_gain: LinearSmooth,
   pub playback_gain: LinearSmooth,
   pub time: LogarithmicSmooth,
@@ -39,6 +40,7 @@ pub struct Params {
   pub reset_playback: bool,
   file_duration: Option<f32>,
   loop_duration: Option<f32>,
+  has_delay_mode_recording: bool,
   stopwatch: Stopwatch,
   prev_file_duration: Option<f32>,
   prev_play: bool,
@@ -58,6 +60,7 @@ impl Params {
       stereo: 1.,
       speed: 1.,
       stretch: 0.,
+      should_reset_offset: false,
       recording_gain: LinearSmooth::new(sample_rate, 55.),
       playback_gain: LinearSmooth::new(sample_rate, 55.),
       time: LogarithmicSmooth::new(sample_rate, 0.3),
@@ -75,6 +78,7 @@ impl Params {
       reset_playback: false,
       file_duration: None,
       loop_duration: None,
+      has_delay_mode_recording: false,
       stopwatch: Stopwatch::new(sample_rate),
       prev_file_duration: None,
       prev_play: true,
@@ -129,15 +133,14 @@ impl Params {
     let erase_has_changed = erase && !self.prev_erase;
     self.is_erasing_buffer = sample_mode_has_changed || erase_has_changed;
 
-    if erase_has_changed {
+    if self.is_erasing_buffer {
+      self.has_delay_mode_recording = false;
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
     }
 
     if sample_mode_has_changed && sample_mode == SampleMode::Looper {
-      self.stopwatch.reset();
-      self.loop_duration = None;
       self.playback_gain.reset(0.);
     }
 
@@ -188,6 +191,10 @@ impl Params {
   pub fn settle(&mut self) {
     if self.reset_playback {
       self.reset_playback = false;
+    }
+
+    if self.should_reset_offset {
+      self.should_reset_offset = false;
     }
   }
 
@@ -246,10 +253,12 @@ impl Params {
           self.time.set_target(file_duration * length);
         } else {
           self.time.reset(file_duration * length);
+          self.should_reset_offset = true;
         }
       }
       (Some(file_duration), None, _, _) => {
         self.time.reset(file_duration * length);
+        self.should_reset_offset = true;
       }
       (None, _, None, SampleMode::Looper) => {
         // stop stopwatch if play changed from false to true
@@ -258,12 +267,17 @@ impl Params {
           self.time.reset(loop_duration * length);
           self.loop_duration = Some(loop_duration);
           self.reset_playback = true;
+          self.should_reset_offset = true;
         }
       }
       (_, _, Some(loop_duration), SampleMode::Looper) => {
         self.time.set_target(loop_duration * length);
       }
       _ => {
+        if record && !self.has_delay_mode_recording {
+          self.has_delay_mode_recording = true;
+          self.should_reset_offset = true;
+        }
         self.time.set_target(time);
       }
     }

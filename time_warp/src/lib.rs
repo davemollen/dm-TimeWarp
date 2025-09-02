@@ -65,6 +65,7 @@ impl TimeWarp {
       stretch,
       midi_enabled,
       reset_playback,
+      should_reset_offset,
       ..
     } = *params;
 
@@ -79,6 +80,9 @@ impl TimeWarp {
     let decay = params.decay.next();
     let sustain = params.sustain.next();
     let release = params.release.next();
+    if params.should_erase_buffer() {
+      self.voices.reset();
+    }
 
     let grains_out = self
       .voices
@@ -99,6 +103,7 @@ impl TimeWarp {
         sustain,
         release,
         reset_playback,
+        should_reset_offset,
       )
       .multiply(playback_gain);
     self.write_to_delay(input, time, grains_out, recycle, feedback, recording_gain);
