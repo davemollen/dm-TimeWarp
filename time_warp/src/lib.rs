@@ -79,7 +79,6 @@ impl TimeWarp {
     let decay = params.decay.next();
     let sustain = params.sustain.next();
     let release = params.release.next();
-    params.settle();
 
     let grains_out = self
       .voices
@@ -101,11 +100,12 @@ impl TimeWarp {
         release,
         reset_playback,
       )
-      .multiply(playback_gain * 2.);
-
+      .multiply(playback_gain);
     self.write_to_delay(input, time, grains_out, recycle, feedback, recording_gain);
+    let output = input.multiply(dry).add(grains_out.multiply(wet));
+    params.settle();
 
-    input.multiply(dry).add(grains_out.multiply(wet))
+    output
   }
 
   pub fn get_delay_line_size(&self) -> usize {

@@ -200,7 +200,7 @@ impl Default for TimeWarpParameters {
       .with_value_to_string(v2s_f32_ms_then_s())
       .with_string_to_value(s2v_f32_ms_then_s()),
 
-      division: IntParam::new("Time", 15, IntRange::Linear { min: 0, max: 20 })
+      division: IntParam::new("Division", 15, IntRange::Linear { min: 0, max: 20 })
         .with_value_to_string(v2s_f32_synced_time())
         .with_string_to_value(s2v_f32_synced_time()),
 
