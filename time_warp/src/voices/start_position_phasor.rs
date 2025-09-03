@@ -14,12 +14,13 @@ impl StartPositionPhasor {
     }
   }
 
-  pub fn process(&mut self, is_in_granular_mode: bool, freq: f32) -> f32 {
-    if is_in_granular_mode {
-      (self.phasor.process(freq) + self.offset).fract()
+  pub fn process(&mut self, freq: f32, speed: f32, stretch: f32, is_in_granular_mode: bool) -> f32 {
+    let freq = if is_in_granular_mode {
+      freq * (stretch - 1.)
     } else {
-      self.offset
-    }
+      freq * ((speed * stretch.signum()) - 1.)
+    };
+    (self.phasor.process(freq) + self.offset).fract()
   }
 
   pub fn reset(&mut self, offset: f32) {

@@ -62,7 +62,7 @@ impl Voices {
     let max_window_factor = grain_duration / FADE_TIME;
     let window_factor = max_window_factor.mix(min_window_factor, normalized_density);
     let is_in_granular_mode = size < 1. || density > 1.;
-    let start_phasor_freq = 1000. / time * (stretch - 1.);
+    let freq = 1000. / time;
 
     if midi_enabled {
       notes
@@ -72,13 +72,14 @@ impl Voices {
         .zip(self.adsr.iter_mut())
         .zip(self.phasors.iter_mut())
         .fold((0., 0.), |result, (((note, grains), adsr), phasor)| {
+          let speed = speed * adsr.get_speed();
           let gain = adsr.process(note, attack, decay, sustain, release);
           let reset = adsr.get_trigger() || reset_playback;
           if reset {
             phasor.reset(phase_offset);
             grains.reset();
           }
-          let start_position_phase = phasor.process(is_in_granular_mode, start_phasor_freq);
+          let start_position_phase = phasor.process(freq, speed, stretch, is_in_granular_mode);
           let trigger = self.grain_trigger.process(duration, density, reset);
           let grains_out = grains.process(
             delay_line,
@@ -89,7 +90,7 @@ impl Voices {
             time,
             start_position_phase,
             phase_step_size,
-            speed * adsr.get_speed(),
+            speed,
             stretch < 0.,
             window_factor,
           );
@@ -103,7 +104,7 @@ impl Voices {
         self.phasors[0].reset(phase_offset);
         self.grains[0].reset();
       }
-      let start_position_phase = self.phasors[0].process(is_in_granular_mode, start_phasor_freq);
+      let start_position_phase = self.phasors[0].process(freq, speed, stretch, is_in_granular_mode);
       let trigger = self
         .grain_trigger
         .process(duration, density, reset_playback);

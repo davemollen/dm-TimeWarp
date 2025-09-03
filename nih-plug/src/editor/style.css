@@ -10,6 +10,7 @@
   width: 1s;
   height: auto;
   top: 16px;
+  overflow: hidden;
 }
 
 .show {
