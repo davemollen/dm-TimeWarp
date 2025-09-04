@@ -158,9 +158,6 @@ impl Plugin for DmTimeWarp {
   }
 
   fn run(&mut self, ports: &mut Ports, features: &mut Self::AudioFeatures, sample_count: u32) {
-    self.set_param_values(ports, features, sample_count);
-    self.handle_events(ports, features);
-
     if self.activated && !self.worker_is_initialized {
       if !self.file_path.is_empty() {
         features
@@ -173,16 +170,18 @@ impl Plugin for DmTimeWarp {
           .ok();
       }
       self.worker_is_initialized = true;
+      return;
     }
-
     if self.worker_is_finished {
       self.write_set_file(ports);
       self.worker_is_finished = false;
     }
 
+    self.set_param_values(ports, features, sample_count);
+    self.handle_events(ports, features);
+
     let input_channels = ports.input_left.iter().zip(ports.input_right.iter());
     let output_channels = ports.output_left.iter().zip(ports.output_right.iter());
-
     for ((input_left, input_right), (output_left, output_right)) in
       input_channels.zip(output_channels)
     {
