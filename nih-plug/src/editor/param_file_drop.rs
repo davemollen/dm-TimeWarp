@@ -26,7 +26,7 @@ impl ParamFileDrop {
     Self { async_executor }.build(cx, |cx| {
       VStack::new(cx, |cx| {
         Label::new(cx, &label_text)
-          .font_size(13.0)
+          .font_size(11.0)
           .font_weight(FontWeightKeyword::SemiBold)
           .child_space(Stretch(1.0));
 
@@ -35,7 +35,7 @@ impl ParamFileDrop {
           |cx| cx.emit(ParamFileDropEvent::PickFileFromDialog),
           |cx| {
             Label::new(cx, lens)
-              .font_size(10.0)
+              .font_size(9.0)
               .font_weight(FontWeightKeyword::Bold)
               .text_wrap(false)
               .hoverable(false)
@@ -57,7 +57,7 @@ impl ParamFileDrop {
       })
       .size(Auto)
       .child_space(Stretch(1.0))
-      .row_between(Pixels(4.0));
+      .row_between(Pixels(3.0));
     })
   }
 }

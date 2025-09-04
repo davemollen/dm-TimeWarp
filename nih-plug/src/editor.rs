@@ -40,7 +40,7 @@ pub struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-  ViziaState::new(|| (1156, 426))
+  ViziaState::new(|| (944, 352))
 }
 
 pub(crate) fn create(
@@ -91,12 +91,12 @@ pub(crate) fn create(
           })
           .width(Stretch(1.0))
           .height(Auto)
-          .col_between(Pixels(16.0))
+          .col_between(Pixels(4.0))
           .border_color("#797979")
           .border_width(Pixels(2.0))
           .border_top_right_radius(Pixels(8.0))
           .top(Stretch(1.0))
-          .child_space(Pixels(16.0))
+          .child_space(Pixels(12.0))
           .child_left(Stretch(1.0))
           .background_color("#211F24");
 
@@ -117,6 +117,7 @@ pub(crate) fn create(
             .size(Auto)
             .top(Stretch(1.0))
             .bottom(Stretch(1.0))
+            .left(Pixels(16.0))
             .right(Pixels(48.0));
 
             VStack::new(cx, |cx| {
@@ -156,11 +157,11 @@ pub(crate) fn create(
           })
           .width(Stretch(1.0))
           .height(Auto)
-          .col_between(Pixels(16.0))
+          .col_between(Pixels(4.0))
           .border_color("#797979")
           .border_width(Pixels(2.0))
           .border_bottom_right_radius(Pixels(8.0))
-          .child_space(Pixels(16.0))
+          .child_space(Pixels(12.0))
           .child_left(Stretch(1.0))
           .background_color("#211F24");
         })
@@ -191,10 +192,14 @@ pub(crate) fn create(
               .child_left(Stretch(1.0))
               .child_right(Stretch(1.0))
               .width(Auto)
-              .height(Stretch(1.0));
+              .height(Stretch(1.0))
+              .left(Pixels(8.0));
             })
             .size(Auto)
-            .child_space(Pixels(16.0))
+            .child_top(Pixels(16.0))
+            .child_left(Pixels(12.0))
+            .child_right(Pixels(12.0))
+            .child_bottom(Pixels(16.0))
             .col_between(Pixels(4.0))
             .border_color("#797979")
             .border_width(Pixels(2.0))
@@ -209,7 +214,10 @@ pub(crate) fn create(
             .col_between(Pixels(4.0))
             .border_color("#797979")
             .border_width(Pixels(2.0))
-            .child_space(Pixels(16.0))
+            .child_top(Pixels(16.0))
+            .child_left(Pixels(12.0))
+            .child_right(Pixels(12.0))
+            .child_bottom(Pixels(16.0))
             .background_color("#211F24");
           })
           .size(Auto);

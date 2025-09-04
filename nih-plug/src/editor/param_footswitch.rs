@@ -37,7 +37,7 @@ impl ParamFootswitch {
 
         VStack::new(cx, |cx| {
           Label::new(cx, &label_text)
-            .font_size(13.0)
+            .font_size(11.0)
             .font_weight(FontWeightKeyword::SemiBold)
             .child_space(Stretch(1.0));
           HStack::new(cx, |cx| {
@@ -92,7 +92,7 @@ impl ParamFootswitch {
         })
         .size(Auto)
         .child_space(Stretch(1.0))
-        .row_between(Pixels(8.0));
+        .row_between(Pixels(3.0));
       }),
     )
   }

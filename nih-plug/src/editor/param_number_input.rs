@@ -33,10 +33,11 @@ impl ParamNumberInput {
 
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name())
-            .font_size(13.0)
+            .font_size(11.0)
             .font_weight(FontWeightKeyword::SemiBold)
             .child_space(Stretch(1.0));
           Textbox::new(cx, display_value_lens)
+            .font_size(13.0)
             .placeholder("..")
             .on_mouse_down(|cx, _| {
               if cx.is_disabled() {
@@ -55,7 +56,7 @@ impl ParamNumberInput {
         })
         .size(Auto)
         .child_space(Stretch(1.0))
-        .row_between(Pixels(4.0));
+        .row_between(Pixels(3.0));
       }),
     )
   }

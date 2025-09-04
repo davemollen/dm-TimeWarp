@@ -30,7 +30,7 @@ impl ParamTabs {
       ParamWidgetBase::build_view(params, params_to_param, |cx, param_data| {
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name())
-            .font_size(13.0)
+            .font_size(11.0)
             .font_weight(FontWeightKeyword::SemiBold)
             .child_space(Stretch(1.0));
           VStack::new(cx, |cx| {
@@ -41,7 +41,7 @@ impl ParamTabs {
                 .checkable(true)
                 .on_press(|cx| cx.emit(ParamTabEvent::TextInput(option.to_string())))
                 .checked(checked)
-                .font_size(10.0)
+                .font_size(9.0)
                 .font_weight(FontWeightKeyword::Bold)
                 .child_space(Stretch(1.0))
                 .class("tab");
@@ -51,7 +51,7 @@ impl ParamTabs {
         })
         .size(Auto)
         .child_space(Stretch(1.0))
-        .row_between(Pixels(4.0));
+        .row_between(Pixels(3.0));
       }),
     )
   }

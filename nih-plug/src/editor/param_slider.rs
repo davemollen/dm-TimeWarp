@@ -37,7 +37,7 @@ impl ParamSlider {
 
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name())
-            .font_size(13.0)
+            .font_size(11.0)
             .font_weight(FontWeightKeyword::SemiBold)
             .child_space(Stretch(1.0));
           Slider::new(cx, unmodulated_normalized_value_lens)
@@ -55,12 +55,12 @@ impl ParamSlider {
                 cx.emit(ParamSliderEvent::TextInput(text));
               };
             })
-            .font_size(12.0)
+            .font_size(10.0)
             .text_align(TextAlign::Center);
         })
         .size(Auto)
         .child_space(Stretch(1.0))
-        .row_between(Pixels(4.0));
+        .row_between(Pixels(3.0));
       }),
     )
   }
