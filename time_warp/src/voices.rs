@@ -67,11 +67,13 @@ impl Voices {
     if midi_enabled {
       notes
         .iter_mut()
-        .filter(|n| *n.get_adsr_stage() != ADSRStage::Idle)
         .zip(self.grains.iter_mut())
         .zip(self.adsr.iter_mut())
         .zip(self.phasors.iter_mut())
         .fold((0., 0.), |result, (((note, grains), adsr), phasor)| {
+          if *note.get_adsr_stage() == ADSRStage::Idle {
+            return result;
+          }
           let speed = speed * adsr.get_speed();
           let gain = adsr.process(note, attack, decay, sustain, release);
           let reset = adsr.get_trigger() || reset_playback;
