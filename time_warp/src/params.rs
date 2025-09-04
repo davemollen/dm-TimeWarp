@@ -49,7 +49,7 @@ pub struct Params {
   prev_play: bool,
   prev_erase: bool,
   is_erasing_buffer: bool,
-  prev_sample_mode: SampleMode,
+  prev_sample_mode: Option<SampleMode>,
   pitch_bend_factor: f32,
   start_offset_phasor: Phasor,
 }
@@ -89,7 +89,7 @@ impl Params {
       prev_play: true,
       prev_erase: false,
       is_erasing_buffer: false,
-      prev_sample_mode: SampleMode::Delay,
+      prev_sample_mode: None,
       pitch_bend_factor: 1.,
       start_offset_phasor: Phasor::new(sample_rate),
     }
@@ -135,7 +135,9 @@ impl Params {
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
 
-    let sample_mode_has_changed = sample_mode != self.prev_sample_mode;
+    let sample_mode_has_changed = self
+      .prev_sample_mode
+      .map_or(false, |prev_sample_mode| sample_mode != prev_sample_mode);
     let erase_has_changed = erase && !self.prev_erase;
     self.is_erasing_buffer = sample_mode_has_changed || erase_has_changed;
 
@@ -186,7 +188,7 @@ impl Params {
     }
     if sample_mode == SampleMode::Looper && self.loop_duration.is_none() {
       self.feedback.reset(0.);
-    } else if self.prev_sample_mode == SampleMode::Looper {
+    } else if self.prev_sample_mode == Some(SampleMode::Looper) {
       self.feedback.reset(feedback);
     }
 
@@ -195,7 +197,7 @@ impl Params {
     self.prev_play = play;
     self.prev_erase = erase;
     self.prev_file_duration = self.file_duration;
-    self.prev_sample_mode = sample_mode;
+    self.prev_sample_mode = Some(sample_mode);
   }
 
   pub fn settle(&mut self) {
