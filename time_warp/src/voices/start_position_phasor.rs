@@ -18,7 +18,7 @@ impl StartPositionPhasor {
     let freq = if is_in_granular_mode {
       freq * (stretch - 1.)
     } else {
-      freq * ((speed * stretch.signum()) - 1.)
+      freq * (speed * stretch.signum() - 1.)
     };
     (self.phasor.process(freq) + self.offset).fract()
   }

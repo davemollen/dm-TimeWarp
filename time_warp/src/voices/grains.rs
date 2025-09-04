@@ -29,8 +29,10 @@ impl Grains {
     speed: f32,
     is_reversed: bool,
     window_factor: f32,
+    fade_factor: f32,
+    fade_offset: f32,
   ) -> (f32, f32) {
-    let speed = if is_reversed { 1. + speed } else { 1. - speed };
+    let speed = (if is_reversed { 1. + speed } else { 1. - speed }) * 0.5;
 
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
@@ -47,8 +49,15 @@ impl Grains {
       .fold(
         (0., 0., 0.),
         |(left_output, right_output, acc_gain), grain| {
-          let (left_grain, right_grain, grain_gain) =
-            grain.process(delay_line, time, phase_step_size, speed, window_factor);
+          let (left_grain, right_grain, grain_gain) = grain.process(
+            delay_line,
+            time,
+            phase_step_size,
+            speed,
+            window_factor,
+            fade_factor,
+            fade_offset,
+          );
           (
             left_output + left_grain,
             right_output + right_grain,
