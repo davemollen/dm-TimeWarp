@@ -1,5 +1,5 @@
 use nih_plug::params::Param;
-use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+use vizia_plug::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamNumberInputEvent {
   TextInput(String),
@@ -34,11 +34,9 @@ impl ParamNumberInput {
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name())
             .font_size(11.0)
-            .font_weight(FontWeightKeyword::SemiBold)
-            .child_space(Stretch(1.0));
+            .font_weight(FontWeightKeyword::SemiBold);
           Textbox::new(cx, display_value_lens)
             .font_size(13.0)
-            .placeholder("..")
             .on_mouse_down(|cx, _| {
               if cx.is_disabled() {
                 return;
@@ -52,11 +50,12 @@ impl ParamNumberInput {
                 cx.emit(ParamNumberInputEvent::TextInput(text));
               };
             })
+            .alignment(Alignment::Center)
             .text_align(TextAlign::Center);
         })
         .size(Auto)
-        .child_space(Stretch(1.0))
-        .row_between(Pixels(3.0));
+        .alignment(Alignment::Center)
+        .vertical_gap(Pixels(3.0));
       }),
     )
   }

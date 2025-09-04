@@ -1,5 +1,5 @@
 use nih_plug::params::Param;
-use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+use vizia_plug::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamFootswitchEvent {
   Pressed,
@@ -14,9 +14,9 @@ pub struct ParamFootswitch {
 }
 
 impl ParamFootswitch {
-  pub fn new<L, Params, P, FMap>(
+  pub fn new<F, L, Params, P, FMap>(
     cx: &mut Context,
-    label_text: String,
+    label_content: F,
     params: L,
     params_to_param: FMap,
   ) -> Handle<'_, Self>
@@ -25,6 +25,7 @@ impl ParamFootswitch {
     Params: 'static,
     P: Param<Plain = bool> + 'static,
     FMap: Fn(&Params) -> &P + Copy + 'static,
+    F: FnOnce(&mut Context),
   {
     Self {
       param_base: ParamWidgetBase::new(cx, params, params_to_param),
@@ -36,14 +37,11 @@ impl ParamFootswitch {
         let value = param_data.make_lens(|param| param.modulated_plain_value());
 
         VStack::new(cx, |cx| {
-          Label::new(cx, &label_text)
-            .font_size(11.0)
-            .font_weight(FontWeightKeyword::SemiBold)
-            .child_space(Stretch(1.0));
+          label_content(cx);
           HStack::new(cx, |cx| {
             ZStack::new(cx, |cx| {
               Element::new(cx)
-                .box_shadow(BoxShadow::new(
+                .shadow(Shadow::new(
                   0.,
                   0.,
                   Some(Length::px(8.0)),
@@ -59,7 +57,7 @@ impl ParamFootswitch {
                 .class("footswitch-beam")
                 .toggle_class("active", value);
             })
-            .box_shadow(BoxShadow::new(
+            .shadow(Shadow::new(
               0.,
               4.,
               Some(Length::px(4.0)),
@@ -85,14 +83,14 @@ impl ParamFootswitch {
                 .toggle_class("active", value)
                 .on_press(|cx| cx.emit(ParamFootswitchEvent::Pressed));
             })
-            .row_between(Pixels(8.0))
+            .vertical_gap(Pixels(8.0))
             .class("footswitch");
           })
           .size(Auto);
         })
         .size(Auto)
-        .child_space(Stretch(1.0))
-        .row_between(Pixels(3.0));
+        .alignment(Alignment::Center)
+        .vertical_gap(Pixels(3.0));
       }),
     )
   }
@@ -131,7 +129,7 @@ impl View for ParamFootswitch {
 
         let entity = cx.current();
         cx.spawn(move |cx_proxy| {
-          std::thread::sleep(std::time::Duration::from_millis(100));
+          std::thread::sleep(std::time::Duration::from_millis(200));
           cx_proxy.emit_to(entity, ParamFootswitchEvent::Reset).ok();
         });
 

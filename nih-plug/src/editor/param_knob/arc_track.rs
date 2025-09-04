@@ -1,11 +1,10 @@
-use std::f32::consts::PI;
-
-use nih_plug_vizia::vizia::{
-  binding::{Lens, LensExt},
+use vizia_plug::vizia::{
+  binding::Lens,
   context::{Context, DrawContext, EmitContext, EventContext},
   layout::Units,
-  vg::{LineCap, Paint, Path, Solidity},
-  view::{Canvas, Handle, View},
+  prelude::ResGet,
+  vg::{self, Canvas},
+  view::{Handle, View},
   views::{Binding, KnobMode},
 };
 
@@ -60,22 +59,18 @@ impl View for ArcTrack {
     Some("arctrack")
   }
 
-  fn draw(&self, cx: &mut DrawContext, canvas: &mut Canvas) {
-    let foreground_color = cx.font_color().into();
+  fn draw(&self, cx: &mut DrawContext, canvas: &Canvas) {
+    let foreground_color = cx.font_color();
 
-    let background_color = cx.background_color().into();
+    let background_color = cx.background_color();
 
     let bounds = cx.bounds();
 
-    // Calculate arc center
-    let centerx = bounds.x + 0.5 * bounds.w;
-    let centery = bounds.y + 0.5 * bounds.h;
-
     // Convert start and end angles to radians and rotate origin direction to be upwards instead of to the right
-    let start = self.angle_start.to_radians() - PI / 2.0;
-    let end = self.angle_end.to_radians() - PI / 2.0;
+    let start = self.angle_start;
+    let end = self.angle_end;
 
-    let parent_width = bounds.w + cx.logical_to_physical(2.0);
+    let parent_width = bounds.w;
 
     // Convert radius and span into screen coordinates
     let radius = self.radius.to_px(parent_width / 2.0, 0.0);
@@ -83,22 +78,23 @@ impl View for ArcTrack {
     let span = self.span.to_px(radius, 0.0);
 
     // Draw the track arc
-    let mut path = Path::new();
-    path.arc(
-      centerx,
-      centery,
-      radius - span / 2.0,
-      end,
-      start,
-      Solidity::Solid,
+    let oval = vg::Rect::new(
+      bounds.left() + span / 2.0,
+      bounds.top() + span / 2.0,
+      bounds.right() - span / 2.0,
+      bounds.bottom() - span / 2.0,
     );
-    let mut paint = Paint::color(background_color);
-    paint.set_line_width(span);
-    paint.set_line_cap(LineCap::Round);
-    canvas.stroke_path(&path, &paint);
+
+    let mut paint = vg::Paint::default();
+    paint.set_color(background_color);
+    paint.set_stroke_width(span);
+    paint.set_stroke_cap(vg::PaintCap::Round);
+    paint.set_style(vg::PaintStyle::Stroke);
+    // canvas.draw_path(&path, &paint);
+    canvas.draw_arc(oval, start, end - start, false, &paint);
 
     // Draw the active arc
-    let mut path = Path::new();
+    let mut path = vg::Path::new();
 
     let value = match self.mode {
       KnobMode::Continuous => self.normalized_value,
@@ -109,48 +105,30 @@ impl View for ArcTrack {
     };
 
     if self.center {
-      let center = -PI / 2.0;
+      let center = -90.0;
 
       if value <= 0.5 {
         let current = value * 2.0 * (center - start) + start;
-        path.arc(
-          centerx,
-          centery,
-          radius - span / 2.0,
-          center,
-          current,
-          Solidity::Solid,
-        );
+        path.arc_to(oval, start, current, false);
       } else {
-        let current = (value * 2.0 - 1.0) * (end - center) + center;
-        path.arc(
-          centerx,
-          centery,
-          radius - span / 2.0,
-          current,
-          center,
-          Solidity::Solid,
-        );
+        let current = (value * 2.0 - 1.0) * (end - center);
+        path.arc_to(oval, center, current, false);
       }
     } else {
       let current = value * (end - start) + start;
-      path.arc(
-        centerx,
-        centery,
-        radius - span / 2.0,
-        current,
-        start,
-        Solidity::Solid,
-      );
+      path.arc_to(oval, start, current - start, false);
     }
 
-    let mut paint = Paint::color(foreground_color);
-    paint.set_line_width(span);
-    paint.set_line_cap(LineCap::Round);
-    canvas.stroke_path(&path, &paint);
+    let mut paint = vg::Paint::default();
+    paint.set_color(foreground_color);
+    paint.set_stroke_width(span);
+    paint.set_stroke_cap(vg::PaintCap::Round);
+    paint.set_style(vg::PaintStyle::Stroke);
+    paint.set_anti_alias(true);
+    canvas.draw_path(&path, &paint);
   }
 
-  fn event(&mut self, cx: &mut EventContext, event: &mut nih_plug_vizia::vizia::events::Event) {
+  fn event(&mut self, cx: &mut EventContext, event: &mut vizia_plug::vizia::events::Event) {
     event.map(|msg, _| match msg {
       ArcTrackEvent::SetValue(val) => {
         self.normalized_value = *val;

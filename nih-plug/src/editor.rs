@@ -9,17 +9,15 @@ mod param_switch;
 mod param_tabs;
 use {
   crate::{
-    editor::param_knob::ParamKnobHandle,
+    editor::{
+      assets::{PLAY_ICON, RECORD_ICON, STOP_ICON},
+      param_knob::ParamKnobHandle,
+    },
     time_warp_parameters::{SampleMode, TimeWarpParameters},
     DmTimeWarp,
   },
   assets::{register_roboto, register_roboto_bold, ROBOTO_FONT_NAME},
   nih_plug::prelude::{AsyncExecutor, Editor, Enum},
-  nih_plug_vizia::{
-    create_vizia_editor,
-    vizia::{image, prelude::*},
-    ViziaState, ViziaTheming,
-  },
   param_button::ParamButton,
   param_file_drop::ParamFileDrop,
   param_footswitch::{ParamFootswitch, ParamFootswitchHandle},
@@ -29,6 +27,7 @@ use {
   param_switch::ParamSwitch,
   param_tabs::ParamTabs,
   std::sync::Arc,
+  vizia_plug::{create_vizia_editor, vizia::prelude::*, ViziaState, ViziaTheming},
 };
 
 const STYLE: &str = include_str!("editor/style.css");
@@ -41,7 +40,7 @@ pub struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-  ViziaState::new(|| (948, 352))
+  ViziaState::new(|| (936, 344))
 }
 
 pub(crate) fn create(
@@ -56,21 +55,13 @@ pub(crate) fn create(
     cx.add_stylesheet(STYLE).ok();
     cx.load_image(
       "background.png",
-      image::load_from_memory_with_format(
-        include_bytes!("editor/assets/background.png"),
-        image::ImageFormat::Png,
-      )
-      .unwrap(),
-      ImageRetentionPolicy::DropWhenUnusedForOneFrame,
+      include_bytes!("editor/assets/background.png"),
+      ImageRetentionPolicy::DropWhenNoObservers,
     );
     cx.load_image(
       "logo.png",
-      image::load_from_memory_with_format(
-        include_bytes!("editor/assets/logo.png"),
-        image::ImageFormat::Png,
-      )
-      .unwrap(),
-      ImageRetentionPolicy::DropWhenUnusedForOneFrame,
+      include_bytes!("editor/assets/logo.png"),
+      ImageRetentionPolicy::DropWhenNoObservers,
     );
 
     Data {
@@ -85,15 +76,16 @@ pub(crate) fn create(
             ParamKnob::new(cx, Data::params, |params| &params.scan).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.spray).size(Auto);
             HStack::new(cx, |cx| {
-              ParamButton::new(cx, Data::params, |params| &params.freeze)
-                .size(Auto)
-                .top(Stretch(1.0))
-                .bottom(Stretch(1.0))
-                .right(Pixels(-4.0));
+              HStack::new(cx, |cx| {
+                ParamButton::new(cx, Data::params, |params| &params.freeze).size(Auto);
+              })
+              .size(Auto)
+              .padding_right(Pixels(-4.0));
               ParamKnob::new(cx, Data::params, |params| &params.stretch)
                 .disabled(Data::params.map(|p| p.freeze.value()))
                 .size(Auto);
             })
+            .alignment(Alignment::Center)
             .size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.size).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.density).size(Auto);
@@ -103,29 +95,29 @@ pub(crate) fn create(
                 ParamKnob::new(cx, Data::params, |params| &params.detune)
                   .knob_size(36.)
                   .size(Auto);
-                Element::new(cx)
-                  .class("detune-knob-line")
-                  .left(Pixels(-10.0));
+                HStack::new(cx, |cx| {
+                  Element::new(cx).class("detune-knob-line");
+                })
+                .alignment(Alignment::Center)
+                .padding_left(Pixels(-10.0));
               })
-              .top(Stretch(1.0))
-              .bottom(Stretch(1.0))
-              .left(Pixels(-4.0))
-              .size(Auto);
-              ParamKnob::new(cx, Data::params, |params| &params.pitch)
-                .size(Auto)
-                .left(Pixels(-8.0));
+              .size(Auto)
+              .padding_left(Pixels(-4.0))
+              .padding_right(Pixels(-8.0))
+              .alignment(Alignment::Center);
+              ParamKnob::new(cx, Data::params, |params| &params.pitch).size(Auto);
             })
-            .size(Auto);
+            .size(Auto)
+            .alignment(Alignment::Center);
           })
           .width(Stretch(1.0))
           .height(Auto)
-          .col_between(Pixels(4.0))
+          .horizontal_gap(Pixels(4.0))
+          .alignment(Alignment::Right)
           .border_color("#797979")
           .border_width(Pixels(2.0))
-          .border_top_right_radius(Pixels(8.0))
-          .top(Stretch(1.0))
-          .child_space(Pixels(12.0))
-          .child_left(Stretch(1.0))
+          .corner_top_right_radius(Pixels(8.0))
+          .padding(Pixels(12.0))
           .background_color("#211F24");
 
           HStack::new(cx, |cx| {
@@ -136,26 +128,24 @@ pub(crate) fn create(
               "Sample".to_string(),
             )
             .size(Auto)
-            .top(Stretch(1.0))
-            .bottom(Stretch(1.0))
             .disabled(Data::params.map(|p| p.sample_mode.value() != SampleMode::Sampler));
             ParamTabs::new(cx, SampleMode::variants(), Data::params, |params| {
               &params.sample_mode
             })
-            .size(Auto)
-            .top(Stretch(1.0))
-            .left(Pixels(12.0))
-            .right(Pixels(12.0))
-            .bottom(Stretch(1.0));
+            .padding_left(Pixels(8.0))
+            .padding_right(Pixels(8.0))
+            .size(Auto);
 
             HStack::new(cx, |cx| {
-              ParamButton::new(cx, Data::params, |params| &params.sync)
-                .size(Auto)
-                .top(Stretch(1.0))
-                .bottom(Stretch(1.0))
-                .right(Pixels(-4.0))
-                .class("show")
-                .disabled(Data::params.map(|p| p.sample_mode.value() != SampleMode::Delay));
+              HStack::new(cx, |cx| {
+                ParamButton::new(cx, Data::params, |params| &params.sync)
+                  .size(Auto)
+                  .class("show")
+                  .disabled(Data::params.map(|p| p.sample_mode.value() != SampleMode::Delay));
+              })
+              .size(Auto)
+              .padding_right(Pixels(-4.0));
+
               ParamKnob::new(cx, Data::params, |params| &params.time)
                 .size(Auto)
                 .class("show")
@@ -181,7 +171,7 @@ pub(crate) fn create(
                 );
             })
             .size(Auto)
-            .left(Pixels(4.0));
+            .alignment(Alignment::Center);
             ParamKnob::new(cx, Data::params, |params| &params.highpass).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.lowpass).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.recycle).size(Auto);
@@ -189,14 +179,15 @@ pub(crate) fn create(
           })
           .width(Stretch(1.0))
           .height(Auto)
-          .col_between(Pixels(4.0))
+          .horizontal_gap(Pixels(4.0))
+          .alignment(Alignment::Right)
           .border_color("#797979")
           .border_width(Pixels(2.0))
-          .border_bottom_right_radius(Pixels(8.0))
-          .child_space(Pixels(12.0))
-          .child_left(Stretch(1.0))
+          .corner_bottom_right_radius(Pixels(8.0))
+          .padding(Pixels(12.0))
           .background_color("#211F24");
         })
+        .alignment(Alignment::BottomLeft)
         .width(Stretch(1.0));
 
         VStack::new(cx, |cx| {
@@ -223,21 +214,19 @@ pub(crate) fn create(
                   .size(Auto)
                   .disabled(Data::params.map(|p| !p.midi_enabled.value()));
               })
-              .child_left(Stretch(1.0))
-              .child_right(Stretch(1.0))
+              .alignment(Alignment::TopCenter)
               .width(Auto)
-              .row_between(Pixels(8.0))
-              .left(Pixels(8.0));
+              .vertical_gap(Pixels(8.0));
             })
             .size(Auto)
-            .child_top(Pixels(16.0))
-            .child_left(Pixels(12.0))
-            .child_right(Pixels(12.0))
-            .child_bottom(Pixels(16.0))
-            .col_between(Pixels(4.0))
+            .padding_top(Pixels(16.0))
+            .padding_left(Pixels(12.0))
+            .padding_right(Pixels(12.0))
+            .padding_bottom(Pixels(16.0))
+            .horizontal_gap(Pixels(4.0))
             .border_color("#797979")
             .border_width(Pixels(2.0))
-            .border_bottom_left_radius(Pixels(8.0))
+            .corner_bottom_left_radius(Pixels(8.0))
             .background_color("#211F24");
 
             HStack::new(cx, |cx| {
@@ -245,49 +234,83 @@ pub(crate) fn create(
               ParamSlider::new(cx, Data::params, |params| &params.wet).size(Auto);
             })
             .size(Auto)
-            .col_between(Pixels(4.0))
+            .horizontal_gap(Pixels(4.0))
             .border_color("#797979")
             .border_width(Pixels(2.0))
-            .child_top(Pixels(16.0))
-            .child_left(Pixels(12.0))
-            .child_right(Pixels(12.0))
-            .child_bottom(Pixels(16.0))
+            .padding_top(Pixels(16.0))
+            .padding_left(Pixels(12.0))
+            .padding_right(Pixels(12.0))
+            .padding_bottom(Pixels(16.0))
             .background_color("#211F24");
           })
           .size(Auto);
-          Element::new(cx).class("logo");
+
+          VStack::new(cx, |cx| {
+            Element::new(cx).class("logo");
+          })
+          .size(Stretch(1.0))
+          .alignment(Alignment::Center);
         })
-        .size(Auto)
-        .right(Pixels(0.0));
+        .width(Auto)
+        .height(Stretch(1.0));
       });
+
       HStack::new(cx, |cx| {
-        ParamFootswitch::new(cx, "● / Dub".to_string(), Data::params, |params| {
-          &params.record
-        })
-        .size(Auto)
-        .left(Stretch(1.0))
-        .right(Stretch(1.0));
-        ParamFootswitch::new(cx, "▶ / ◼".to_string(), Data::params, |params| {
-          &params.play
-        })
-        .size(Auto)
-        .left(Stretch(1.0))
-        .right(Stretch(1.0));
-        ParamFootswitch::new(cx, "Erase".to_string(), Data::params, |params| {
-          &params.erase
-        })
+        ParamFootswitch::new(
+          cx,
+          |cx| {
+            HStack::new(cx, |cx| {
+              Svg::new(cx, RECORD_ICON).fill("#ececec").size(Pixels(9.0));
+              Label::new(cx, "  /  Dub")
+                .font_size(11.0)
+                .font_weight(FontWeightKeyword::SemiBold);
+            })
+            .alignment(Alignment::Center)
+            .size(Auto);
+          },
+          Data::params,
+          |params| &params.record,
+        )
+        .size(Auto);
+        ParamFootswitch::new(
+          cx,
+          |cx| {
+            HStack::new(cx, |cx| {
+              Svg::new(cx, PLAY_ICON).fill("#ececec").size(Pixels(9.0));
+              Label::new(cx, "  /  ")
+                .font_size(11.0)
+                .font_weight(FontWeightKeyword::SemiBold);
+              Svg::new(cx, STOP_ICON).fill("#ececec").size(Pixels(8.5));
+            })
+            .alignment(Alignment::Center)
+            .size(Auto);
+          },
+          Data::params,
+          |params| &params.play,
+        )
+        .size(Auto);
+        ParamFootswitch::new(
+          cx,
+          |cx| {
+            Label::new(cx, "Erase")
+              .font_size(11.0)
+              .font_weight(FontWeightKeyword::SemiBold);
+          },
+          Data::params,
+          |params| &params.erase,
+        )
         .is_momentary(true)
-        .size(Auto)
-        .left(Stretch(1.0))
-        .right(Stretch(1.0));
+        .size(Auto);
       })
-      .width(Stretch(1.0))
       .height(Auto)
-      .child_space(Pixels(16.0))
+      .padding_top(Pixels(16.0))
+      .padding_bottom(Pixels(16.0))
+      .padding_left(Percentage(14.0))
+      .padding_right(Percentage(14.0))
       .border_color("#797979")
       .border_width(Pixels(2.0))
-      .col_between(Pixels(4.0))
-      .background_color("#211F24");
+      .background_color("#211F24")
+      .horizontal_gap(Stretch(1.0));
     })
     .class("background");
   })
