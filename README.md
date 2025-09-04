@@ -1,5 +1,7 @@
 ## dm-TimeWarp
 
+<img src="screenshot.png" alt="plugin screenshot" style="display:block;width:75%;max-width:1056px;">
+
 A granular audio effect written in Rust.
 It's a granular delay, looper & sampler with time stretch capabilities wrapped into one plugin.
 
