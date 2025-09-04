@@ -20,6 +20,8 @@ use {
   time_warp::{MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY},
 };
 
+const MAX_PARAM_DELAY_TIME: f32 = 10000.;
+
 #[derive(Enum, PartialEq)]
 pub enum SampleMode {
   Delay,
@@ -122,7 +124,7 @@ pub struct TimeWarpParameters {
 
 impl Default for TimeWarpParameters {
   fn default() -> Self {
-    let max_size = Arc::new(AtomicF32::new(-1.));
+    let max_size = Arc::new(AtomicF32::new(MAX_PARAM_DELAY_TIME));
 
     Self {
       editor_state: editor::default_state(),
@@ -193,7 +195,7 @@ impl Default for TimeWarpParameters {
         2000.,
         FloatRange::Skewed {
           min: MIN_DELAY_TIME,
-          max: 10000.,
+          max: MAX_PARAM_DELAY_TIME,
           factor: 0.3,
         },
       )
