@@ -19,7 +19,7 @@ pub struct Voices {
   grains: Vec<Grains>,
   adsr: Vec<ADSR>,
   phasors: Vec<StartPositionPhasor>,
-  grain_trigger: GrainTrigger,
+  grain_triggers: Vec<GrainTrigger>,
   sample_rate: f32,
 }
 
@@ -29,7 +29,7 @@ impl Voices {
       grains: vec![Grains::new(sample_rate); 8],
       adsr: vec![ADSR::new(sample_rate, 5.); 8],
       phasors: vec![StartPositionPhasor::new(sample_rate); 8],
-      grain_trigger: GrainTrigger::new(sample_rate),
+      grain_triggers: vec![GrainTrigger::new(sample_rate); 8],
       sample_rate,
     }
   }
@@ -70,46 +70,48 @@ impl Voices {
         .zip(self.grains.iter_mut())
         .zip(self.adsr.iter_mut())
         .zip(self.phasors.iter_mut())
-        .fold((0., 0.), |result, (((note, grains), adsr), phasor)| {
-          if *note.get_adsr_stage() == ADSRStage::Idle {
-            return result;
-          }
-          let speed = speed * adsr.get_speed();
-          let gain = adsr.process(note, attack, decay, sustain, release);
-          let reset = adsr.get_trigger() || reset_playback;
-          if reset {
-            phasor.reset(phase_offset);
-            grains.reset();
-          }
-          let start_position_phase = phasor.process(freq, speed, stretch, is_in_granular_mode);
-          let trigger = self.grain_trigger.process(duration, density, reset);
-          let grains_out = grains.process(
-            delay_line,
-            trigger,
-            scan,
-            spray,
-            stereo,
-            time,
-            start_position_phase,
-            phase_step_size,
-            speed,
-            stretch < 0.,
-            window_factor,
-          );
-          (
-            result.0 + grains_out.0 * gain,
-            result.1 + grains_out.1 * gain,
-          )
-        })
+        .zip(self.grain_triggers.iter_mut())
+        .fold(
+          (0., 0.),
+          |result, ((((note, grains), adsr), phasor), grain_trigger)| {
+            if *note.get_adsr_stage() == ADSRStage::Idle {
+              return result;
+            }
+            let speed = speed * adsr.get_speed();
+            let gain = adsr.process(note, attack, decay, sustain, release);
+            let reset = adsr.get_trigger() || reset_playback;
+            if reset {
+              phasor.reset(phase_offset);
+              grains.reset();
+            }
+            let start_position_phase = phasor.process(freq, speed, stretch, is_in_granular_mode);
+            let trigger = grain_trigger.process(duration, density, reset);
+            let grains_out = grains.process(
+              delay_line,
+              trigger,
+              scan,
+              spray,
+              stereo,
+              time,
+              start_position_phase,
+              phase_step_size,
+              speed,
+              stretch < 0.,
+              window_factor,
+            );
+            (
+              result.0 + grains_out.0 * gain,
+              result.1 + grains_out.1 * gain,
+            )
+          },
+        )
     } else {
       if reset_playback {
         self.phasors[0].reset(phase_offset);
         self.grains[0].reset();
       }
       let start_position_phase = self.phasors[0].process(freq, speed, stretch, is_in_granular_mode);
-      let trigger = self
-        .grain_trigger
-        .process(duration, density, reset_playback);
+      let trigger = self.grain_triggers[0].process(duration, density, reset_playback);
       self.grains[0].process(
         delay_line,
         trigger,
