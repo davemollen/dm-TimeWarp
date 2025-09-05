@@ -119,7 +119,7 @@ impl Grain {
   fn get_grain_fade(&self, window_factor: f32) -> f32 {
     let fade_in = (self.phase * window_factor).min(1.);
     let fade_out = ((1. - self.phase) * window_factor).min(1.);
-    let fade = fade_in.min(fade_out);
+    let fade = fade_in * fade_out;
     Self::apply_curve(fade)
   }
 

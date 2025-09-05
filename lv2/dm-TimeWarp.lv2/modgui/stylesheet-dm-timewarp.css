@@ -22,7 +22,7 @@
 .mod-pedal{{{cns}}} .midi-settings {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 12px;
     margin: 8px 0px 0px -8px;
 }
 

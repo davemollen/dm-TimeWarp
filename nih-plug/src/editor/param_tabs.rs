@@ -47,6 +47,8 @@ impl ParamTabs {
                 .class("tab");
             }
           })
+          .child_left(Stretch(1.0))
+          .child_right(Stretch(1.0))
           .class("tabs");
         })
         .size(Auto)

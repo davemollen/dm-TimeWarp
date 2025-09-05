@@ -186,13 +186,12 @@ pub(crate) fn create(
                 ParamSwitch::new(cx, Data::params, |params| &params.midi_enabled).size(Auto);
                 ParamNumberInput::new(cx, Data::params, |params| &params.voices)
                   .size(Auto)
-                  .top(Stretch(1.0))
                   .disabled(Data::params.map(|p| !p.midi_enabled.value()));
               })
               .child_left(Stretch(1.0))
               .child_right(Stretch(1.0))
               .width(Auto)
-              .height(Stretch(1.0))
+              .row_between(Pixels(12.0))
               .left(Pixels(8.0));
             })
             .size(Auto)
