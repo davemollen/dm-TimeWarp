@@ -119,7 +119,7 @@ impl DmTimeWarp {
       MidiMessage::NoteOn(_, note, velocity) => {
         self
           .notes
-          .note_on(note.into(), (u8::from(velocity) / 127).into());
+          .note_on(note.into(), u8::from(velocity) as f32 / 127.);
       }
       MidiMessage::NoteOff(_, note, _) => {
         self.notes.note_off(note.into());
