@@ -123,7 +123,7 @@ impl Params {
   ) {
     self.scan = scan;
     self.spray = spray;
-    self.size = size * size;
+    self.size = size;
     self.density = density;
     self.stereo = stereo;
     self.speed = 2_f32.powf(pitch / 12.)

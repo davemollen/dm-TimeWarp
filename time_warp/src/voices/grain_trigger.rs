@@ -14,13 +14,13 @@ impl GrainTrigger {
     }
   }
 
-  pub fn process(&mut self, duration: f32, density: f32, reset: bool) -> bool {
+  pub fn process(&mut self, grain_duration: f32, density: f32, reset: bool) -> bool {
     if reset {
       self.phasor.reset();
       self.delta.reset();
       return true;
     }
-    let phase = self.phasor.process(1000. / duration * density);
+    let phase = self.phasor.process(1000. / grain_duration * density);
     self.delta.process(phase) < 0.
   }
 }

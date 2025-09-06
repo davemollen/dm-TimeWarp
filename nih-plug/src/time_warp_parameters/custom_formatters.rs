@@ -1,6 +1,6 @@
 use nih_plug::prelude::AtomicF32;
 use std::sync::{atomic::Ordering, Arc};
-use time_warp::MIN_DELAY_TIME;
+use time_warp::{CENTER_GRAIN_DURATION, MIN_DELAY_TIME};
 
 pub fn v2s_f32_ms_then_s() -> Arc<dyn Fn(f32) -> String + Send + Sync> {
   Arc::new(move |value| {
@@ -89,10 +89,18 @@ pub fn s2v_f32_synced_time() -> Arc<dyn Fn(&str) -> Option<i32> + Send + Sync> {
   })
 }
 
-pub fn v2s_size(size_max: Arc<AtomicF32>) -> Arc<dyn Fn(f32) -> String + Send + Sync> {
-  Arc::new(move |value| {
-    let range = size_max.load(Ordering::Relaxed) - MIN_DELAY_TIME;
-    let value = value * value * range + MIN_DELAY_TIME;
+pub fn v2s_size(max_size: Arc<AtomicF32>) -> Arc<dyn Fn(f32) -> String + Send + Sync> {
+  Arc::new(move |size| {
+    let max_size = max_size.load(Ordering::Relaxed);
+
+    let value = if size < 0.5 {
+      size * 2. * (CENTER_GRAIN_DURATION - MIN_DELAY_TIME) + MIN_DELAY_TIME
+    } else {
+      let normalized_size = (size - 0.5) * 2.;
+      normalized_size * normalized_size * (max_size - CENTER_GRAIN_DURATION) + CENTER_GRAIN_DURATION
+    }
+    .min(max_size);
+
     if value >= 10000. {
       format!("{:.1} s", value / 1000.0)
     } else if value >= 1000. {
@@ -107,7 +115,7 @@ pub fn v2s_size(size_max: Arc<AtomicF32>) -> Arc<dyn Fn(f32) -> String + Send + 
   })
 }
 
-pub fn s2v_size(size_max: Arc<AtomicF32>) -> Arc<dyn Fn(&str) -> Option<f32> + Send + Sync> {
+pub fn s2v_size(max_size: Arc<AtomicF32>) -> Arc<dyn Fn(&str) -> Option<f32> + Send + Sync> {
   Arc::new(move |string| {
     let time_segment = string.trim().to_ascii_lowercase();
 
@@ -121,17 +129,14 @@ pub fn s2v_size(size_max: Arc<AtomicF32>) -> Arc<dyn Fn(&str) -> Option<f32> + S
 
     match plain_value {
       Some(plain_val) => {
-        let max = size_max.load(Ordering::Relaxed);
-        let range = max - MIN_DELAY_TIME;
-        let val = if plain_val < MIN_DELAY_TIME {
-          MIN_DELAY_TIME
-        } else if plain_val > max {
-          max
+        let max_size = max_size.load(Ordering::Relaxed);
+        let normalized_val = if plain_val < CENTER_GRAIN_DURATION {
+          (plain_val - MIN_DELAY_TIME) / (max_size - MIN_DELAY_TIME) * 0.5
         } else {
-          plain_val
+          ((plain_val - CENTER_GRAIN_DURATION) / (max_size - CENTER_GRAIN_DURATION)).sqrt() * 0.5
+            + 0.5
         };
-        let y = (val - MIN_DELAY_TIME) / range;
-        Some(y.sqrt())
+        Some(normalized_val)
       }
       _ => None,
     }

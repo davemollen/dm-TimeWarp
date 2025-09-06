@@ -7,7 +7,7 @@ use {
     delay_line::DelayLine,
     notes::{ADSRStage, Note},
     shared::float_ext::FloatExt,
-    FADE_TIME, MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY,
+    CENTER_GRAIN_DURATION, FADE_TIME, MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY,
   },
   grain_trigger::GrainTrigger,
   grains::Grains,
@@ -54,12 +54,12 @@ impl Voices {
     reset_playback: bool,
     phase_offset: f32,
   ) -> (f32, f32) {
-    let duration = size * (time - MIN_DELAY_TIME) + MIN_DELAY_TIME; // range from min delay time to time
+    let grain_duration = Self::map_size_to_grain_duration(size, time);
     let normalized_density = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY);
-    let grain_duration = duration + FADE_TIME * (1. - normalized_density);
-    let phase_step_size = grain_duration.mstosamps(self.sample_rate).recip();
+    let extended_grain_duration = grain_duration + FADE_TIME * (1. - normalized_density);
+    let phase_step_size = extended_grain_duration.mstosamps(self.sample_rate).recip();
     let min_window_factor = 2.;
-    let max_window_factor = grain_duration / FADE_TIME;
+    let max_window_factor = extended_grain_duration / FADE_TIME;
     let window_factor = max_window_factor.mix(min_window_factor, normalized_density);
     let fade_factor = time / FADE_TIME;
     let fade_offset = fade_factor.recip() + 1.;
@@ -87,7 +87,7 @@ impl Voices {
               grains.reset();
             }
             let start_position_phase = phasor.process(freq, speed, stretch, is_in_granular_mode);
-            let trigger = grain_trigger.process(duration, density, reset);
+            let trigger = grain_trigger.process(grain_duration, density, reset);
             let grains_out = grains.process(
               delay_line,
               trigger,
@@ -115,7 +115,7 @@ impl Voices {
         self.grains[0].reset();
       }
       let start_position_phase = self.phasors[0].process(freq, speed, stretch, is_in_granular_mode);
-      let trigger = self.grain_triggers[0].process(duration, density, reset_playback);
+      let trigger = self.grain_triggers[0].process(grain_duration, density, reset_playback);
       self.grains[0].process(
         delay_line,
         trigger,
@@ -132,5 +132,15 @@ impl Voices {
         fade_offset,
       )
     }
+  }
+
+  fn map_size_to_grain_duration(size: f32, time: f32) -> f32 {
+    if size < 0.5 {
+      size * 2. * (CENTER_GRAIN_DURATION - MIN_DELAY_TIME) + MIN_DELAY_TIME
+    } else {
+      let range = (size - 0.5) * 2.;
+      range * range * (time - CENTER_GRAIN_DURATION) + CENTER_GRAIN_DURATION
+    }
+    .min(time)
   }
 }
