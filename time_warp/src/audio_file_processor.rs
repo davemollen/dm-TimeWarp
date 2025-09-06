@@ -32,11 +32,15 @@ pub struct AudioFileData {
 #[derive(Clone)]
 pub struct AudioFileProcessor {
   sample_rate: f32,
+  max_size: usize,
 }
 
 impl AudioFileProcessor {
-  pub fn new(sample_rate: f32) -> Self {
-    Self { sample_rate }
+  pub fn new(sample_rate: f32, max_size: usize) -> Self {
+    Self {
+      sample_rate,
+      max_size,
+    }
   }
 
   pub fn read<'a, P: AsRef<Path>>(
@@ -185,8 +189,14 @@ impl AudioFileProcessor {
         resample_buffer.clear();
       }
     }
-    let duration_in_samples = samples.len();
+
+    let duration_in_samples = if samples.len() > self.max_size {
+      self.max_size
+    } else {
+      samples.len()
+    };
     let duration_in_ms = duration_in_samples as f32 / self.sample_rate * 1000.;
+    samples.resize(self.max_size, 0.);
 
     return Ok(AudioFileData {
       samples,
@@ -204,7 +214,7 @@ mod tests {
   #[test]
   fn should_read_audio_file() {
     let file_path = Path::new("src/audio_file_processor/read_example.wav");
-    let audio_file_processor = AudioFileProcessor::new(44100.);
+    let audio_file_processor = AudioFileProcessor::new(44100., 44100);
     let result = audio_file_processor.read(file_path);
 
     assert!(result.is_ok());

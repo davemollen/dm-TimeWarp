@@ -24,14 +24,13 @@ impl Worker for DmTimeWarp {
     data: Self::WorkData,
   ) -> Result<(), WorkerError> {
     match data {
-      WorkRequest::LoadFile(file_path, sample_rate, size) => {
+      WorkRequest::LoadFile(file_path, sample_rate, max_size) => {
         if file_path.is_empty() {
           return Err(WorkerError::Unknown);
         }
-        let mut audio_file_data = AudioFileProcessor::new(sample_rate)
+        let audio_file_data = AudioFileProcessor::new(sample_rate, max_size)
           .read(&file_path)
           .or(Err(WorkerError::Unknown))?;
-        audio_file_data.samples.resize(size, 0.);
 
         response_handler
           .respond(WorkResponseData::LoadFile(audio_file_data))

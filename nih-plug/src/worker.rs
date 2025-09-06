@@ -49,8 +49,9 @@ impl Worker {
         if file_path.is_empty() {
           return;
         }
-        let mut audio_file_data = match AudioFileProcessor::new(
+        let audio_file_data = match AudioFileProcessor::new(
           self.sample_rate.load(Ordering::Relaxed),
+          self.delay_line_size,
         )
         .read(&file_path)
         {
@@ -59,7 +60,6 @@ impl Worker {
             return;
           }
         };
-        audio_file_data.samples.resize(self.delay_line_size, 0.);
 
         match self
           .sender
