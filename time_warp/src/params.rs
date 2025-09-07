@@ -157,8 +157,8 @@ impl Params {
     let overridden_play = self.override_play(play, &sample_mode);
     let recording_gain = if record { 1. } else { 0. };
     let playback_gain = if overridden_play { 1. } else { 0. };
-    let dry = dry.fast_dbtoa();
-    let wet = wet.fast_dbtoa();
+    let dry = if dry <= -70. { 0. } else { dry.fast_dbtoa() };
+    let wet = if wet <= -70. { 0. } else { wet.fast_dbtoa() };
 
     if self.is_initialized {
       self.recording_gain.set_target(recording_gain);
