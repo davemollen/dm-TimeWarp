@@ -5,7 +5,7 @@ pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,
   phasor::Phasor,
-  smooth::{ExponentialSmooth, LinearSmooth},
+  smooth::{CascadedExponentialSmooth, LinearSmooth},
   stopwatch::Stopwatch,
 };
 
@@ -27,7 +27,7 @@ pub struct Params {
   pub should_reset_start_offset: bool,
   pub recording_gain: LinearSmooth,
   pub playback_gain: LinearSmooth,
-  pub time: ExponentialSmooth,
+  pub time: CascadedExponentialSmooth,
   pub filter_coefficients: ([f32; 3], [f32; 3]),
   pub recycle: LinearSmooth,
   pub feedback: LinearSmooth,
@@ -67,7 +67,7 @@ impl Params {
       should_reset_start_offset: false,
       recording_gain: LinearSmooth::new(sample_rate, 55.),
       playback_gain: LinearSmooth::new(sample_rate, 55.),
-      time: ExponentialSmooth::new(sample_rate, 2.109),
+      time: CascadedExponentialSmooth::new(sample_rate, 1.29),
       filter_coefficients: ([0.; 3], [0.; 3]),
       recycle: LinearSmooth::new(sample_rate, 20.),
       feedback: LinearSmooth::new(sample_rate, 20.),

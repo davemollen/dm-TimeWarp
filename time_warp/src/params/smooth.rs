@@ -107,6 +107,59 @@ impl Smoother for ExponentialSmooth {
   }
 }
 
+pub struct CascadedExponentialSmooth {
+  current1: f32,
+  current2: f32,
+  target: f32,
+  b1: f32,
+  is_active: bool,
+}
+
+impl CascadedExponentialSmooth {
+  pub fn new(sample_rate: f32, frequency: f32) -> Self {
+    Self {
+      current1: 0.,
+      current2: 0.,
+      target: 0.,
+      b1: (-TAU * frequency * sample_rate.recip()).exp(),
+      is_active: false,
+    }
+  }
+}
+
+impl Smoother for CascadedExponentialSmooth {
+  fn reset(&mut self, target: f32) {
+    self.current1 = target;
+    self.current2 = target;
+    self.is_active = false;
+  }
+
+  fn set_target(&mut self, target: f32) {
+    self.target = target;
+    self.is_active = self.current2 != self.target;
+  }
+
+  fn get_target(&self) -> f32 {
+    self.target
+  }
+
+  fn next(&mut self) -> f32 {
+    if self.is_active {
+      let a0 = 1.0 - self.b1;
+
+      self.current1 = self.target * a0 + self.current1 * self.b1;
+      self.current2 = self.current1 * a0 + self.current2 * self.b1;
+
+      if (self.current2 - self.target).abs() <= f32::EPSILON {
+        self.current1 = self.target;
+        self.current2 = self.target;
+        self.is_active = false;
+      }
+    }
+    self.current2
+  }
+}
+
 pub struct LogarithmicSmooth {
   current: f32,
   target: f32,
