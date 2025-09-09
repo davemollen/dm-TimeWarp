@@ -52,20 +52,25 @@ impl ADSR {
         }
       }
       ADSRStage::Decay => {
-        let decay_step_size = decay_time.mstosamps(self.sample_rate).recip() * (1. - sustain);
-        let next_x = self.x - decay_step_size;
-        if next_x <= sustain {
-          self.x = sustain;
+        if sustain == 1. {
           note.set_adsr_stage(ADSRStage::Sustain);
         } else {
-          self.x = next_x;
+          let decay_step_size = decay_time.mstosamps(self.sample_rate).recip() * (1. - sustain);
+          let next_x = self.x - decay_step_size;
+          if next_x <= sustain {
+            self.x = sustain;
+            note.set_adsr_stage(ADSRStage::Sustain);
+          } else {
+            self.x = next_x;
+          }
         }
       }
       ADSRStage::Sustain => {
         self.x = sustain;
       }
       ADSRStage::Release => {
-        let release_step_size = release_time.mstosamps(self.sample_rate).recip() * sustain;
+        let release_step_size = release_time.mstosamps(self.sample_rate).recip()
+          * if sustain == 0. { 1. } else { sustain };
         let next_x = self.x - release_step_size;
         if next_x <= 0. {
           self.x = 0.;
