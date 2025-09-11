@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - { name: ubuntu, os: ubuntu-latest, cross-target: "" }
+          - { name: ubuntu, os: ubuntu-22.04, cross-target: "" }
           - { name: macos, os: macos-latest, cross-target: x86_64-apple-darwin }
           - { name: windows, os: windows-latest, cross-target: "" }
     runs-on: ${{ matrix.os }}
