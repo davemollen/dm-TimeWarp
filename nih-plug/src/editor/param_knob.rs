@@ -77,6 +77,9 @@ impl ParamKnob {
           Textbox::new(cx, display_value_lens)
             .placeholder("..")
             .on_mouse_down(|cx, _| {
+              if cx.is_disabled() {
+                return;
+              }
               cx.emit(TextEvent::StartEdit);
               cx.emit(TextEvent::Clear);
             })
