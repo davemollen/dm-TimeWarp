@@ -65,6 +65,7 @@ impl TimeWarp {
       speed,
       stretch,
       midi_enabled,
+      sync_position,
       reset_playback,
       start_offset_phase,
       ..
@@ -96,6 +97,7 @@ impl TimeWarp {
         scan,
         spray,
         midi_enabled,
+        sync_position,
         attack,
         decay,
         sustain,

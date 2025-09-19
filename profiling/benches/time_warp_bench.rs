@@ -26,6 +26,7 @@ fn time_warp_bench(c: &mut Criterion) {
     0.,
     0.,
     false,
+    true,
     10.,
     50.,
     -12.,

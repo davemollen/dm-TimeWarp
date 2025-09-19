@@ -40,7 +40,7 @@ pub struct Data {
 impl Model for Data {}
 
 pub(crate) fn default_state() -> Arc<ViziaState> {
-  ViziaState::new(|| (944, 352))
+  ViziaState::new(|| (948, 352))
 }
 
 pub(crate) fn create(
@@ -184,6 +184,9 @@ pub(crate) fn create(
                 .disabled(Data::params.map(|p| !p.midi_enabled.value()));
               VStack::new(cx, |cx| {
                 ParamSwitch::new(cx, Data::params, |params| &params.midi_enabled).size(Auto);
+                ParamSwitch::new(cx, Data::params, |params| &params.sync_position)
+                  .size(Auto)
+                  .disabled(Data::params.map(|p| !p.midi_enabled.value()));
                 ParamNumberInput::new(cx, Data::params, |params| &params.voices)
                   .size(Auto)
                   .disabled(Data::params.map(|p| !p.midi_enabled.value()));
@@ -191,7 +194,7 @@ pub(crate) fn create(
               .child_left(Stretch(1.0))
               .child_right(Stretch(1.0))
               .width(Auto)
-              .row_between(Pixels(12.0))
+              .row_between(Pixels(8.0))
               .left(Pixels(8.0));
             })
             .size(Auto)

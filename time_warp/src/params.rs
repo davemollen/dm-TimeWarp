@@ -34,6 +34,7 @@ pub struct Params {
   pub dry: LinearSmooth,
   pub wet: LinearSmooth,
   pub midi_enabled: bool,
+  pub sync_position: bool,
   is_initialized: bool,
   pub attack: LinearSmooth,
   pub decay: LinearSmooth,
@@ -74,6 +75,7 @@ impl Params {
       dry: LinearSmooth::new(sample_rate, 20.),
       wet: LinearSmooth::new(sample_rate, 20.),
       midi_enabled: false,
+      sync_position: true,
       is_initialized: false,
       attack: LinearSmooth::new(sample_rate, 20.),
       decay: LinearSmooth::new(sample_rate, 20.),
@@ -114,6 +116,7 @@ impl Params {
     dry: f32,
     wet: f32,
     midi_enabled: bool,
+    sync_position: bool,
     attack: f32,
     decay: f32,
     sustain: f32,
@@ -134,6 +137,7 @@ impl Params {
       };
     self.stretch = stretch;
     self.midi_enabled = midi_enabled;
+    self.sync_position = sync_position;
 
     let sample_mode_has_changed = self
       .prev_sample_mode

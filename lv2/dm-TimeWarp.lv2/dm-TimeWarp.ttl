@@ -216,6 +216,15 @@ A granular delay, looper & sampler with time stretch capabilities.
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 19 ;
+		lv2:symbol "sync_position" ;
+		lv2:name "Sync Position" ;
+		lv2:portProperty lv2:integer, lv2:toggled;
+		lv2:default 0 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+	] , [
+		a lv2:InputPort, lv2:ControlPort ;
+		lv2:index 20 ;
 		lv2:symbol "voices" ;
 		lv2:name "Voices" ;
 		lv2:portProperty lv2:integer;
@@ -224,7 +233,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:maximum 8 ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 20 ;
+		lv2:index 21 ;
 		lv2:symbol "attack" ;
 		lv2:name "Attack" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -234,7 +243,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 21 ;
+		lv2:index 22 ;
 		lv2:symbol "decay" ;
 		lv2:name "Decay" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -244,7 +253,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 22 ;
+		lv2:index 23 ;
 		lv2:symbol "sustain" ;
 		lv2:name "Sustain" ;
 		lv2:default 1.0 ;
@@ -252,7 +261,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:maximum 1.0 ;
 	], [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 23 ;
+		lv2:index 24 ;
 		lv2:symbol "release" ;
 		lv2:name "Release" ;
 		lv2:portProperty pprops:logarithmic ;
@@ -262,7 +271,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		units:unit units:ms
 	], [
 		a lv2:InputPort, lv2:ControlPort ;
-		lv2:index 24 ;
+		lv2:index 25 ;
 		lv2:symbol "erase" ;
 		lv2:name "Erase" ;
 		lv2:portProperty lv2:integer, lv2:toggled, pprops:trigger;
@@ -274,7 +283,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		atom:bufferType atom:Sequence ;
 		atom:supports midi:MidiEvent , patch:Message ;
 		lv2:designation lv2:control ;
-		lv2:index 25 ;
+		lv2:index 26 ;
 		lv2:symbol "control" ;
 		lv2:name "Control"
 	] , [
@@ -282,27 +291,27 @@ A granular delay, looper & sampler with time stretch capabilities.
 		atom:bufferType atom:Sequence ;
 		atom:supports patch:Message ;
 		lv2:designation lv2:control ;
-		lv2:index 26 ;
+		lv2:index 27 ;
 		lv2:symbol "notify" ;
 		lv2:name "Notify"
 	] , [
 		a lv2:AudioPort, lv2:InputPort ;
-		lv2:index 27 ;
+		lv2:index 28 ;
 		lv2:symbol "input_left" ;
 		lv2:name "In left"
 	] , [
 		a lv2:AudioPort, lv2:InputPort ;
-		lv2:index 28 ;
+		lv2:index 29 ;
 		lv2:symbol "input_right" ;
 		lv2:name "In right"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 29 ;
+		lv2:index 30 ;
 		lv2:symbol "output_left" ;
 		lv2:name "Out left"
 	] , [
 		a lv2:AudioPort, lv2:OutputPort ;
-		lv2:index 30 ;
+		lv2:index 31 ;
 		lv2:symbol "output_right" ;
 		lv2:name "Out right"
 	] .

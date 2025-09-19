@@ -61,6 +61,7 @@ impl DmTimeWarp {
       self.params.dry.value(),
       self.params.wet.value(),
       self.params.midi_enabled.value(),
+      self.params.sync_position.value(),
       self.params.attack.value(),
       self.params.decay.value(),
       self.params.sustain.value(),

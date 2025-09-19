@@ -94,6 +94,9 @@ pub struct TimeWarpParameters {
   #[id = "voices"]
   pub voices: IntParam,
 
+  #[id = "sync_position"]
+  pub sync_position: BoolParam,
+
   #[id = "attack"]
   pub attack: FloatParam,
 
@@ -246,6 +249,8 @@ impl Default for TimeWarpParameters {
         .with_string_to_value(s2v_f32_percentage()),
 
       midi_enabled: BoolParam::new("MIDI", false),
+
+      sync_position: BoolParam::new("Sync Pos.", false),
 
       voices: IntParam::new("Voices", 1, IntRange::Linear { min: 1, max: 8 }),
 

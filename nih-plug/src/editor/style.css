@@ -172,7 +172,7 @@ param-switch switch .switch-handle-bg {
   bottom: 1s;
   border-color: #797979;
   border-width: 2px;
-  background-color: #84848426;
+  background-color: #2f2f2f;
   border-radius: 50%;
   transition: background-color 100ms;
 }
@@ -195,12 +195,36 @@ param-switch switch:checked:hover .switch-handle {
   background-color: #2f2f2f;
 }
 
+param-switch:disabled switch .switch-handle-bg {
+  background-color: #2f2f2f;
+  border-color: #2f2f2f;
+}
+
+param-switch:disabled switch:checked .switch-handle-bg {
+  background-color: #1b9494;
+  border-color: #2f2f2f;
+}
+
+param-switch:disabled switch:checked .switch-handle {
+  background-color: #2f2f2f;
+}
+
+param-switch:disabled switch:hover .switch-handle {
+  background-color: #797979;
+}
+
+param-switch:disabled switch:checked:hover .switch-handle {
+  background-color: #2f2f2f;
+}
+
 /* NUMBER INPUT */
 param-number-input textbox {
   text-align: center;
   font-weight: 700;
   width: 36px;
   height: 24px;
+  child-left: 8px;
+  child-right: 8px;
   color: #0cf2f2;
   background-color: #797979;
   border-width: 0px;
@@ -222,7 +246,7 @@ param-number-input textbox:checked.caret {
 }
 
 param-number-input textbox:disabled {
-  background-color: #84848426;
+  background-color: #2f2f2f;
   color: #1b9494;
 }
 
@@ -451,29 +475,29 @@ param-button2 .line {
 }
 
 param-button2:disabled label {
-  background-color: #84848426;
+  background-color: #2f2f2f;
   color: #646464;
   transition: background-color 100ms;
 }
 
 param-button2:disabled .line {
-  background-color: #84848426;
+  background-color: #2f2f2f;
   color: #646464;
   transition: background-color 100ms;
 }
 
 param-button2:disabled label:hover {
-  background-color: #84848426;
+  background-color: #2f2f2f;
   color: #646464;
   transition: background-color 100ms;
 }
 param-button2:disabled label:checked {
-  background-color: #84848426;
+  background-color: #2f2f2f;
   color: #646464;
   transition: background-color 100ms;
 }
 param-button2:disabled label:checked:hover {
-  background-color: #84848426;
+  background-color: #2f2f2f;
   color: #646464;
   transition: background-color 100ms;
 }
