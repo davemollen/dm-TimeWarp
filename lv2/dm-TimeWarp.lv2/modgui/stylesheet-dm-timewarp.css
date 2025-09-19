@@ -22,7 +22,7 @@
 .mod-pedal{{{cns}}} .midi-settings {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    justify-content: space-between;
     margin: 8px 0px 0px -8px;
 }
 
@@ -256,7 +256,7 @@
     border-radius: 50%;
 }
 .mod-pedal{{{cns}}} .mod-switch .mod-param-title {
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 /* = NUMBER INPUT

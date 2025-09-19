@@ -51,14 +51,15 @@ function(event) {
           erase.removeClass("on");
         }
         break;
-      case "midi_enabled":
+      case "midi_enabled": {
         const midi = event.icon.find("[mod-port-symbol=midi_enabled]");
         const attack = event.icon.find("[mod-port-symbol=attack]").parent();
         const decay = event.icon.find("[mod-port-symbol=decay]").parent();
         const sustain = event.icon.find("[mod-port-symbol=sustain]").parent();
         const release = event.icon.find("[mod-port-symbol=release]").parent();
+        const sync_position = event.icon.find("[mod-port-symbol=sync_position]").parent();
         const voices = event.icon.find("[mod-port-symbol=voices]").parent();
-        const midi_controls = [attack, decay, sustain, release, voices];
+        const midi_controls = [attack, decay, sustain, release, sync_position, voices];
         if(value == 1) {
           midi.addClass("on");
         } else {
@@ -71,6 +72,15 @@ function(event) {
             midi_control.addClass("disabled");
           }
         })
+        break;
+      }
+      case "sync_position":
+        const sync_position = event.icon.find("[mod-port-symbol=sync_position]");
+        if(value == 1) {
+          sync_position.addClass("on");
+        } else {
+          sync_position.removeClass("on");
+        }
         break;
       default:
         break;
