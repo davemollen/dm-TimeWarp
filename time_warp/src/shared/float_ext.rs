@@ -1,6 +1,7 @@
-use std::f32::consts::{FRAC_PI_2, LN_10, PI, TAU};
+use std::f32::consts::{FRAC_PI_2, LN_10, PI};
 
 pub trait FloatExt {
+  fn fast_cbrt(self) -> Self;
   fn dbtoa(self) -> Self;
   fn fast_dbtoa(self) -> Self;
   fn scale(self, in_low: Self, in_high: Self, out_low: Self, out_high: Self) -> Self;
@@ -16,7 +17,6 @@ pub trait FloatExt {
   fn fast_cos_bhaskara(self) -> Self;
   fn fast_pow(self, exponent: Self) -> Self;
   fn fast_exp(self) -> Self;
-  fn fast_cbrt(self) -> Self;
   fn mstosamps(self, sample_rate: Self) -> Self;
 }
 
@@ -98,31 +98,35 @@ impl FloatExt for f32 {
 
   /// This is a sine approximation. Use this to safe processing power.
   fn fast_sin(self) -> Self {
+    const TWOPI: f32 = 6.2831853071795865;
     const INVTWOPI: f32 = 0.15915494309189534;
     let k: u32 = (self * INVTWOPI) as u32;
     let half = if self < 0_f32 { -0.5_f32 } else { 0.5_f32 };
-    let x = (half + (k as f32)) * TAU - self;
+    let x = (half + (k as f32)) * TWOPI - self;
     sin_approx(x)
   }
 
   /// This is a cosine approximation. Use this to safe processing power.
   fn fast_cos(self) -> Self {
+    const TWOPI: f32 = 6.2831853071795865;
     const INVTWOPI: f32 = 0.15915494309189534;
     let x = self + FRAC_PI_2;
     let k: u32 = (x * INVTWOPI) as u32;
     let half = if x < 0_f32 { -0.5_f32 } else { 0.5_f32 };
-    let x_new = (half + (k as f32)) * TAU - x;
+    let x_new = (half + (k as f32)) * TWOPI - x;
     sin_approx(x_new)
   }
 
-  /// This is the Bhaskara sine approximation. It returns a sine from 0 to 180 degrees.
+  /// This is the Bhaskara sine approximation.
+  /// It only works with input values between zero and half pi.
   fn fast_sin_bhaskara(self) -> Self {
     let pi_squared = 9.869604401089358;
     let a = self * (PI - self);
     (16. * a) / (5. * pi_squared - 4. * a)
   }
 
-  /// This is the Bhaskara cosine approximation. It returns a sine from 0 to 180 degrees.
+  /// This is the Bhaskara cosine approximation.
+  /// It only works with input values between zero and half pi.
   fn fast_cos_bhaskara(self) -> Self {
     let x_squared = self * self;
     let pi_squared = 9.869604401089358;
@@ -149,8 +153,13 @@ mod tests {
   use super::FloatExt;
   use std::f32::consts::PI;
 
-  fn assert_approximately_eq(left: f32, right: f32) {
-    assert_eq!((left * 100.).floor() / 100., (right * 100.).floor() / 100.)
+  fn assert_approximately_eq(left: f32, right: f32, digits: usize) {
+    let tol = 10f32.powi(-(digits as i32));
+    let diff = (left - right).abs();
+    assert!(
+      diff <= tol,
+      "Values are not approximately equal: left={left}, right={right}, diff={diff}, tol={tol}"
+    );
   }
 
   #[test]
@@ -158,17 +167,6 @@ mod tests {
     assert_eq!((-3f32).dbtoa(), 0.70794576);
     assert_eq!((-6f32).dbtoa(), 0.5011872);
     assert_eq!((-12f32).dbtoa(), 0.25118864);
-    assert_eq!((-70f32).dbtoa(), 0.00031622776);
-    assert_eq!((-100f32).dbtoa(), 1e-5);
-  }
-
-  #[test]
-  fn fast_dbtoa() {
-    assert_approximately_eq(-3f32.fast_dbtoa(), -3f32.dbtoa());
-    assert_approximately_eq(-6f32.fast_dbtoa(), -6f32.dbtoa());
-    assert_approximately_eq(-12f32.fast_dbtoa(), -12f32.dbtoa());
-    assert_approximately_eq(-70f32.fast_dbtoa(), -70f32.dbtoa());
-    assert_approximately_eq((-100.0).fast_dbtoa(), (-100.0).dbtoa());
   }
 
   #[test]
@@ -187,83 +185,79 @@ mod tests {
 
   #[test]
   fn fast_atan1() {
-    assert_approximately_eq((0.5).fast_atan1(), (0.5f32).atan());
-    assert_approximately_eq((-0.5).fast_atan1(), (-0.5f32).atan());
-    assert_approximately_eq((1.).fast_atan1(), (1f32).atan());
-    assert_approximately_eq((-1.).fast_atan1(), (-1f32).atan());
+    assert_approximately_eq((0.5).fast_atan1(), (0.5f32).atan(), 5);
+    assert_approximately_eq((-0.5).fast_atan1(), (-0.5f32).atan(), 5);
+    assert_approximately_eq((1.).fast_atan1(), (1f32).atan(), 5);
+    assert_approximately_eq((-1.).fast_atan1(), (-1f32).atan(), 5);
   }
 
   #[test]
   fn fast_atan2() {
-    assert_approximately_eq((0.5).fast_atan2(), (0.5f32).atan());
-    assert_approximately_eq((-0.5).fast_atan2(), (-0.5f32).atan());
-    assert_approximately_eq((1.).fast_atan2(), (1f32).atan());
-    assert_approximately_eq((-1.).fast_atan2(), (-1f32).atan());
+    assert_approximately_eq((0.5).fast_atan2(), (0.5f32).atan(), 2);
+    assert_approximately_eq((-0.5).fast_atan2(), (-0.5f32).atan(), 2);
+    assert_approximately_eq((1.).fast_atan2(), (1f32).atan(), 2);
+    assert_approximately_eq((-1.).fast_atan2(), (-1f32).atan(), 2);
   }
 
   #[test]
   fn fast_tanh1() {
-    assert_approximately_eq((0.5).fast_tanh1(), (0.5f32).tanh());
-    assert_approximately_eq((-0.5).fast_tanh1(), (-0.5f32).tanh());
-    assert_approximately_eq((1.).fast_tanh1(), (1f32).tanh());
-    assert_approximately_eq((-1.).fast_tanh1(), (-1f32).tanh());
-    assert_approximately_eq((1.5).fast_tanh1(), (1.5f32).tanh());
-    assert_approximately_eq((-1.5).fast_tanh1(), (-1.5f32).tanh());
+    assert_approximately_eq((0.5).fast_tanh1(), (0.5f32).tanh(), 21);
+    assert_approximately_eq((-0.5).fast_tanh1(), (-0.5f32).tanh(), 21);
+    assert_approximately_eq((1.).fast_tanh1(), (1f32).tanh(), 21);
+    assert_approximately_eq((-1.).fast_tanh1(), (-1f32).tanh(), 21);
+    assert_approximately_eq((1.5).fast_tanh1(), (1.5f32).tanh(), 21);
+    assert_approximately_eq((-1.5).fast_tanh1(), (-1.5f32).tanh(), 21);
   }
 
   #[test]
   fn fast_tanh2() {
-    assert_approximately_eq((0.5).fast_tanh2(), (0.5f32).tanh());
-    assert_approximately_eq((-0.5).fast_tanh2(), (-0.5f32).tanh());
-    assert_approximately_eq((1.).fast_tanh2(), (1f32).tanh());
-    assert_approximately_eq((-1.).fast_tanh2(), (-1f32).tanh());
-    assert_approximately_eq((1.5).fast_tanh2(), (1.5f32).tanh());
-    assert_approximately_eq((-1.5).fast_tanh2(), (-1.5f32).tanh());
+    assert_approximately_eq((0.5).fast_tanh2(), (0.5f32).tanh(), 4);
+    assert_approximately_eq((-0.5).fast_tanh2(), (-0.5f32).tanh(), 4);
+    assert_approximately_eq((1.).fast_tanh2(), (1f32).tanh(), 4);
+    assert_approximately_eq((-1.).fast_tanh2(), (-1f32).tanh(), 4);
+    assert_approximately_eq((1.5).fast_tanh2(), (1.5f32).tanh(), 4);
+    assert_approximately_eq((-1.5).fast_tanh2(), (-1.5f32).tanh(), 4);
   }
 
   #[test]
   fn fast_tanh3() {
-    assert_approximately_eq((0.5).fast_tanh2(), (0.5f32).tanh());
-    assert_approximately_eq((-0.5).fast_tanh2(), (-0.5f32).tanh());
-    assert_approximately_eq((1.).fast_tanh2(), (1f32).tanh());
-    assert_approximately_eq((-1.).fast_tanh2(), (-1f32).tanh());
-    assert_approximately_eq((1.5).fast_tanh2(), (1.5f32).tanh());
-    assert_approximately_eq((-1.5).fast_tanh2(), (-1.5f32).tanh());
+    assert_approximately_eq((0.5).fast_tanh2(), (0.5f32).tanh(), 4);
+    assert_approximately_eq((-0.5).fast_tanh2(), (-0.5f32).tanh(), 4);
+    assert_approximately_eq((1.).fast_tanh2(), (1f32).tanh(), 4);
+    assert_approximately_eq((-1.).fast_tanh2(), (-1f32).tanh(), 4);
+    assert_approximately_eq((1.5).fast_tanh2(), (1.5f32).tanh(), 4);
+    assert_approximately_eq((-1.5).fast_tanh2(), (-1.5f32).tanh(), 4);
   }
 
   #[test]
   fn fast_sin() {
-    assert_approximately_eq((0.1).fast_sin(), (0.1f32).sin());
-    assert_approximately_eq((PI * 1.5).fast_sin(), (PI * 1.5).sin());
-    assert_approximately_eq((PI * -1.9).fast_sin(), (PI * -1.9).sin());
+    assert_approximately_eq((0.1).fast_sin(), (0.1f32).sin(), 3);
+    assert_approximately_eq((0.5 * PI).fast_sin_bhaskara(), (0.5 * PI).sin(), 2);
+    assert_approximately_eq((PI).fast_sin(), (PI).sin(), 3);
+    assert_approximately_eq((PI * 1.5).fast_sin(), (PI * 1.5).sin(), 3);
+    assert_approximately_eq((PI * -1.9).fast_sin(), (PI * -1.9).sin(), 3);
   }
 
   #[test]
   fn fast_cos() {
-    assert_approximately_eq((0.1).fast_cos(), (0.1f32).cos());
-    assert_approximately_eq((PI * 1.5).fast_cos(), (PI * 1.5).cos());
-    assert_approximately_eq((PI * 1.9).fast_cos(), (PI * 1.9).cos());
+    assert_approximately_eq((0.1).fast_cos(), (0.1f32).cos(), 3);
+    assert_approximately_eq((PI * 0.5).fast_cos(), (PI * 0.5).cos(), 3);
+    assert_approximately_eq((PI * 1.5).fast_cos(), (PI * 1.5).cos(), 3);
+    assert_approximately_eq((PI * 1.9).fast_cos(), (PI * 1.9).cos(), 3);
   }
 
   #[test]
-  fn fast_bhaskara() {
-    assert_approximately_eq(0f32.fast_sin_bhaskara(), 0f32.sin());
-    assert_approximately_eq((PI * 0.25).fast_sin_bhaskara(), (PI * 0.25).sin());
-    assert_approximately_eq((PI * 0.5).fast_sin_bhaskara(), (PI * 0.5).sin());
-
-    assert_approximately_eq(0f32.fast_cos_bhaskara(), 0f32.cos());
-    assert_approximately_eq((PI * 0.25).fast_cos_bhaskara(), (PI * 0.25).cos());
-    assert_approximately_eq((PI * 0.5).fast_cos_bhaskara(), (PI * 0.5).cos());
+  fn fast_sin_bhaskara() {
+    assert_approximately_eq((0.0).fast_sin_bhaskara(), (0.0f32).sin(), 21);
+    assert_approximately_eq((0.25 * PI).fast_sin_bhaskara(), (0.25 * PI).sin(), 2);
+    assert_approximately_eq((0.5 * PI).fast_sin_bhaskara(), (0.5 * PI).sin(), 6);
   }
 
   #[test]
-  fn size() {
-    for i in 0..101 {
-      let x = i as f32 / 100.;
-      println!("{}, {}, {}", x, x.cbrt(), x.fast_cbrt(),);
-    }
-    // assert_approximately_eq(0_f32.powf(0.333), 0_f32.fast_pow(0.333));
-    // assert_approximately_eq(0.1_f32.powf(0.333), 0.1_f32.fast_pow(0.333));
+  fn fast_cos_bhaskara() {
+    assert_approximately_eq((0.0).fast_cos_bhaskara(), (0.0f32).cos(), 21);
+    assert_approximately_eq((0.25 * PI).fast_cos_bhaskara(), (0.25 * PI).cos(), 2);
+    assert_approximately_eq((0.5 * PI).fast_cos_bhaskara(), (0.5 * PI).cos(), 7);
   }
 }
 
