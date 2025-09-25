@@ -19,11 +19,10 @@ impl Mix {
   pub fn process(&mut self, dry: f32, wet: f32, mix: f32) -> f32 {
     if mix != self.mix {
       let factor = mix * FRAC_PI_2;
+      let wet_gain = factor.fast_sin_bhaskara();
+      self.wet_gain = wet_gain * wet_gain;
+      self.dry_gain = 1. - self.wet_gain;
       self.mix = mix;
-      self.dry_gain = factor.fast_cos_bhaskara();
-      self.dry_gain *= self.dry_gain;
-      self.wet_gain = factor.fast_sin_bhaskara();
-      self.wet_gain *= self.wet_gain;
     }
     dry * self.dry_gain + wet * self.wet_gain
   }
