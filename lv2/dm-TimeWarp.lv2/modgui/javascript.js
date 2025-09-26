@@ -82,6 +82,31 @@ function(event) {
           sync_position.removeClass("on");
         }
         break;
+      case "attack":
+      case "decay":
+      case "release": {
+        const element = event.icon.find('[mod-port-symbol=' + symbol + ']').parent();
+        if(value >= 10000) {
+          element.find('[mod-role="input-control-value"]').text((value / 1000).toFixed(1) + " s");
+        } else if(value >= 1000) {
+          element.find('[mod-role="input-control-value"]').text((value / 1000).toFixed(2) + " s");
+        } else if(value >= 100) {
+          element.find('[mod-role="input-control-value"]').text((value).toFixed(0) + " ms");
+        } else if(value >= 10) {
+          element.find('[mod-role="input-control-value"]').text((value).toFixed(1) + " ms");
+        } else {
+          element.find('[mod-role="input-control-value"]').text((value).toFixed(2) + " ms");
+        }
+        break;
+      }
+      case "dry":
+      case "wet": {
+        const element = event.icon.find('[mod-port-symbol=' + symbol + ']').parent();
+        if(value == -70) {
+          element.find('[mod-role="input-control-value"]').text("-inf dB");
+        }
+        break;
+      }
       default:
         break;
     }

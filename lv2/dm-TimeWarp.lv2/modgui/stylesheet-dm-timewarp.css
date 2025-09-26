@@ -13,7 +13,7 @@
 .mod-pedal{{{cns}}} .midi-controls {
     display: flex;
     flex-direction: row;
-    padding: 16px;
+    padding: 20px 16px 16px;
     border-bottom-left-radius: 8px;
     border-left: 2px solid #797979;
     border-bottom: 2px solid #797979;
@@ -23,7 +23,6 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    margin: 8px 0px 0px -8px;
 }
 
 .mod-pedal{{{cns}}} .grain-controls {
@@ -38,7 +37,6 @@
 
 .mod-pedal{{{cns}}} .buffer-controls {
     justify-content: end;
-    align-items: center;
     padding: 16px;
     border-top: 2px solid #797979;
     border-right: 2px solid #797979;
@@ -52,7 +50,7 @@
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    height: 136px;
+    height: 100%;
     border-top: 2px solid #797979;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
@@ -69,7 +67,11 @@
     flex-direction: column;
 }
 
-.mod-pedal{{{cns}}} .gap {
+.mod-pedal{{{cns}}} .gap-4 {
+    gap: 4px;
+}
+
+.mod-pedal{{{cns}}} .gap-12 {
     gap: 12px;
 }
 
@@ -87,6 +89,7 @@
 .mod-pedal{{{cns}}} .mix-controls {
     gap: 8px;
     margin-right: -8px;
+    padding: 20px 8px 16px;
 }
 
 .mod-pedal{{{cns}}} .logo {
@@ -105,9 +108,9 @@
 }
 
 .mod-pedal{{{cns}}} .unicode-symbol {
-    font-size: 22px;
+    font-size: 19px;
     vertical-align: text-top;
-    line-height: 15px;
+    line-height: 12px;
 }
 
 .mod-pedal{{{cns}}} .disabled {
@@ -125,7 +128,7 @@
     display: flex;
     flex-direction: column;
     width: 1114px;
-    height: 442px;
+    height: 454px;
     border-radius: 8px;
 }
 
@@ -149,12 +152,20 @@
     justify-content: center;
     color: #ECECEC;
     font-weight: 600;
-    margin-top: 1px;
+    margin-top: 0px;
+    margin-bottom: 4px;
     font-size: 11.5px;
+    line-height: 13px;
+    text-transform: uppercase;
+    text-align: center;
 }
 
 /* = KNOBS
 ================================================ */
+.mod-pedal{{{cns}}} .mod-knob {
+    position: relative;
+}
+
 .mod-pedal{{{cns}}} .mod-knob .mod-knob-image {
     background-image:url(/resources/assets/knob.png{{{ns}}});
     background-repeat:no-repeat;
@@ -164,18 +175,41 @@
     margin:0 auto;
 }
 
+.mod-pedal{{{cns}}} .mod-knob .mod-knob-value {
+    margin: 0 auto;
+    font-size: 10px;
+    line-height: 10px;
+    font-weight: 500;
+    color: #ECECEC;
+    pointer-events: none;
+    width: 64px;
+    text-align: center;
+    margin-top: 1px;
+}
+
 /* = SLIDER
 ================================================ */
 .mod-pedal{{{cns}}} .mod-slider {
-    width: 40px;
+    width: 48px;
 }
 .mod-pedal{{{cns}}} .mod-slider .mod-slider-image {
     background-image:url(/resources/assets/slider.png{{{ns}}});
     background-repeat:no-repeat;
-    background-size:auto 160px;
-    height:160px;
+    background-size:auto 145px;
+    height:145px;
     width:29px;
-    margin:0 auto;
+    margin-left:12px;
+}
+.mod-pedal{{{cns}}} .mod-slider .mod-slider-value {
+    margin: 0 auto;
+    font-size: 10px;
+    line-height: 10px;
+    font-weight: 500;
+    color: #ECECEC;
+    pointer-events: none;
+    width: 48px;
+    text-align: center;
+    margin-top: 4px;
 }
 
 /* = FOOTSWITCH
@@ -209,7 +243,7 @@
     background-position-y: top !important;
 }
 .mod-pedal{{{cns}}} .footswitches .mod-param-title {
-    margin-top: 8px;
+    margin-bottom: 6px;
 }
 .mod-pedal{{{cns}}} .mod-footswitch.bypass.on > .mod-light {
     background-position-y: bottom !important;
@@ -255,9 +289,6 @@
     background-color: #797979;
     border-radius: 50%;
 }
-.mod-pedal{{{cns}}} .mod-switch .mod-param-title {
-    margin-top: 2px;
-}
 
 /* = NUMBER INPUT
 ================================================ */
@@ -270,12 +301,14 @@
     margin:0 auto;
 }
 
-.mod-pedal{{{cns}}} .mod-number-input > .mod-param-title {
-    margin-top: 4px;
-}
-
 /* = ENUMERATED LIST
 ================================================ */
+.mod-pedal{{{cns}}} .mod-enumerated-group-container {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+}
+
 .mod-pedal{{{cns}}} .mod-enumerated-group {
     width:128px;
     height:28px;
@@ -341,10 +374,6 @@
     cursor:pointer;
 }
 
-.mod-pedal{{{cns}}} .mod-enumerated-group .mod-param-title {
-    margin-top: 14px;
-}
-
 /* = TABS
 ================================================ */
 .mod-pedal{{{cns}}} .mod-tabs-container {
@@ -386,10 +415,6 @@
 .mod-pedal{{{cns}}} .mod-tabs > .mod-tab.selected {
     color: #211F24;
     background-color: #0CC0C0;
-}
-
-.mod-pedal{{{cns}}} .mod-tabs-container > .mod-param-title {
-    margin-top: 4px;
 }
 
 /* = BACKGROUND IMAGES - Background of the pedal

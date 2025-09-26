@@ -4,92 +4,137 @@
     <div class="column">
       <div class="grain-controls">
         <div class="mod-knob">
+          <div class="mod-param-title">SCAN</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="scan"
           ></div>
-          <div class="mod-param-title">SCAN</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="scan"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">SPRAY</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="spray"
           ></div>
-          <div class="mod-param-title">SPRAY</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="spray"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">SIZE</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="size"
           ></div>
-          <div class="mod-param-title">SIZE</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="size"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">DENSITY</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="density"
           ></div>
-          <div class="mod-param-title">DENSITY</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="density"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">STEREO</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="stereo"
           ></div>
-          <div class="mod-param-title">STEREO</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="stereo"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">PITCH</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="pitch"
           ></div>
-          <div class="mod-param-title">PITCH</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="pitch"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">STRETCH</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="stretch"
           ></div>
-          <div class="mod-param-title">STRETCH</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="stretch"
+          ></div>
         </div>
       </div>
       <div class="buffer-controls">
-        <div class="mod-control-group mod-enumerated-group disabled">
-          {{#effect.parameters}} {{#path}}
-          <div
-            class="mod-enumerated"
-            mod-role="input-parameter"
-            mod-parameter-uri="{{uri}}"
-            mod-widget="custom-select-path"
-          >
-            <div
-              id="sample-parameter"
-              mod-role="input-parameter-value"
-              mod-parameter-uri="{{uri}}"
-              class="mod-enumerated-selected"
-            ></div>
-            <div class="mod-enumerated-list">
-              {{#files}}
-              <div
-                mod-role="enumeration-option"
-                mod-parameter-value="{{fullname}}"
-              >
-                {{basename}}
-              </div>
-              {{/files}}
-            </div>
-          </div>
-          {{/path}} {{/effect.parameters}}
+        <div class="mod-enumerated-group-container">
           <div class="mod-param-title">SAMPLE</div>
+          <div class="mod-enumerated-group disabled">
+            {{#effect.parameters}} {{#path}}
+            <div
+              class="mod-enumerated"
+              mod-role="input-parameter"
+              mod-parameter-uri="{{uri}}"
+              mod-widget="custom-select-path"
+            >
+              <div
+                id="sample-parameter"
+                mod-role="input-parameter-value"
+                mod-parameter-uri="{{uri}}"
+                class="mod-enumerated-selected"
+              ></div>
+              <div class="mod-enumerated-list">
+                {{#files}}
+                <div
+                  mod-role="enumeration-option"
+                  mod-parameter-value="{{fullname}}"
+                >
+                  {{basename}}
+                </div>
+                {{/files}}
+              </div>
+            </div>
+            {{/path}} {{/effect.parameters}}
+          </div>
         </div>
         <div class="mod-tabs-container">
+          <div class="mod-param-title">SAMPLE MODE</div>
           <div
             class="mod-tabs"
             mod-role="input-control-port"
@@ -118,97 +163,157 @@
               SAMPLER
             </div>
           </div>
-          <div class="mod-param-title">SAMPLE MODE</div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">TIME</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="time"
           ></div>
-          <div class="mod-param-title">TIME</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="time"
+          ></div>
         </div>
         <div class="mod-knob hide">
+          <div class="mod-param-title">LENGTH</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="length"
           ></div>
-          <div class="mod-param-title">LENGTH</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="length"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">HIGHPASS</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="highpass"
           ></div>
-          <div class="mod-param-title">HIGHPASS</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="highpass"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">LOWPASS</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="lowpass"
           ></div>
-          <div class="mod-param-title">LOWPASS</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="lowpass"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">FEEDBACK</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="feedback"
           ></div>
-          <div class="mod-param-title">FEEDBACK</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="feedback"
+          ></div>
         </div>
         <div class="mod-knob">
+          <div class="mod-param-title">RECYCLE</div>
           <div
             class="mod-knob-image"
             mod-role="input-control-port"
             mod-port-symbol="recycle"
           ></div>
-          <div class="mod-param-title">RECYCLE</div>
+          <div
+            class="mod-knob-value"
+            mod-role="input-control-value"
+            contenteditable="false"
+            mod-port-symbol="recycle"
+          ></div>
         </div>
       </div>
     </div>
     <div class="column">
       <div class="row">
         <div class="midi-controls">
-          <div class="row gap">
+          <div class="row gap-4">
             <div class="mod-slider">
+              <div class="mod-param-title">ATTACK</div>
               <div
                 class="mod-slider-image"
                 mod-role="input-control-port"
                 mod-port-symbol="attack"
               ></div>
-              <div class="mod-param-title">ATTACK</div>
+              <div
+                class="mod-slider-value"
+                mod-role="input-control-value"
+                contenteditable="false"
+                mod-port-symbol="attack"
+              ></div>
             </div>
             <div class="mod-slider">
+              <div class="mod-param-title">DECAY</div>
               <div
                 class="mod-slider-image"
                 mod-role="input-control-port"
                 mod-port-symbol="decay"
               ></div>
-              <div class="mod-param-title">DECAY</div>
+              <div
+                class="mod-slider-value"
+                mod-role="input-control-value"
+                contenteditable="false"
+                mod-port-symbol="decay"
+              ></div>
             </div>
             <div class="mod-slider">
+              <div class="mod-param-title">SUSTAIN</div>
               <div
                 class="mod-slider-image"
                 mod-role="input-control-port"
                 mod-port-symbol="sustain"
               ></div>
-              <div class="mod-param-title">SUSTAIN</div>
+              <div
+                class="mod-slider-value"
+                mod-role="input-control-value"
+                contenteditable="false"
+                mod-port-symbol="sustain"
+              ></div>
             </div>
             <div class="mod-slider">
+              <div class="mod-param-title">RELEASE</div>
               <div
                 class="mod-slider-image"
                 mod-role="input-control-port"
                 mod-port-symbol="release"
               ></div>
-              <div class="mod-param-title">RELEASE</div>
+              <div
+                class="mod-slider-value"
+                mod-role="input-control-value"
+                contenteditable="false"
+                mod-port-symbol="release"
+              ></div>
             </div>
           </div>
           <div class="midi-settings">
             <div class="mod-switch">
+              <div class="mod-param-title">MIDI</div>
               <div
                 class="mod-switch-image"
                 mod-role="input-control-port"
@@ -216,9 +321,9 @@
               >
                 <div class="circle"></div>
               </div>
-              <div class="mod-param-title">MIDI</div>
             </div>
             <div class="mod-switch">
+              <div class="mod-param-title">SYNC POS.</div>
               <div
                 class="mod-switch-image"
                 mod-role="input-control-port"
@@ -226,34 +331,45 @@
               >
                 <div class="circle"></div>
               </div>
-              <div class="mod-param-title">SYNC POS.</div>
             </div>
             <div class="mod-number-input">
+              <div class="mod-param-title">VOICES</div>
               <div
                 class="mod-number-input-image"
                 mod-role="input-control-port"
                 mod-port-symbol="voices"
               ></div>
-              <div class="mod-param-title">VOICES</div>
             </div>
           </div>
         </div>
-        <div class="mix-controls row gap">
+        <div class="mix-controls row gap-12">
           <div class="mod-slider">
+            <div class="mod-param-title">DRY</div>
             <div
               class="mod-slider-image"
               mod-role="input-control-port"
               mod-port-symbol="dry"
             ></div>
-            <div class="mod-param-title">DRY</div>
+            <div
+              class="mod-slider-value"
+              mod-role="input-control-value"
+              contenteditable="false"
+              mod-port-symbol="dry"
+            ></div>
           </div>
           <div class="mod-slider">
+            <div class="mod-param-title">WET</div>
             <div
               class="mod-slider-image"
               mod-role="input-control-port"
               mod-port-symbol="wet"
             ></div>
-            <div class="mod-param-title">WET</div>
+            <div
+              class="mod-slider-value"
+              mod-role="input-control-value"
+              contenteditable="false"
+              mod-port-symbol="wet"
+            ></div>
           </div>
         </div>
       </div>
@@ -262,14 +378,17 @@
   </div>
   <div class="footswitches">
     <div>
-      <div class="mod-footswitch bypass" mod-role="bypass">
-        <div class="mod-light" mod-role="bypass-light"></div>
-      </div>
       <div class="mod-param-title">
         <span class="unicode-symbol">&#x23FB;</span>
       </div>
+      <div class="mod-footswitch bypass" mod-role="bypass">
+        <div class="mod-light" mod-role="bypass-light"></div>
+      </div>
     </div>
     <div>
+      <div class="mod-param-title">
+        <span class="unicode-symbol">&#x23FA;</span>&nbsp;&nbsp;/&nbsp;&nbsp;DUB
+      </div>
       <div
         class="mod-footswitch on"
         mod-role="input-control-port"
@@ -277,11 +396,12 @@
       >
         <div class="mod-light"></div>
       </div>
-      <div class="mod-param-title">
-        <span class="unicode-symbol">&#x23FA;</span>&nbsp;&nbsp;/&nbsp;&nbsp;DUB
-      </div>
     </div>
     <div>
+      <div class="mod-param-title">
+        <span class="unicode-symbol">&#x23F5;</span>&nbsp;&nbsp;/&nbsp;&nbsp;
+        <span class="unicode-symbol">&#x23F9;</span>
+      </div>
       <div
         class="mod-footswitch on"
         mod-role="input-control-port"
@@ -289,18 +409,14 @@
       >
         <div class="mod-light"></div>
       </div>
-      <div class="mod-param-title">
-        <span class="unicode-symbol">&#x23F5;</span>&nbsp;&nbsp;/&nbsp;&nbsp;
-        <span class="unicode-symbol">&#x23F9;</span>
-      </div>
     </div>
     <div>
+      <div class="mod-param-title">ERASE</div>
       <div
         class="mod-footswitch"
         mod-role="input-control-port"
         mod-port-symbol="erase"
       ></div>
-      <div class="mod-param-title">ERASE</div>
     </div>
   </div>
 
