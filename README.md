@@ -15,7 +15,7 @@ The effect can be compiled to a [MOD audio](https://mod.audio/), VST3, CLAP, AUv
 
 ## VST3, CLAP, AUv2 & LV2 installation
 
-You can download the VST3, CLAP, AUv2 (macOS only) & LV2 plugins from the [releases page](https://github.com/davemollen/dm-TimeWarp/releases).
+You can download the VST3, CLAP, AUv2 & LV2 plugins from the [releases page](https://github.com/davemollen/dm-TimeWarp/releases).
 
 The LV2 plugin doesn't have a GUI unless you run the plugin in MOD Desktop.
 
