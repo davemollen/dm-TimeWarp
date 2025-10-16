@@ -107,12 +107,6 @@
     z-index: 20;
 }
 
-.mod-pedal{{{cns}}} .unicode-symbol {
-    font-size: 19px;
-    vertical-align: text-top;
-    line-height: 12px;
-}
-
 .mod-pedal{{{cns}}} .disabled {
     opacity: 0.5;
 }
@@ -158,6 +152,26 @@
     line-height: 13px;
     text-transform: uppercase;
     text-align: center;
+}
+
+.mod-pedal{{{cns}}} .mod-param-title > svg {
+    width: 15px;
+    height: 15px;
+    align-self: center;
+}
+
+.mod-pedal{{{cns}}} svg.standby {
+    width: 16px;
+    height: 16px;
+}
+
+.mod-pedal{{{cns}}} svg.record, svg.play {
+    padding: 1px;
+}
+
+.mod-pedal{{{cns}}} svg.stop {
+    padding: 1.5px;
+    margin-left: 2px;
 }
 
 /* = KNOBS
