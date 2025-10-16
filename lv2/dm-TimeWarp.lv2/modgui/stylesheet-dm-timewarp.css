@@ -3,6 +3,12 @@
 @import url(/fonts/nexa/stylesheet.css);
 @import url(/fonts/questrial/stylesheet.css);
 
+.mod-pedal{{{cns}}} .stretch-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 .mod-pedal{{{cns}}} .mix-controls {
     padding: 16px;
     border-top-right-radius: 8px;
@@ -144,6 +150,7 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
     color: #ECECEC;
     font-weight: 600;
     margin-top: 0px;
@@ -157,7 +164,6 @@
 .mod-pedal{{{cns}}} .mod-param-title > svg {
     width: 15px;
     height: 15px;
-    align-self: center;
 }
 
 .mod-pedal{{{cns}}} svg.standby {
@@ -412,7 +418,7 @@
     line-height: 21px;
     text-align: center;
     color: #ECECEC;
-    cursor: default;
+    cursor: pointer;
 }
 
 .mod-pedal{{{cns}}} .mod-tabs > .mod-tab:nth-child(1) {
@@ -429,6 +435,49 @@
 .mod-pedal{{{cns}}} .mod-tabs > .mod-tab.selected {
     color: #211F24;
     background-color: #0CC0C0;
+}
+
+/* = BUTTON
+================================================ */
+.mod-pedal{{{cns}}} .button {
+    position: relative;
+    z-index: 20;
+    width: auto;
+    height: 18px;
+    font-size: 9.5px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin-right: 10px;
+    color: #ececec;
+    background-color: #797979;
+    box-shadow: 0px 3px 3px #00000026;
+    background-image:url(/resources/assets/light.png{{{ns}}});
+    background-size: 0 0;
+    cursor: pointer;
+}
+
+.mod-pedal{{{cns}}} .button:hover {
+    background-color: #8e8e8e;
+}
+
+.mod-pedal{{{cns}}} .button.on {
+    color: #211f24;
+    background-color: #00dbdb;
+}
+
+.mod-pedal{{{cns}}} .button::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 2px;
+    background-color: #797979;
+    top: 6px;
+    right: -10px;
+    display: flex;
+    align-self: center;
 }
 
 /* = BACKGROUND IMAGES - Background of the pedal

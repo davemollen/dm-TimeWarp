@@ -154,7 +154,7 @@ impl Default for TimeWarpParameters {
 
       freeze: BoolParam::new("Freeze", false),
 
-      stretch: FloatParam::new("Stretch", 0., FloatRange::Linear { min: -2., max: 2. })
+      stretch: FloatParam::new("Stretch", 1., FloatRange::Linear { min: -2., max: 2. })
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),

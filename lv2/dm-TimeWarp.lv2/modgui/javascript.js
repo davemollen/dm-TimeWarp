@@ -13,6 +13,17 @@ function(event) {
 
   function handle_port_values(symbol, value) {
     switch (symbol) {
+      case "freeze":
+        const freeze = event.icon.find("[mod-port-symbol=freeze]");
+        const stretch = event.icon.find("[mod-port-symbol=stretch]");
+        if(value == 1) {
+          freeze.addClass("on");
+          stretch.addClass("disabled");
+        } else {
+          freeze.removeClass("on");
+          stretch.removeClass("disabled");
+        }
+        break;
       case "record":
         const record = event.icon.find("[mod-port-symbol=record]");
         if(value == 1) {

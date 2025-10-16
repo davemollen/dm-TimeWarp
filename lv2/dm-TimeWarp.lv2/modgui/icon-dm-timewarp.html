@@ -31,6 +31,29 @@
             mod-port-symbol="spray"
           ></div>
         </div>
+        <div class="stretch-container">
+          <div
+            class="button"
+            mod-role="input-control-port"
+            mod-port-symbol="freeze"
+          >
+            FREEZE
+          </div>
+          <div class="mod-knob">
+            <div class="mod-param-title">STRETCH</div>
+            <div
+              class="mod-knob-image"
+              mod-role="input-control-port"
+              mod-port-symbol="stretch"
+            ></div>
+            <div
+              class="mod-knob-value"
+              mod-role="input-control-value"
+              contenteditable="false"
+              mod-port-symbol="stretch"
+            ></div>
+          </div>
+        </div>
         <div class="mod-knob">
           <div class="mod-param-title">SIZE</div>
           <div
@@ -85,20 +108,6 @@
             mod-role="input-control-value"
             contenteditable="false"
             mod-port-symbol="pitch"
-          ></div>
-        </div>
-        <div class="mod-knob">
-          <div class="mod-param-title">STRETCH</div>
-          <div
-            class="mod-knob-image"
-            mod-role="input-control-port"
-            mod-port-symbol="stretch"
-          ></div>
-          <div
-            class="mod-knob-value"
-            mod-role="input-control-value"
-            contenteditable="false"
-            mod-port-symbol="stretch"
           ></div>
         </div>
       </div>
@@ -398,16 +407,6 @@
     </div>
     <div>
       <div class="mod-param-title">
-        <span class="unicode-symbol">&#x23FA;</span>&nbsp;&nbsp;/&nbsp;&nbsp;DUB
-      </div>
-      <div
-        class="mod-footswitch on"
-        mod-role="input-control-port"
-        mod-port-symbol="record"
-      >
-        <div class="mod-light"></div>
-      </div>
-      <div class="mod-param-title">
         <svg
           width="19"
           height="19"
@@ -422,19 +421,15 @@
         </svg>
         &nbsp;&nbsp;/&nbsp;&nbsp;DUB
       </div>
-    </div>
-    <div>
-      <div class="mod-param-title">
-        <span class="unicode-symbol">&#x23F5;</span>&nbsp;&nbsp;/&nbsp;&nbsp;
-        <span class="unicode-symbol">&#x23F9;</span>
-      </div>
       <div
         class="mod-footswitch on"
         mod-role="input-control-port"
-        mod-port-symbol="play"
+        mod-port-symbol="record"
       >
         <div class="mod-light"></div>
       </div>
+    </div>
+    <div>
       <div class="mod-param-title">
         <svg
           width="19"
@@ -457,6 +452,13 @@
         >
           <path d="M0.25 18V0.545454H17.7045V18H0.25Z" />
         </svg>
+      </div>
+      <div
+        class="mod-footswitch on"
+        mod-role="input-control-port"
+        mod-port-symbol="play"
+      >
+        <div class="mod-light"></div>
       </div>
     </div>
     <div>
