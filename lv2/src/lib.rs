@@ -10,11 +10,12 @@ use worker::*;
 struct Ports {
   scan: InputPort<InPlaceControl>,
   spray: InputPort<InPlaceControl>,
+  freeze: InputPort<InPlaceControl>,
+  stretch: InputPort<InPlaceControl>,
   size: InputPort<InPlaceControl>,
   density: InputPort<InPlaceControl>,
   stereo: InputPort<InPlaceControl>,
   pitch: InputPort<InPlaceControl>,
-  stretch: InputPort<InPlaceControl>,
   record: InputPort<InPlaceControl>,
   play: InputPort<InPlaceControl>,
   sample_mode: InputPort<InPlaceControl>,
@@ -89,11 +90,12 @@ impl DmTimeWarp {
     self.params.set(
       ports.scan.get(),
       ports.spray.get(),
+      ports.freeze.get() == 1.,
+      ports.stretch.get(),
       ports.size.get(),
       ports.density.get(),
       ports.stereo.get(),
       ports.pitch.get(),
-      ports.stretch.get(),
       ports.record.get() == 1.,
       ports.play.get() == 1.,
       match ports.sample_mode.get() {

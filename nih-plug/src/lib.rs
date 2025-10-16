@@ -42,11 +42,12 @@ impl DmTimeWarp {
     self.process_params.set(
       self.params.scan.value(),
       self.params.spray.value(),
+      self.params.freeze.value(),
+      self.params.stretch.value(),
       self.params.size.value(),
       self.params.density.value(),
       self.params.stereo.value(),
       self.params.pitch.value(),
-      self.params.stretch.value(),
       self.params.record.value(),
       self.params.play.value(),
       match self.params.sample_mode.value() {

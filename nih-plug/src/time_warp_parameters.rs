@@ -40,6 +40,12 @@ pub struct TimeWarpParameters {
   #[id = "spray"]
   pub spray: FloatParam,
 
+  #[id = "freeze"]
+  pub freeze: BoolParam,
+
+  #[id = "stretch"]
+  pub stretch: FloatParam,
+
   #[id = "size"]
   pub size: FloatParam,
 
@@ -51,9 +57,6 @@ pub struct TimeWarpParameters {
 
   #[id = "pitch"]
   pub pitch: FloatParam,
-
-  #[id = "stretch"]
-  pub stretch: FloatParam,
 
   #[id = "record"]
   pub record: BoolParam,
@@ -149,6 +152,13 @@ impl Default for TimeWarpParameters {
       .with_value_to_string(v2s_f32_ms_then_s())
       .with_string_to_value(s2v_f32_ms_then_s()),
 
+      freeze: BoolParam::new("Freeze", false),
+
+      stretch: FloatParam::new("Stretch", 0., FloatRange::Linear { min: -2., max: 2. })
+        .with_unit(" %")
+        .with_value_to_string(v2s_f32_percentage(2))
+        .with_string_to_value(s2v_f32_percentage()),
+
       size: FloatParam::new("Size", 1., FloatRange::Linear { min: 0., max: 1. })
         .with_value_to_string(v2s_size(max_size.clone()))
         .with_string_to_value(s2v_size(max_size.clone())),
@@ -179,11 +189,6 @@ impl Default for TimeWarpParameters {
       )
       .with_unit(" st")
       .with_value_to_string(v2s_f32_rounded(2)),
-
-      stretch: FloatParam::new("Stretch", 0., FloatRange::Linear { min: -2., max: 2. })
-        .with_unit(" %")
-        .with_value_to_string(v2s_f32_percentage(2))
-        .with_string_to_value(s2v_f32_percentage()),
 
       record: BoolParam::new("Record / Dub", false),
 

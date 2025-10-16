@@ -11,10 +11,11 @@ fn time_warp_bench(c: &mut Criterion) {
   params.set(
     0.,
     0.1,
+    false,
+    1.,
     0.75,
     6.25,
     0.,
-    1.,
     1.,
     true,
     true,

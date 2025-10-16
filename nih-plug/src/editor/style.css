@@ -98,6 +98,16 @@ param-knob knob .knob-tick {
   background-color: #797979;
 }
 
+param-knob:disabled knob .knob-track {
+  color: #1b9494;
+}
+
+param-knob:disabled knob .knob-head {
+  color: transparent;
+  background-color: transparent;
+  border-color: transparent;
+}
+
 /* SLIDER */
 param-slider2 textbox {
   width: 42px;
@@ -430,14 +440,7 @@ param-tabs label.tab:nth-child(3) {
 }
 
 /* BUTTON */
-param-button2 {
-  position-type: self-directed;
-  top: 63px;
-  left: -32px;
-}
-
 param-button2 label {
-  width: 32px;
   height: 16px;
   color: #ececec;
   background-color: #797979;

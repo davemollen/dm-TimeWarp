@@ -101,11 +101,12 @@ impl Params {
     &mut self,
     scan: f32,
     spray: f32,
+    freeze: bool,
+    stretch: f32,
     size: f32,
     density: f32,
     stereo: f32,
     pitch: f32,
-    stretch: f32,
     record: bool,
     play: bool,
     sample_mode: SampleMode,
@@ -135,7 +136,7 @@ impl Params {
       } else {
         1.
       };
-    self.stretch = stretch;
+    self.stretch = if freeze { 0. } else { stretch };
     self.midi_enabled = midi_enabled;
     self.sync_position = sync_position;
 

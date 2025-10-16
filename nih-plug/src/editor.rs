@@ -83,11 +83,21 @@ pub(crate) fn create(
           HStack::new(cx, |cx| {
             ParamKnob::new(cx, Data::params, |params| &params.scan).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.spray).size(Auto);
+            HStack::new(cx, |cx| {
+              ParamButton::new(cx, Data::params, |params| &params.freeze)
+                .size(Auto)
+                .top(Stretch(1.0))
+                .bottom(Stretch(1.0))
+                .right(Pixels(-4.0));
+              ParamKnob::new(cx, Data::params, |params| &params.stretch)
+                .disabled(Data::params.map(|p| p.freeze.value()))
+                .size(Auto);
+            })
+            .size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.size).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.density).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.stereo).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.pitch).size(Auto);
-            ParamKnob::new(cx, Data::params, |params| &params.stretch).size(Auto);
           })
           .width(Stretch(1.0))
           .height(Auto)
@@ -116,13 +126,16 @@ pub(crate) fn create(
             })
             .size(Auto)
             .top(Stretch(1.0))
-            .bottom(Stretch(1.0))
-            .left(Pixels(16.0))
-            .right(Pixels(48.0));
+            .left(Pixels(12.0))
+            .right(Pixels(12.0))
+            .bottom(Stretch(1.0));
 
-            VStack::new(cx, |cx| {
+            HStack::new(cx, |cx| {
               ParamButton::new(cx, Data::params, |params| &params.sync)
                 .size(Auto)
+                .top(Stretch(1.0))
+                .bottom(Stretch(1.0))
+                .right(Pixels(-4.0))
                 .class("show")
                 .disabled(Data::params.map(|p| p.sample_mode.value() != SampleMode::Delay));
               ParamKnob::new(cx, Data::params, |params| &params.time)
@@ -149,7 +162,8 @@ pub(crate) fn create(
                   Data::params.map(|p| p.sample_mode.value() == SampleMode::Delay),
                 );
             })
-            .size(Auto);
+            .size(Auto)
+            .left(Pixels(4.0));
             ParamKnob::new(cx, Data::params, |params| &params.highpass).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.lowpass).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.recycle).size(Auto);

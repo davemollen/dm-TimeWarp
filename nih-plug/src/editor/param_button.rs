@@ -36,7 +36,9 @@ impl ParamButton {
             .on_press(|cx| cx.emit(ParamButtonEvent::Toggle))
             .font_size(9.0)
             .font_weight(FontWeightKeyword::Bold)
-            .child_space(Stretch(1.0));
+            .child_space(Stretch(1.0))
+            .child_left(Pixels(4.0))
+            .child_right(Pixels(4.0));
           Element::new(cx).class("line");
         })
         .size(Auto);
