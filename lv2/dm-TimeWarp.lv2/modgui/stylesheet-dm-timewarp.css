@@ -468,16 +468,19 @@
     background-color: #00dbdb;
 }
 
+.mod-pedal{{{cns}}} .button.on:hover {
+    background-color: #16f1f1;
+}
+
 .mod-pedal{{{cns}}} .button::after {
     content: "";
     position: absolute;
     width: 10px;
     height: 2px;
     background-color: #797979;
-    top: 6px;
-    right: -10px;
-    display: flex;
-    align-self: center;
+    top: 50%;
+    left: 100%;
+    transform: translate(0%, -50%);
 }
 
 /* = BACKGROUND IMAGES - Background of the pedal
