@@ -47,7 +47,7 @@ impl DmTimeWarp {
       self.params.size.value(),
       self.params.density.value(),
       self.params.stereo.value(),
-      self.params.pitch.value(),
+      self.params.pitch.value() as f32,
       self.params.record.value(),
       self.params.play.value(),
       match self.params.sample_mode.value() {

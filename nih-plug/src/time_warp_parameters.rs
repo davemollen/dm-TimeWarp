@@ -56,7 +56,7 @@ pub struct TimeWarpParameters {
   pub stereo: FloatParam,
 
   #[id = "pitch"]
-  pub pitch: FloatParam,
+  pub pitch: IntParam,
 
   #[id = "record"]
   pub record: BoolParam,
@@ -179,16 +179,7 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      pitch: FloatParam::new(
-        "Pitch",
-        0.,
-        FloatRange::Linear {
-          min: -24.,
-          max: 24.,
-        },
-      )
-      .with_unit(" st")
-      .with_value_to_string(v2s_f32_rounded(2)),
+      pitch: IntParam::new("Pitch", 0, IntRange::Linear { min: -24, max: 24 }).with_unit(" st"),
 
       record: BoolParam::new("Record / Dub", false),
 
