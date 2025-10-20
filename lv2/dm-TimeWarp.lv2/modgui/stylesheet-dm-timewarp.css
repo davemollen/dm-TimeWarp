@@ -127,7 +127,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 1114px;
+    width: 1136px;
     height: 454px;
     border-radius: 8px;
 }
@@ -205,6 +205,34 @@
     width: 64px;
     text-align: center;
     margin-top: 1px;
+}
+
+.mod-pedal{{{cns}}} .mod-knob.small {
+    margin-top: 0px;
+    margin-right: 10px;
+    align-self: center;
+}
+
+.mod-pedal{{{cns}}} .mod-knob.small .mod-knob-image {
+    position: relative;
+    background-size:auto 40px;
+    height:40px;
+    width:40px;
+}
+
+.mod-pedal{{{cns}}} .mod-knob.small .mod-knob-value {
+    width: 40px;
+}
+
+.mod-pedal{{{cns}}} .mod-knob.small .mod-knob-image::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 2px;
+    background-color: #797979;
+    top: 50%;
+    right: 0px;
+    transform: translate(100%, -50%);
 }
 
 /* = SLIDER

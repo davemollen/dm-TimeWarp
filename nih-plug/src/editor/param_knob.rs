@@ -10,8 +10,10 @@ enum ParamKnobEvent {
   TextInput(String),
 }
 
+#[derive(Lens)]
 pub struct ParamKnob {
   param_base: ParamWidgetBase,
+  knob_size: f32,
 }
 
 impl ParamKnob {
@@ -28,6 +30,7 @@ impl ParamKnob {
   {
     Self {
       param_base: ParamWidgetBase::new(cx, params, params_to_param),
+      knob_size: 48.,
     }
     .build(
       cx,
@@ -45,34 +48,37 @@ impl ParamKnob {
             .font_weight(FontWeightKeyword::SemiBold)
             .child_space(Stretch(1.0));
 
-          Knob::custom(
-            cx,
-            default_normalized_value,
-            unmodulated_normalized_value_lens,
-            |cx, lens| {
-              ZStack::new(cx, |cx| {
-                ArcTrack::new(
-                  cx,
-                  lens,
-                  false,
-                  Percentage(100.0),
-                  Percentage(15.0),
-                  -150.,
-                  150.,
-                  KnobMode::Continuous,
-                )
-                .class("knob-track");
+          Binding::new(cx, ParamKnob::knob_size, move |cx, size| {
+            let size = size.get(cx);
+            Knob::custom(
+              cx,
+              default_normalized_value,
+              unmodulated_normalized_value_lens,
+              |cx, lens| {
+                ZStack::new(cx, |cx| {
+                  ArcTrack::new(
+                    cx,
+                    lens,
+                    false,
+                    Percentage(100.0),
+                    Percentage(15.0),
+                    -150.,
+                    150.,
+                    KnobMode::Continuous,
+                  )
+                  .class("knob-track");
 
-                HStack::new(cx, |cx| {
-                  Element::new(cx).class("knob-tick");
+                  HStack::new(cx, |cx| {
+                    Element::new(cx).class("knob-tick");
+                  })
+                  .rotate(lens.map(|v| Angle::Deg(*v * 300.0 - 150.0)))
+                  .class("knob-head");
                 })
-                .rotate(lens.map(|v| Angle::Deg(*v * 300.0 - 150.0)))
-                .class("knob-head");
-              })
-            },
-          )
-          .size(Pixels(48.0))
-          .on_changing(|cx, val| cx.emit(ParamKnobEvent::SetValue(val)));
+              },
+            )
+            .size(Pixels(size))
+            .on_changing(|cx, val| cx.emit(ParamKnobEvent::SetValue(val)));
+          });
 
           Textbox::new(cx, display_value_lens)
             .placeholder("..")
@@ -124,5 +130,17 @@ impl View for ParamKnob {
         meta.consume();
       }
     });
+  }
+}
+
+pub trait ParamKnobHandle {
+  fn knob_size(self, size: f32) -> Self;
+}
+
+impl<'a> ParamKnobHandle for Handle<'a, ParamKnob> {
+  fn knob_size(self, size: f32) -> Self {
+    self.modify(|knob| {
+      knob.knob_size = size;
+    })
   }
 }

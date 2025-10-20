@@ -9,6 +9,7 @@ mod param_switch;
 mod param_tabs;
 use {
   crate::{
+    editor::param_knob::ParamKnobHandle,
     time_warp_parameters::{SampleMode, TimeWarpParameters},
     DmTimeWarp,
   },
@@ -97,7 +98,24 @@ pub(crate) fn create(
             ParamKnob::new(cx, Data::params, |params| &params.size).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.density).size(Auto);
             ParamKnob::new(cx, Data::params, |params| &params.stereo).size(Auto);
-            ParamKnob::new(cx, Data::params, |params| &params.pitch).size(Auto);
+            HStack::new(cx, |cx| {
+              HStack::new(cx, |cx| {
+                ParamKnob::new(cx, Data::params, |params| &params.detune)
+                  .knob_size(36.)
+                  .size(Auto);
+                Element::new(cx)
+                  .class("detune-knob-line")
+                  .left(Pixels(-10.0));
+              })
+              .top(Stretch(1.0))
+              .bottom(Stretch(1.0))
+              .left(Pixels(-4.0))
+              .size(Auto);
+              ParamKnob::new(cx, Data::params, |params| &params.pitch)
+                .size(Auto)
+                .left(Pixels(-8.0));
+            })
+            .size(Auto);
           })
           .width(Stretch(1.0))
           .height(Auto)

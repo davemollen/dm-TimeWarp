@@ -106,6 +106,7 @@ impl Params {
     size: f32,
     density: f32,
     stereo: f32,
+    detune: f32,
     pitch: f32,
     record: bool,
     play: bool,
@@ -130,7 +131,7 @@ impl Params {
     self.size = size;
     self.density = density;
     self.stereo = stereo;
-    self.speed = 2_f32.powf(pitch / 12.)
+    self.speed = 2_f32.powf((pitch + detune * 0.01) / 12.)
       * if midi_enabled {
         self.pitch_bend_factor
       } else {

@@ -21,6 +21,14 @@
   display: none;
 }
 
+.detune-knob-line {
+  width: 10px;
+  height: 2px;
+  top: 1s;
+  bottom: 1s;
+  background-color: #797979;
+}
+
 /* LABEL */
 label {
   color: #ececec;

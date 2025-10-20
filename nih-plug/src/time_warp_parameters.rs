@@ -55,6 +55,9 @@ pub struct TimeWarpParameters {
   #[id = "stereo"]
   pub stereo: FloatParam,
 
+  #[id = "detune"]
+  pub detune: IntParam,
+
   #[id = "pitch"]
   pub pitch: IntParam,
 
@@ -178,6 +181,16 @@ impl Default for TimeWarpParameters {
         .with_unit(" %")
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
+
+      detune: IntParam::new(
+        "Detune",
+        0,
+        IntRange::Linear {
+          min: -100,
+          max: 100,
+        },
+      )
+      .with_unit(" ct"),
 
       pitch: IntParam::new("Pitch", 0, IntRange::Linear { min: -24, max: 24 }).with_unit(" st"),
 
