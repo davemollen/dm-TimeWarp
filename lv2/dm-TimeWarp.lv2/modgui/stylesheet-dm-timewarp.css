@@ -162,22 +162,8 @@
 }
 
 .mod-pedal{{{cns}}} .mod-param-title > svg {
-    width: 15px;
-    height: 15px;
-}
-
-.mod-pedal{{{cns}}} svg.standby {
     width: 16px;
     height: 16px;
-}
-
-.mod-pedal{{{cns}}} svg.record, svg.play {
-    padding: 1px;
-}
-
-.mod-pedal{{{cns}}} svg.stop {
-    padding: 1.5px;
-    margin-left: 2px;
 }
 
 /* = KNOBS

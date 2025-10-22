@@ -9,10 +9,7 @@ mod param_switch;
 mod param_tabs;
 use {
   crate::{
-    editor::{
-      assets::{PLAY_ICON, RECORD_ICON, STOP_ICON},
-      param_knob::ParamKnobHandle,
-    },
+    editor::param_knob::ParamKnobHandle,
     time_warp_parameters::{SampleMode, TimeWarpParameters},
     DmTimeWarp,
   },
@@ -27,7 +24,14 @@ use {
   param_switch::ParamSwitch,
   param_tabs::ParamTabs,
   std::sync::Arc,
-  vizia_plug::{create_vizia_editor, vizia::prelude::*, ViziaState, ViziaTheming},
+  vizia_plug::{
+    create_vizia_editor,
+    vizia::{
+      icons::{ICON_PLAYER_PLAY_FILLED, ICON_PLAYER_RECORD_FILLED, ICON_PLAYER_STOP_FILLED},
+      prelude::*,
+    },
+    ViziaState, ViziaTheming,
+  },
 };
 
 const STYLE: &str = include_str!("editor/style.css");
@@ -260,8 +264,10 @@ pub(crate) fn create(
           cx,
           |cx| {
             HStack::new(cx, |cx| {
-              Svg::new(cx, RECORD_ICON).fill("#ececec").size(Pixels(9.0));
-              Label::new(cx, "  /  Dub")
+              Svg::new(cx, ICON_PLAYER_RECORD_FILLED)
+                .fill("#ececec")
+                .size(Pixels(12.5));
+              Label::new(cx, " / Dub")
                 .font_size(11.0)
                 .font_weight(FontWeightKeyword::SemiBold);
             })
@@ -276,11 +282,15 @@ pub(crate) fn create(
           cx,
           |cx| {
             HStack::new(cx, |cx| {
-              Svg::new(cx, PLAY_ICON).fill("#ececec").size(Pixels(9.0));
+              Svg::new(cx, ICON_PLAYER_PLAY_FILLED)
+                .fill("#ececec")
+                .size(Pixels(12.5));
               Label::new(cx, "  /  ")
                 .font_size(11.0)
                 .font_weight(FontWeightKeyword::SemiBold);
-              Svg::new(cx, STOP_ICON).fill("#ececec").size(Pixels(8.5));
+              Svg::new(cx, ICON_PLAYER_STOP_FILLED)
+                .fill("#ececec")
+                .size(Pixels(12.5));
             })
             .alignment(Alignment::Center)
             .size(Auto);
