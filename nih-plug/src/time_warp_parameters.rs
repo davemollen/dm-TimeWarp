@@ -15,9 +15,9 @@ use {
     params::{BoolParam, EnumParam, IntParam},
     prelude::{AtomicF32, Enum, FloatParam, FloatRange, IntRange, Params},
   },
+  nih_plug_vizia::ViziaState,
   std::sync::{Arc, Mutex},
   time_warp::{MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY},
-  vizia_plug::ViziaState,
 };
 
 const MAX_PARAM_DELAY_TIME: f32 = 10000.;
@@ -316,7 +316,7 @@ impl Default for TimeWarpParameters {
         if value == -70. {
           "-inf".to_string()
         } else {
-          format!("{:.1}", value)
+          format!("{:.2}", value)
         }
       })),
 
@@ -334,7 +334,7 @@ impl Default for TimeWarpParameters {
         if value == -70. {
           "-inf".to_string()
         } else {
-          format!("{:.1}", value)
+          format!("{:.2}", value)
         }
       })),
 

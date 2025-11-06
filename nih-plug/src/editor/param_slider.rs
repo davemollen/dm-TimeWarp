@@ -1,6 +1,6 @@
 use nih_plug::params::Param;
-use vizia_plug::vizia::prelude::*;
-use vizia_plug::widgets::param_base::ParamWidgetBase;
+use nih_plug_vizia::vizia::prelude::*;
+use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
 
 enum ParamSliderEvent {
   SetValue(f32),
@@ -38,11 +38,13 @@ impl ParamSlider {
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name())
             .font_size(11.0)
-            .font_weight(FontWeightKeyword::SemiBold);
+            .font_weight(FontWeightKeyword::SemiBold)
+            .child_space(Stretch(1.0));
           Slider::new(cx, unmodulated_normalized_value_lens)
-            .on_change(|cx, val| cx.emit(ParamSliderEvent::SetValue(val)))
-            .orientation(Orientation::Vertical);
+            .on_changing(|cx, val| cx.emit(ParamSliderEvent::SetValue(val)))
+            .class("vertical");
           Textbox::new(cx, display_value_lens)
+            .placeholder("..")
             .on_mouse_down(|cx, _| {
               if cx.is_disabled() {
                 return;
@@ -57,12 +59,11 @@ impl ParamSlider {
               };
             })
             .font_size(10.0)
-            .alignment(Alignment::Center)
             .text_align(TextAlign::Center);
         })
         .size(Auto)
-        .alignment(Alignment::Center)
-        .vertical_gap(Pixels(3.0));
+        .child_space(Stretch(1.0))
+        .row_between(Pixels(3.0));
       }),
     )
   }

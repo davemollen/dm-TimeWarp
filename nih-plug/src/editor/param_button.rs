@@ -1,5 +1,5 @@
 use nih_plug::params::Param;
-use vizia_plug::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamButtonEvent {
   Toggle,
@@ -36,13 +36,12 @@ impl ParamButton {
             .on_press(|cx| cx.emit(ParamButtonEvent::Toggle))
             .font_size(9.0)
             .font_weight(FontWeightKeyword::Bold)
-            .alignment(Alignment::Center)
-            .padding_left(Pixels(4.0))
-            .padding_right(Pixels(4.0));
+            .child_space(Stretch(1.0))
+            .child_left(Pixels(4.0))
+            .child_right(Pixels(4.0));
           Element::new(cx).class("line");
         })
-        .size(Auto)
-        .alignment(Alignment::Center);
+        .size(Auto);
       }),
     )
   }

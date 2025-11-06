@@ -1,5 +1,5 @@
 use nih_plug::params::Param;
-use vizia_plug::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamTabEvent {
   TextInput(String),
@@ -31,7 +31,8 @@ impl ParamTabs {
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name())
             .font_size(11.0)
-            .font_weight(FontWeightKeyword::SemiBold);
+            .font_weight(FontWeightKeyword::SemiBold)
+            .child_space(Stretch(1.0));
           VStack::new(cx, |cx| {
             for option in options {
               let checked = param_data.make_lens(|param| param.to_string() == option.to_string());
@@ -42,18 +43,17 @@ impl ParamTabs {
                 .checked(checked)
                 .font_size(9.0)
                 .font_weight(FontWeightKeyword::Bold)
-                .text_align(TextAlign::Center)
-                .alignment(Alignment::Center)
-                .size(Stretch(1.0))
-                .class("tab-item");
+                .child_space(Stretch(1.0))
+                .class("tab");
             }
           })
-          .class("tabs")
-          .alignment(Alignment::Center);
+          .child_left(Stretch(1.0))
+          .child_right(Stretch(1.0))
+          .class("tabs");
         })
         .size(Auto)
-        .alignment(Alignment::Center)
-        .vertical_gap(Pixels(3.0));
+        .child_space(Stretch(1.0))
+        .row_between(Pixels(3.0));
       }),
     )
   }

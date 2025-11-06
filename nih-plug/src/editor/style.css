@@ -8,7 +8,9 @@
   background-image: url("logo.png");
   background-size: contain;
   width: 1s;
-  height: 46px;
+  height: 48px;
+  top: 16px;
+  overflow: hidden;
 }
 
 .show {
@@ -46,7 +48,7 @@ textbox {
   background-color: transparent;
   border-width: 0px;
   overflow: hidden;
-  padding: 1s;
+  child-space: 1s;
 }
 
 textbox:hover {
@@ -71,14 +73,14 @@ textbox:disabled {
 /* KNOB */
 param-knob knob {
   size: 64px;
-  corner-radius: 50%;
+  border-radius: 50%;
   overflow: hidden;
 }
 
 param-knob knob .knob-track {
   width: 1s;
   height: 1s;
-  corner-radius: 50%;
+  border-radius: 50%;
   color: #0cc0c0;
   background-color: #797979;
 }
@@ -86,7 +88,7 @@ param-knob knob .knob-track {
 param-knob knob .knob-head {
   width: 1s;
   height: 1s;
-  corner-radius: 50%;
+  border-radius: 50%;
   top: -5px;
   left: -5px;
   right: -5px;
@@ -114,10 +116,6 @@ param-knob:disabled knob .knob-head {
   border-color: transparent;
 }
 
-param-knob:disabled knob .knob-tick {
-  background-color: #797979;
-}
-
 /* SLIDER */
 param-slider2 textbox {
   width: 42px;
@@ -126,7 +124,7 @@ param-slider2 textbox {
 param-slider2 slider {
   height: 16px;
   width: 1s;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #797979;
 }
 
@@ -138,21 +136,21 @@ param-slider2 slider.vertical {
 param-slider2 slider .thumb {
   width: 16px;
   height: 16px;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #0cc0c0;
-  shadow: 0px 3px 3px #00000026;
+  box-shadow: 0px 3px 3px #00000026;
 }
 
 param-slider2 slider:focus-visible {
   outline-width: 1px;
   outline-color: #51afef80;
   outline-offset: 3px;
-  corner-radius: 4px;
+  border-radius: 4px;
 }
 
 param-slider2 slider .active {
   background-color: #0cc0c0;
-  corner-radius: 50%;
+  border-radius: 50%;
 }
 
 param-slider2 slider:disabled {
@@ -193,7 +191,7 @@ param-switch switch .switch-handle-bg {
   border-color: #797979;
   border-width: 2px;
   background-color: #2f2f2f;
-  corner-radius: 50%;
+  border-radius: 50%;
   transition: background-color 100ms;
 }
 
@@ -243,10 +241,12 @@ param-number-input textbox {
   font-weight: 700;
   width: 36px;
   height: 24px;
+  child-left: 8px;
+  child-right: 8px;
   color: #0cf2f2;
   background-color: #797979;
   border-width: 0px;
-  corner-radius: 6px;
+  border-radius: 6px;
 }
 
 param-number-input textbox:hover {
@@ -271,18 +271,19 @@ param-number-input textbox:disabled {
 /* FOOTSWITCH */
 param-footswitch .footswitch {
   size: 48px;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #797979;
 }
 
 param-footswitch .footswitch-light {
   size: 12px;
-  corner-radius: 50%;
+  border-radius: 50%;
   top: 1s;
   bottom: 1s;
   left: -18px;
   background-color: #ae1111;
-  position-type: absolute;
+  box-shadow: inset 0px 4px 4px #00000040;
+  position-type: self-directed;
   transition: 100ms background-color;
 }
 
@@ -294,21 +295,21 @@ param-footswitch .footswitch-light.active {
 param-footswitch .footswitch-beam {
   width: 1s;
   height: 1s;
-  corner-radius: 50%;
-  position-type: absolute;
+  border-radius: 50%;
+  position-type: self-directed;
   opacity: 0;
-  transition: opacity 100ms;
+  transition: opacity 200ms;
 }
 
 param-footswitch .footswitch-beam.active {
   opacity: 1;
-  transition: opacity 100ms;
+  transition: opacity 200ms;
 }
 
 param-footswitch .footswitch-bg {
   width: 1s;
   height: 1s;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #4f4f4f;
   border-color: #2f2f2f;
   border-width: 1px;
@@ -321,9 +322,9 @@ param-footswitch .footswitch-fg {
   left: 8px;
   right: 8px;
   bottom: 8px;
-  corner-radius: 50%;
+  border-radius: 50%;
   background-color: #797979;
-  shadow: 2px 2px 3px #0000004d;
+  box-shadow: 2px 2px 3px #0000004d;
   transition: top 100ms;
   transition: left 100ms;
   transition: right 100ms;
@@ -341,8 +342,8 @@ param-footswitch .footswitch-shadow {
   left: 8px;
   right: 8px;
   bottom: 8px;
-  corner-radius: 50%;
-  shadow: -2px 2px 3px #0000004d;
+  border-radius: 50%;
+  box-shadow: -2px 2px 3px #0000004d;
   transition: top 100ms;
   transition: left 100ms;
   transition: right 100ms;
@@ -372,12 +373,16 @@ param-footswitch .footswitch-shadow.active {
 }
 
 /* FILEDROP */
+param-filedrop label.file-path {
+  overflow: hidden;
+}
+
 param-filedrop button.filedrop {
   width: 104px;
   height: 30px;
   border-color: #797979;
   border-width: 2px;
-  corner-radius: 8px;
+  border-radius: 8px;
   background-color: transparent;
   transition: background-color 100ms;
 }
@@ -388,6 +393,7 @@ param-filedrop button.filedrop:hover {
 }
 
 param-filedrop button.filedrop .icon {
+  position-type: self-directed;
   fill: #ececec;
 }
 
@@ -396,50 +402,49 @@ param-filedrop:disabled button.filedrop:hover {
   transition: background-color 100ms;
 }
 
-param-filedrop:disabled button.filedrop .icon {
-  fill: #646464;
-}
-
 /* TABS */
 param-tabs .tabs {
-  width: 80px;
+  width: 72px;
   height: 64px;
 }
 
-param-tabs label.tab-item {
+param-tabs label.tab {
+  width: 80px;
+  height: 1s;
   color: #ececec;
   border-color: #797979;
   border-width: 2px;
+  child-space: 1s;
   background-color: transparent;
   transition: color 100ms;
   transition: background-color 100ms;
 }
 
-param-tabs label.tab-item:checked {
+param-tabs label.tab:checked {
   color: #211f24;
   background-color: #00dbdb;
   transition: color 100ms;
   transition: background-color 100ms;
 }
 
-param-tabs label.tab-item:hover {
+param-tabs label.tab:hover {
   background-color: #2f2f2f;
   transition: background-color 100ms;
 }
 
-param-tabs label.tab-item:checked:hover {
+param-tabs label.tab:checked:hover {
   background-color: #00dbdb;
   transition: background-color 100ms;
 }
 
-param-tabs label.tab-item:nth-child(1) {
-  corner-top-left-radius: 8px;
-  corner-top-right-radius: 8px;
+param-tabs label.tab:nth-child(1) {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
-param-tabs label.tab-item:nth-child(3) {
-  corner-bottom-left-radius: 8px;
-  corner-bottom-right-radius: 8px;
+param-tabs label.tab:nth-child(3) {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 /* BUTTON */
@@ -447,10 +452,10 @@ param-button2 label {
   height: 16px;
   color: #ececec;
   background-color: #797979;
-  corner-radius: 4px;
+  border-radius: 4px;
   transition: color 100ms;
   transition: background-color 100ms;
-  shadow: 0px 3px 3px #00000026;
+  box-shadow: 0px 3px 3px #00000026;
 }
 
 param-button2 label:hover {

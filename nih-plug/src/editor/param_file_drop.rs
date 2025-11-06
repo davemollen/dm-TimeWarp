@@ -1,8 +1,8 @@
 use crate::{worker::WorkerRequest, DmTimeWarp};
 use nih_plug::prelude::AsyncExecutor;
+use nih_plug_vizia::vizia::{icons::ICON_CHEVRON_DOWN, prelude::*};
 use rfd::FileDialog;
 use std::path::PathBuf;
-use vizia_plug::vizia::{icons::ICON_CHEVRON_DOWN, prelude::*};
 
 enum ParamFileDropEvent {
   PickFileFromDialog,
@@ -27,36 +27,37 @@ impl ParamFileDrop {
       VStack::new(cx, |cx| {
         Label::new(cx, &label_text)
           .font_size(11.0)
-          .font_weight(FontWeightKeyword::SemiBold);
+          .font_weight(FontWeightKeyword::SemiBold)
+          .child_space(Stretch(1.0));
 
-        Button::new(cx, |cx| {
-          HStack::new(cx, move |cx| {
+        Button::new(
+          cx,
+          |cx| cx.emit(ParamFileDropEvent::PickFileFromDialog),
+          |cx| {
             Label::new(cx, lens)
               .font_size(9.0)
               .font_weight(FontWeightKeyword::Bold)
-              .width(Stretch(2.0))
               .text_wrap(false)
-              .text_overflow(TextOverflow::Ellipsis)
-              .hoverable(false);
-            Svg::new(cx, ICON_CHEVRON_DOWN)
+              .hoverable(false)
+              .width(Pixels(72.0))
+              .left(Pixels(4.0))
+              .class("file-path");
+            Label::new(cx, ICON_CHEVRON_DOWN)
               .class("icon")
-              .size(Pixels(16.0))
-              .hoverable(false);
-          })
-          .width(Stretch(1.0))
-          .gap(Pixels(1.0))
-        })
-        .on_press(|cx| cx.emit(ParamFileDropEvent::PickFileFromDialog))
+              .right(Pixels(0.0))
+              .hoverable(false)
+          },
+        )
+        .class("filedrop")
         .on_drop(|cx, data| {
           if let DropData::File(path_buf) = data {
             cx.emit(ParamFileDropEvent::SetFilePath(path_buf));
           }
-        })
-        .class("filedrop");
+        });
       })
       .size(Auto)
-      .alignment(Alignment::Center)
-      .vertical_gap(Pixels(3.0));
+      .child_space(Stretch(1.0))
+      .row_between(Pixels(3.0));
     })
   }
 }

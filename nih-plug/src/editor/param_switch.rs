@@ -1,5 +1,5 @@
 use nih_plug::params::Param;
-use vizia_plug::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
+use nih_plug_vizia::{vizia::prelude::*, widgets::param_base::ParamWidgetBase};
 
 enum ParamSwitchEvent {
   Toggle,
@@ -33,14 +33,15 @@ impl ParamSwitch {
           Label::new(cx, label_text)
             .describing(label_text)
             .font_size(11.0)
-            .font_weight(FontWeightKeyword::SemiBold);
+            .font_weight(FontWeightKeyword::SemiBold)
+            .child_space(Stretch(1.0));
           Switch::new(cx, value)
             .on_toggle(|cx| cx.emit(ParamSwitchEvent::Toggle))
             .id(label_text);
         })
         .size(Auto)
-        .alignment(Alignment::Center)
-        .vertical_gap(Pixels(3.0));
+        .row_between(Pixels(3.0))
+        .child_space(Stretch(1.0));
       }),
     )
   }

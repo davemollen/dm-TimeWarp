@@ -2,8 +2,8 @@
 mod arc_track;
 use arc_track::ArcTrack;
 use nih_plug::params::Param;
-use vizia_plug::vizia::prelude::*;
-use vizia_plug::widgets::param_base::ParamWidgetBase;
+use nih_plug_vizia::vizia::prelude::*;
+use nih_plug_vizia::widgets::param_base::ParamWidgetBase;
 
 enum ParamKnobEvent {
   SetValue(f32),
@@ -45,65 +45,63 @@ impl ParamKnob {
         VStack::new(cx, |cx| {
           Label::new(cx, param_data.param().name())
             .font_size(11.0)
-            .font_weight(FontWeightKeyword::SemiBold);
+            .font_weight(FontWeightKeyword::SemiBold)
+            .child_space(Stretch(1.0));
 
           Binding::new(cx, ParamKnob::knob_size, move |cx, size| {
             let size = size.get(cx);
-            VStack::new(cx, |cx| {
-              Knob::custom(
-                cx,
-                default_normalized_value,
-                unmodulated_normalized_value_lens,
-                |cx, lens| {
-                  ZStack::new(cx, |cx| {
-                    ArcTrack::new(
-                      cx,
-                      lens,
-                      false,
-                      Percentage(100.0),
-                      Percentage(15.0),
-                      -240.,
-                      60.,
-                      KnobMode::Continuous,
-                    )
-                    .class("knob-track");
+            Knob::custom(
+              cx,
+              default_normalized_value,
+              unmodulated_normalized_value_lens,
+              |cx, lens| {
+                ZStack::new(cx, |cx| {
+                  ArcTrack::new(
+                    cx,
+                    lens,
+                    false,
+                    Percentage(100.0),
+                    Percentage(15.0),
+                    -150.,
+                    150.,
+                    KnobMode::Continuous,
+                  )
+                  .class("knob-track");
 
-                    HStack::new(cx, |cx| {
-                      Element::new(cx).class("knob-tick");
-                    })
-                    .rotate(lens.map(|v| Angle::Deg(*v * 300.0 - 150.0)))
-                    .class("knob-head");
+                  HStack::new(cx, |cx| {
+                    Element::new(cx).class("knob-tick");
                   })
-                },
-              )
-              .size(Pixels(size))
-              .on_change(|cx, val| cx.emit(ParamKnobEvent::SetValue(val)));
+                  .rotate(lens.map(|v| Angle::Deg(*v * 300.0 - 150.0)))
+                  .class("knob-head");
+                })
+              },
+            )
+            .size(Pixels(size))
+            .on_changing(|cx, val| cx.emit(ParamKnobEvent::SetValue(val)));
+          });
 
-              Textbox::new(cx, display_value_lens)
-                .on_mouse_down(|cx, _| {
-                  if cx.is_disabled() {
-                    return;
-                  }
-                  cx.emit(TextEvent::StartEdit);
-                  cx.emit(TextEvent::Clear);
-                })
-                .on_submit(|cx, text, success| {
-                  cx.emit(TextEvent::EndEdit);
-                  if success {
-                    cx.emit(ParamKnobEvent::TextInput(text));
-                  };
-                })
-                .font_size(10.0)
-                .alignment(Alignment::Center)
-                .text_align(TextAlign::Center);
+          Textbox::new(cx, display_value_lens)
+            .placeholder("..")
+            .on_mouse_down(|cx, _| {
+              if cx.is_disabled() {
+                return;
+              }
+              cx.emit(TextEvent::StartEdit);
+              cx.emit(TextEvent::Clear);
             })
-            .alignment(Alignment::Center)
-            .size(Auto);
-          })
+            .on_submit(|cx, text, success| {
+              cx.emit(TextEvent::EndEdit);
+              if success {
+                cx.emit(ParamKnobEvent::TextInput(text));
+              };
+            })
+            .font_size(10.0)
+            .top(Pixels(-1.0))
+            .text_align(TextAlign::Center);
         })
         .size(Auto)
-        .alignment(Alignment::Center)
-        .vertical_gap(Pixels(3.0));
+        .child_space(Stretch(1.0))
+        .row_between(Pixels(3.0));
       }),
     )
   }
