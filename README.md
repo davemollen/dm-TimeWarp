@@ -3,7 +3,7 @@
 <img src="screenshot.png" alt="plugin screenshot" style="display:block;width:75%;max-width:1056px;">
 
 A granular audio effect written in Rust.
-It's a granular delay, looper & sampler with time stretch capabilities wrapped into one plugin.
+It's a granular delay, looper & sampler with time stretch capabilities wrapped into one plugin. You can morph from regular playback into the granular universe.
 
 The effect can be compiled to a [MOD audio](https://mod.audio/), VST3, CLAP, AUv2 or LV2 plugin.
 
