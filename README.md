@@ -23,7 +23,7 @@ On macOS you may need to [disable Gatekeeper](https://disable-gatekeeper.github.
 
 ## MOD installation
 
-~~Install the plugin from the MOD Audio plugin store.~~
+Install the plugin from the MOD Audio plugin store.
 
 The latest MOD builds can also be found on the [releases page](https://github.com/davemollen/dm-TimeWarp/releases).
 
