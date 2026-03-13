@@ -97,6 +97,11 @@ jobs:
             do mv $file_name "${file_name/$binary_name/$plugin_name}";
           done
 
+      - name: Rename vst3 plugin binary on linux
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          mv $ARCHIVE_NAME/$plugin_name.vst3/Contents/x86_64-linux/$binary_name.so $ARCHIVE_NAME/$plugin_name.vst3/Contents/x86_64-linux/$plugin_name.so
+
       - name: Build AUv2 plugin from CLAP plugin
         if: startsWith(matrix.os, 'macos')
         run: |
