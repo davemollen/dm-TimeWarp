@@ -1,4 +1,6 @@
-use std::{f32::consts::PI, mem};
+use std::{f32::consts::FRAC_PI_2, mem};
+
+use crate::shared::float_ext::FloatExt;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
@@ -83,7 +85,10 @@ impl DelayLine {
     let mix = read_pointer - rounded_read_pointer;
     let index = rounded_read_pointer as usize;
 
-    let cosine_mix = (1. - (mix * PI).cos()) / 2.;
+    // fast_cos_bhaskara is valid for [0, π/2]. Halving the argument via the
+    // double-angle identity keeps it in range: (1 - cos(x·π))/2 = 1 - cos²(x·π/2)
+    let c = (mix * FRAC_PI_2).fast_cos_bhaskara();
+    let cosine_mix = 1. - c * c;
     let x = self.buffer[index & self.wrap];
     let y = self.buffer[index + 1 & self.wrap];
     x + (y - x) * cosine_mix
