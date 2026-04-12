@@ -8,6 +8,8 @@ pub struct ADSR {
   trigger: bool,
   t: f32,
   retrigger_time: f32,
+  cached_time: f32,
+  b1: f32,
 }
 
 impl ADSR {
@@ -19,6 +21,8 @@ impl ADSR {
       trigger: false,
       t: sample_rate.recip(),
       retrigger_time,
+      cached_time: -1.,
+      b1: 0.,
     }
   }
 
@@ -86,9 +90,12 @@ impl ADSR {
   }
 
   fn apply_curve(&mut self, target: f32, time: f32) {
-    let b1 = (-self.t / (time / 6910.)).exp();
-    let a0 = 1. - b1;
+    if time != self.cached_time {
+      self.cached_time = time;
+      self.b1 = (-self.t / (time / 6910.)).exp();
+    }
+    let a0 = 1. - self.b1;
 
-    self.x = target * a0 + self.x * b1;
+    self.x = target * a0 + self.x * self.b1;
   }
 }
