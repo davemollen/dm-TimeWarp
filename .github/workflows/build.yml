@@ -105,7 +105,7 @@ jobs:
       - name: Build AUv2 plugin from CLAP plugin
         if: startsWith(matrix.os, 'macos')
         run: |
-          git clone --branch next https://github.com/free-audio/clap-wrapper.git
+          git clone https://github.com/free-audio/clap-wrapper.git
           cp .github/workflows/AUv2/top_level_default.cmake clap-wrapper/cmake/top_level_default.cmake
           version=$(perl -pe 's/[^0-9.]//g' <<< ${{ github.event.release.tag_name }})
           cmake -S ./clap-wrapper -B build \
