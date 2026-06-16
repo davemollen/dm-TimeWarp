@@ -1,6 +1,7 @@
 mod phasor;
 mod smooth;
 mod stopwatch;
+use crate::MAX_DELAY_TIME;
 pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,
@@ -154,10 +155,9 @@ impl Params {
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
-    }
-
-    if sample_mode_has_changed && sample_mode == SampleMode::Looper {
-      self.playback_gain.reset(0.);
+      if sample_mode == SampleMode::Looper {
+        self.time.reset(MAX_DELAY_TIME);
+      }
     }
 
     let overridden_play = self.override_play(play, &sample_mode);
@@ -303,7 +303,7 @@ impl Params {
 
   fn reset_time(&mut self, time: f32, length: f32) {
     match (self.file_duration, self.loop_duration) {
-      (Some(dur), _) => self.time.reset(dur * length),
+      (Some(dur), None) => self.time.reset(dur * length),
       (None, Some(dur)) => self.time.reset(dur * length),
       _ => {
         self.time.reset(time);
