@@ -50,6 +50,11 @@ impl TimeWarp {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.delay_line.reset();
+    self.filter.reset();
+  }
+
   pub fn process(
     &mut self,
     input: (f32, f32),

@@ -209,6 +209,10 @@ impl Plugin for DmTimeWarp {
     true
   }
 
+  fn reset(&mut self) {
+    self.time_warp.reset();
+  }
+
   fn task_executor(&mut self) -> TaskExecutor<Self> {
     let worker = self.worker.clone();
 

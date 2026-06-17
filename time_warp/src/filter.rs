@@ -14,6 +14,11 @@ impl Filter {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.lowpass_filter.reset();
+    self.highpass_filter.reset();
+  }
+
   pub fn set_cutoff_frequencies(&mut self, highpass_freq: f32, lowpass_freq: f32) {
     self.highpass_filter.set_cutoff_freq(highpass_freq);
     self.lowpass_filter.set_cutoff_freq(lowpass_freq);

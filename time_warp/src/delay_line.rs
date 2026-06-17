@@ -29,6 +29,11 @@ impl DelayLine {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.buffer.fill(0.);
+    self.write_pointer = 0;
+  }
+
   pub fn read(&self, time: f32, interp: Interpolation) -> f32 {
     match interp {
       Interpolation::Step => self.step_interp(time),

@@ -22,6 +22,10 @@ impl OnePoleFilter {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.z = 0.;
+  }
+
   pub fn set_cutoff_freq(&mut self, cutoff_freq: f32) {
     if cutoff_freq != self.prev_cutoff_freq {
       self.b1 = (cutoff_freq * self.t).exp();
