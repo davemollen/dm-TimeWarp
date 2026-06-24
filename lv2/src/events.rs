@@ -14,15 +14,12 @@ impl DmTimeWarp {
       None => return,
     };
 
-    let should_read_patch_value = false;
     for (time_stamp, atom) in control_sequence {
       self.time_stamp = time_stamp.as_frames().unwrap_or(0);
       self.read_patch_get_events(atom, ports);
-      self.read_patch_set_events(atom, features, should_read_patch_value);
+      self.read_patch_set_events(atom, features);
       if self.params.midi_enabled {
         self.read_midi_events(atom);
-      } else {
-        self.notes.remove_notes();
       }
     }
   }
@@ -63,8 +60,9 @@ impl DmTimeWarp {
     &mut self,
     atom: UnidentifiedAtom<'static>,
     features: &mut AudioFeatures,
-    mut should_read_patch_value: bool,
   ) {
+    let mut should_read_patch_value = false;
+
     let (object_header, object_reader) = match atom.read(self.urids.atom.object, ()) {
       Some(object) => object,
       None => return,

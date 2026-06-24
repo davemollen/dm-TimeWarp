@@ -137,6 +137,10 @@ impl DmTimeWarp {
         .ok();
     }
 
+    if self.params.should_remove_notes() {
+      self.notes.remove_notes();
+    }
+
     self.notes.set_voice_count(ports.voices.get() as usize);
   }
 }

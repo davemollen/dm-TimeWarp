@@ -52,6 +52,7 @@ pub struct Params {
   prev_erase: bool,
   is_erasing_buffer: bool,
   prev_sample_mode: Option<SampleMode>,
+  prev_midi_enabled: bool,
   pitch_bend_factor: f32,
   start_offset_phasor: Phasor,
 }
@@ -93,6 +94,7 @@ impl Params {
       prev_erase: false,
       is_erasing_buffer: false,
       prev_sample_mode: None,
+      prev_midi_enabled: false,
       pitch_bend_factor: 1.,
       start_offset_phasor: Phasor::new(sample_rate),
     }
@@ -139,12 +141,14 @@ impl Params {
         1.
       };
     self.stretch = if freeze { 0. } else { stretch };
+    self.prev_midi_enabled = self.midi_enabled;
     self.midi_enabled = midi_enabled;
     self.sync_position = sync_position;
 
     let sample_mode_has_changed = self
       .prev_sample_mode
       .map_or(false, |prev_sample_mode| sample_mode != prev_sample_mode);
+    self.prev_sample_mode = Some(sample_mode);
     let erase_has_changed = erase && !self.prev_erase;
     self.is_erasing_buffer = sample_mode_has_changed || erase_has_changed;
 
@@ -152,6 +156,7 @@ impl Params {
       self.has_delay_mode_recording = false;
       self.should_reset_start_offset = true;
       self.reset_playback = true;
+      self.prev_file_duration = self.file_duration;
       self.file_duration = None;
       self.stopwatch.reset();
       self.loop_duration = None;
@@ -202,8 +207,6 @@ impl Params {
 
     self.prev_play = play;
     self.prev_erase = erase;
-    self.prev_file_duration = self.file_duration;
-    self.prev_sample_mode = Some(sample_mode);
   }
 
   pub fn settle(&mut self) {
@@ -217,6 +220,7 @@ impl Params {
   }
 
   pub fn set_file_duration(&mut self, file_duration: f32) {
+    self.prev_file_duration = self.file_duration;
     self.file_duration = Some(file_duration);
   }
 
@@ -225,8 +229,12 @@ impl Params {
     self.recording_gain.reset(0.);
   }
 
-  pub fn should_erase_buffer(&mut self) -> bool {
+  pub fn should_erase_buffer(&self) -> bool {
     self.is_erasing_buffer
+  }
+
+  pub fn should_remove_notes(&self) -> bool {
+    !self.midi_enabled && self.prev_midi_enabled
   }
 
   pub fn set_pitch_bend_factor(&mut self, pitch_bend_factor: f32) {

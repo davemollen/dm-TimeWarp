@@ -82,6 +82,10 @@ impl DmTimeWarp {
       context.execute_background(WorkerRequest::FlushBuffer);
     }
 
+    if self.process_params.should_remove_notes() {
+      self.notes.remove_notes();
+    }
+
     self
       .notes
       .set_voice_count(self.params.voices.value() as usize);
@@ -111,8 +115,6 @@ impl DmTimeWarp {
           _ => (),
         }
       }
-    } else {
-      self.notes.remove_notes();
     }
   }
 

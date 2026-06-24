@@ -104,7 +104,9 @@ impl Notes {
   }
 
   pub fn remove_notes(&mut self) {
-    self.notes.iter_mut().for_each(|v| v.reset_note());
+    for note in &mut self.notes {
+      note.reset_note();
+    }
   }
 
   pub fn release_notes(&mut self) {
