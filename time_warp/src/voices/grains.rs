@@ -32,12 +32,12 @@ impl Grains {
     fade_factor: f32,
     fade_offset: f32,
   ) -> (f32, f32) {
-    let speed = (if is_reversed { 1. + speed } else { 1. - speed }) * 0.5;
-
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
       match inactive_grain {
-        Some(grain) => grain.set_parameters(scan, spray, stereo, time, start_position_phase),
+        Some(grain) => {
+          grain.set_parameters(scan, spray, stereo, time, start_position_phase, is_reversed)
+        }
         _ => {}
       }
     }

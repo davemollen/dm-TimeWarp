@@ -12,6 +12,7 @@ pub struct Grain {
   position: f32,
   gain: (f32, f32),
   sample_factor: f32,
+  is_reversed: bool,
   is_active: bool,
 }
 
@@ -22,6 +23,7 @@ impl Grain {
       position: 0.,
       gain: (0.5, 0.5),
       sample_factor: 1000. / sample_rate,
+      is_reversed: false,
       is_active: false,
     }
   }
@@ -36,6 +38,11 @@ impl Grain {
     fade_factor: f32,
     fade_offset: f32,
   ) -> (f32, f32, f32) {
+    let speed = (if self.is_reversed {
+      1. + speed
+    } else {
+      1. - speed
+    }) * 0.5;
     let position_a = Self::wrap(self.position) * 2.;
     let position_b = Self::wrap(self.position + 0.5) * 2.;
     let position_a_fade = Self::get_playhead_fade(position_a, fade_factor, fade_offset);
@@ -75,12 +82,14 @@ impl Grain {
     stereo: f32,
     time: f32,
     start_position_phase: f32,
+    is_reversed: bool,
   ) {
     let spray = fastrand::f32() * spray / time;
 
     self.phase = 0.;
     self.position = 1. - (scan + spray + start_position_phase).fract() * 0.5;
     self.is_active = true;
+    self.is_reversed = is_reversed;
     self.set_panning(stereo);
   }
 
