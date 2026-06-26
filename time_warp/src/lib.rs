@@ -88,29 +88,32 @@ impl TimeWarp {
     let sustain = params.sustain.next();
     let release = params.release.next();
 
-    let grains_out = self
-      .voices
-      .process(
-        &self.delay_line,
-        notes,
-        size,
-        time,
-        density,
-        stereo,
-        speed,
-        stretch,
-        scan,
-        spray,
-        midi_enabled,
-        sync_position,
-        attack,
-        decay,
-        sustain,
-        release,
-        reset_playback,
-        start_offset_phase,
-      )
-      .multiply(playback_gain);
+    let (grains_out, grains_gain) = self.voices.process(
+      &self.delay_line,
+      notes,
+      size,
+      time,
+      density,
+      stereo,
+      speed,
+      stretch,
+      scan,
+      spray,
+      midi_enabled,
+      sync_position,
+      attack,
+      decay,
+      sustain,
+      release,
+      reset_playback,
+      start_offset_phase,
+    );
+    let gain_compensation = if grains_gain == 0. {
+      0.
+    } else {
+      grains_gain.recip().sqrt()
+    };
+    let grains_out = grains_out.multiply(playback_gain * gain_compensation);
     self.write_to_delay(input, time, grains_out, recycle, feedback, recording_gain);
     let output = input.multiply(dry).add(grains_out.multiply(wet));
     params.settle();

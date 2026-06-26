@@ -7,13 +7,23 @@ use {
 #[derive(Clone)]
 pub struct Grains {
   grains: [Grain; 12], // extra grains to allow for speed changes without voice stealing
+  gain: f32,
 }
 
 impl Grains {
   pub fn new(sample_rate: f32) -> Self {
     Self {
       grains: [Grain::new(sample_rate); 12],
+      gain: 1.,
     }
+  }
+
+  pub fn reset(&mut self) {
+    self.grains.iter_mut().for_each(|grain| grain.reset());
+  }
+
+  pub fn get_gain(&self) -> f32 {
+    self.gain
   }
 
   pub fn process(
@@ -66,10 +76,8 @@ impl Grains {
         },
       );
 
-    (grains_left, grains_right).multiply(if gain == 0. { 0. } else { gain.recip().sqrt() })
-  }
+    self.gain = gain;
 
-  pub fn reset(&mut self) {
-    self.grains.iter_mut().for_each(|grain| grain.reset());
+    (grains_left, grains_right)
   }
 }

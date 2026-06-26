@@ -56,7 +56,7 @@ impl Voices {
     release: f32,
     reset_playback: bool,
     phase_offset: f32,
-  ) -> (f32, f32) {
+  ) -> ((f32, f32), f32) {
     let grain_duration = Self::map_size_to_grain_duration(size, time);
     let normalized_density = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY);
     let extended_grain_duration = grain_duration + FADE_TIME * (1. - normalized_density);
@@ -88,7 +88,7 @@ impl Voices {
           .zip(self.adsr.iter_mut())
           .zip(self.grain_triggers.iter_mut())
           .fold(
-            (0., 0.),
+            ((0., 0.), 0.),
             |result, (((note, grains), adsr), grain_trigger)| {
               if *note.get_adsr_stage() == ADSRStage::Idle {
                 return result;
@@ -112,8 +112,11 @@ impl Voices {
                 fade_offset,
               );
               (
-                result.0 + grains_out.0 * gain,
-                result.1 + grains_out.1 * gain,
+                (
+                  result.0 .0 + grains_out.0 * gain,
+                  result.0 .1 + grains_out.1 * gain,
+                ),
+                result.1 + grains.get_gain(),
               )
             },
           )
@@ -125,7 +128,7 @@ impl Voices {
           .zip(self.phasors.iter_mut())
           .zip(self.grain_triggers.iter_mut())
           .fold(
-            (0., 0.),
+            ((0., 0.), 0.),
             |result, ((((note, grains), adsr), phasor), grain_trigger)| {
               if *note.get_adsr_stage() == ADSRStage::Idle {
                 return result;
@@ -155,8 +158,11 @@ impl Voices {
                 fade_offset,
               );
               (
-                result.0 + grains_out.0 * gain,
-                result.1 + grains_out.1 * gain,
+                (
+                  result.0 .0 + grains_out.0 * gain,
+                  result.0 .1 + grains_out.1 * gain,
+                ),
+                result.1 + grains.get_gain(),
               )
             },
           )
@@ -168,7 +174,7 @@ impl Voices {
       }
       let start_position_phase = self.phasors[0].process(freq, speed, stretch, is_in_granular_mode);
       let trigger = self.grain_triggers[0].process(grain_duration, density, reset_playback);
-      self.grains[0].process(
+      let grains_out = self.grains[0].process(
         delay_line,
         trigger,
         scan,
@@ -182,7 +188,8 @@ impl Voices {
         window_factor,
         fade_factor,
         fade_offset,
-      )
+      );
+      ((grains_out.0, grains_out.1), self.grains[0].get_gain())
     }
   }
 
