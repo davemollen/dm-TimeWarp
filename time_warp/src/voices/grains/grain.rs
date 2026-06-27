@@ -130,24 +130,13 @@ impl Grain {
     let fade_in = (self.phase * window_factor).min(1.);
     let fade_out = ((1. - self.phase) * window_factor).min(1.);
     let fade = fade_in * fade_out;
-    Self::apply_curve(fade)
+    fade.cubic_spline_curve()
   }
 
   fn get_playhead_fade(position: f32, fade_factor: f32, fade_offset: f32) -> f32 {
     let fade =
       (position * fade_factor).min(1.) * ((fade_offset - position) * fade_factor).clamp(0., 1.);
-    Self::apply_curve(fade)
-  }
-
-  fn apply_curve(x: f32) -> f32 {
-    if x == 0. {
-      0.
-    } else if x == 1. {
-      1.
-    } else {
-      let y = (x * FRAC_PI_2).fast_sin_bhaskara();
-      y * y
-    }
+    fade.cubic_spline_curve()
   }
 
   fn wrap(x: f32) -> f32 {

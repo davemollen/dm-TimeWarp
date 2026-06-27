@@ -1,5 +1,4 @@
 use crate::shared::float_ext::FloatExt;
-use std::f32::consts::FRAC_PI_2;
 
 pub struct Mix {
   mix: f32,
@@ -18,8 +17,7 @@ impl Mix {
 
   pub fn process(&mut self, dry: f32, wet: f32, mix: f32) -> f32 {
     if mix != self.mix {
-      let factor = mix * FRAC_PI_2;
-      let wet_gain = factor.fast_sin_bhaskara();
+      let wet_gain = mix.cubic_spline_curve();
       self.wet_gain = wet_gain * wet_gain;
       self.dry_gain = 1. - self.wet_gain;
       self.mix = mix;
