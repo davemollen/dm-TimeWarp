@@ -1,8 +1,5 @@
 mod grain;
-use {
-  crate::{delay_line::DelayLine, shared::tuple_ext::TupleExt},
-  grain::Grain,
-};
+use {crate::delay_line::DelayLine, grain::Grain};
 
 #[derive(Clone)]
 pub struct Grains {

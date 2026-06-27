@@ -9,9 +9,9 @@ use {
 #[derive(Clone, Copy)]
 pub struct Grain {
   phase: f32,
-  position: f32,
+  position: f64,
   gain: (f32, f32),
-  sample_factor: f32,
+  sample_factor: f64,
   is_reversed: bool,
   is_active: bool,
 }
@@ -22,7 +22,7 @@ impl Grain {
       phase: 0.,
       position: 0.,
       gain: (0.5, 0.5),
-      sample_factor: 1000. / sample_rate,
+      sample_factor: 1000. / sample_rate as f64,
       is_reversed: false,
       is_active: false,
     }
@@ -43,8 +43,9 @@ impl Grain {
     } else {
       1. - speed
     }) * 0.5;
-    let position_a = Self::wrap(self.position) * 2.;
-    let position_b = Self::wrap(self.position + 0.5) * 2.;
+    let position = self.position as f32;
+    let position_a = Self::wrap(position) * 2.;
+    let position_b = Self::wrap(position + 0.5) * 2.;
     let position_a_fade = Self::get_playhead_fade(position_a, fade_factor, fade_offset);
     let position_b_fade = 1. - position_a_fade;
     let grain_fade = self.get_grain_fade(window_factor);
@@ -56,7 +57,7 @@ impl Grain {
       self.is_active = false;
     }
 
-    self.position += self.sample_factor / time * speed;
+    self.position += self.sample_factor / time as f64 * speed as f64;
     let delay_out = Self::read_from_delay(
       delay_line,
       time,
@@ -87,7 +88,7 @@ impl Grain {
     let spray = fastrand::f32() * spray / time;
 
     self.phase = 0.;
-    self.position = 1. - (scan + spray + start_position_phase).fract() * 0.5;
+    self.position = (1. - (scan + spray + start_position_phase).fract() * 0.5) as f64;
     self.is_active = true;
     self.is_reversed = is_reversed;
     self.set_panning(stereo);
