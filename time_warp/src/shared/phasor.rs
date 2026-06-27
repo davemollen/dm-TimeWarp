@@ -1,28 +1,28 @@
 #[derive(Clone)]
 pub struct Phasor {
-  sample_period: f32,
-  x: f32,
+  sample_period: f64,
+  x: f64,
 }
 
 impl Phasor {
-  pub fn new(sample_rate: f32) -> Self {
+  pub fn new(sample_rate: f64) -> Self {
     Self {
       sample_period: sample_rate.recip(),
       x: 0.,
     }
   }
 
-  pub fn process(&mut self, freq: f32) -> f32 {
+  pub fn process(&mut self, freq: f64) -> f64 {
     let y = self.x;
     self.x = self.wrap(self.x + freq * self.sample_period);
     y
   }
 
   pub fn reset(&mut self) {
-    self.x = 0.
+    self.x = 0.;
   }
 
-  fn wrap(&self, input: f32) -> f32 {
+  fn wrap(&self, input: f64) -> f64 {
     if input >= 1. {
       input - 1.
     } else if input < 0. {

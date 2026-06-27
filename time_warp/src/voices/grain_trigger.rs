@@ -9,12 +9,17 @@ pub struct GrainTrigger {
 impl GrainTrigger {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      phasor: Phasor::new(sample_rate),
+      phasor: Phasor::new(sample_rate as f64),
       delta: Delta::new(),
     }
   }
 
-  pub fn process(&mut self, grain_duration: f32, density: f32, reset: bool) -> bool {
+  pub fn reset(&mut self) {
+    self.phasor.reset();
+    self.delta.reset();
+  }
+
+  pub fn process(&mut self, grain_duration: f64, density: f64, reset: bool) -> bool {
     if reset {
       self.phasor.reset();
       self.delta.reset();

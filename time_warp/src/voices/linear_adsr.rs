@@ -9,7 +9,7 @@ pub struct ADSR {
   sample_rate: f32,
   retrigger_step_size: f32,
   gain: f32,
-  speed: f32,
+  speed: f64,
   trigger: bool,
 }
 
@@ -24,6 +24,13 @@ impl ADSR {
       speed: 1.,
       trigger: false,
     }
+  }
+
+  pub fn reset(&mut self) {
+    self.x = 0.;
+    self.gain = 1.;
+    self.speed = 1.;
+    self.trigger = false;
   }
 
   pub fn process(
@@ -93,7 +100,7 @@ impl ADSR {
     self.x * self.gain
   }
 
-  pub fn get_speed(&self) -> f32 {
+  pub fn get_speed(&self) -> f64 {
     self.speed
   }
 

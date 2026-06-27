@@ -32,12 +32,12 @@ impl Grains {
     stereo: f32,
     time: f32,
     start_position_phase: f32,
-    phase_step_size: f32,
-    speed: f32,
+    phase_step_size: f64,
+    speed: f64,
     is_reversed: bool,
-    window_factor: f32,
-    fade_factor: f32,
-    fade_offset: f32,
+    window_factor: f64,
+    fade_factor: f64,
+    fade_offset: f64,
   ) -> (f32, f32) {
     if trigger {
       let inactive_grain = self.grains.iter_mut().find(|grain| !grain.is_active());
@@ -58,7 +58,7 @@ impl Grains {
         |(left_output, right_output, acc_gain), grain| {
           let (left_grain, right_grain, grain_gain) = grain.process(
             delay_line,
-            time,
+            time as f64,
             phase_step_size,
             speed,
             window_factor,

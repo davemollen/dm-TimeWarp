@@ -1,7 +1,7 @@
 mod phasor;
 mod smooth;
 mod stopwatch;
-use crate::MAX_DELAY_TIME;
+use crate::{FADE_TIME, MAX_DELAY_TIME};
 pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,

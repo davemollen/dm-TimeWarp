@@ -211,6 +211,7 @@ impl Plugin for DmTimeWarp {
 
   fn activate(&mut self, _features: &mut Self::InitFeatures) {
     self.time_warp.reset();
+    self.notes.remove_notes();
     self.activated = true;
   }
 

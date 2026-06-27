@@ -1,34 +1,12 @@
-use std::f32::consts::{FRAC_PI_2, LN_10, PI, TAU};
-
 pub trait FloatExt {
-  fn fast_cbrt(self) -> Self;
   fn dbtoa(self) -> Self;
   fn fast_dbtoa(self) -> Self;
-  fn scale(self, in_low: Self, in_high: Self, out_low: Self, out_high: Self) -> Self;
-  fn mix(self, right: f32, factor: f32) -> Self;
-  fn fast_atan1(self) -> Self;
-  fn fast_atan2(self) -> Self;
-  fn fast_tanh1(self) -> Self;
-  fn fast_tanh2(self) -> Self;
-  fn fast_tanh3(self) -> Self;
-  fn fast_sin(self) -> Self;
-  fn fast_cos(self) -> Self;
-  fn fast_sin_bhaskara(self) -> Self;
-  fn fast_cos_bhaskara(self) -> Self;
-  fn fast_pow(self, exponent: Self) -> Self;
-  fn fast_exp(self) -> Self;
+  fn mix(self, right: Self, factor: Self) -> Self;
   fn mstosamps(self, sample_rate: Self) -> Self;
   fn cubic_spline_curve(self) -> Self;
 }
 
 impl FloatExt for f32 {
-  #[inline(always)]
-  fn fast_cbrt(self) -> Self {
-    let i = self.to_bits();
-    let approx = i / 3 + 709921077;
-    f32::from_bits(approx)
-  }
-
   /// Converts decibels to a linear amplitude value
   #[inline(always)]
   fn dbtoa(self) -> Self {
@@ -38,123 +16,44 @@ impl FloatExt for f32 {
   /// Fast decibels to linear amplitude conversion
   #[inline(always)]
   fn fast_dbtoa(self) -> Self {
-    const CONVERSION_FACTOR: f32 = LN_10 / 20.0;
+    const CONVERSION_FACTOR: f32 = std::f32::consts::LN_10 / 20.0;
     (self * CONVERSION_FACTOR).exp()
   }
 
   #[inline(always)]
-  fn scale(self, in_low: Self, in_high: Self, out_low: Self, out_high: Self) -> Self {
-    let in_scale = 1. / (in_high - in_low);
-    let out_range = out_high - out_low;
-    let normalized_value = (self - in_low) * in_scale;
-    normalized_value * out_range + out_low
-  }
-
-  #[inline(always)]
-  fn mix(self, right: f32, factor: f32) -> Self {
+  fn mix(self, right: Self, factor: Self) -> Self {
     self + (right - self) * factor
   }
 
-  /// This is an atan approximation
+  /// Convert milliseconds to samples based on the samplerate.
   #[inline(always)]
-  fn fast_atan1(self) -> Self {
-    let a1 = 0.99997726;
-    let a3 = -0.33262347;
-    let a5 = 0.19354346;
-    let a7 = -0.11643287;
-    let a9 = 0.05265332;
-    let a11 = -0.01172120;
-    let squared_self = self * self;
-    self
-      * (a1
-        + squared_self
-          * (a3
-            + squared_self * (a5 + squared_self * (a7 + squared_self * (a9 + squared_self * a11)))))
-  }
-
-  /// This is an atan approximation, not atan2. This variant only amplifies the first harmonic instead of multiple.
-  /// https://www.dsprelated.com/showarticle/1052.php
-  #[inline(always)]
-  fn fast_atan2(self) -> Self {
-    let n1 = 0.97239411;
-    let n2 = -0.19194795;
-    (n1 + n2 * self * self) * self
-  }
-
-  /// This is a tanh approximation.
-  #[inline(always)]
-  fn fast_tanh1(self) -> Self {
-    let squared_self = self * self;
-    let a = self * (135135. + squared_self * (17325. + squared_self * (378. + squared_self)));
-    let b = 135135. + squared_self * (62370. + squared_self * (3150. + squared_self * 28.));
-    a / b
-  }
-
-  /// This is a tanh approximation. It's cheaper than fast_tanh1, but looses accuracy for higher input values (< -1 and > 1).
-  #[inline(always)]
-  fn fast_tanh2(self) -> Self {
-    let x2 = self * self;
-    let x3 = x2 * self;
-    let x4 = x3 * self;
-    (105. * self + 10. * x3) / (105. + 45. * x2 + x4)
-  }
-
-  /// This is a tanh approximation. For more accuracy (less aliasing) choose fast_tanh1 or fast_tanh2.
-  #[inline(always)]
-  fn fast_tanh3(self) -> Self {
-    let a = self.abs();
-    let b = 1.26175667589988239 + a * (-0.54699348440059470 + a * (2.66559097474027817));
-    (b * self) / (b * a + 1.)
-  }
-
-  /// This is a sine approximation. Use this to safe processing power.
-  #[inline(always)]
-  fn fast_sin(self) -> Self {
-    const INVTWOPI: f32 = 0.15915494309189534;
-    let k: u32 = (self * INVTWOPI) as u32;
-    let half = if self < 0_f32 { -0.5_f32 } else { 0.5_f32 };
-    let x = (half + (k as f32)) * TAU - self;
-    sin_approx(x)
-  }
-
-  /// This is a cosine approximation. Use this to safe processing power.
-  #[inline(always)]
-  fn fast_cos(self) -> Self {
-    const INVTWOPI: f32 = 0.15915494309189534;
-    let x = self + FRAC_PI_2;
-    let k: u32 = (x * INVTWOPI) as u32;
-    let half = if x < 0_f32 { -0.5_f32 } else { 0.5_f32 };
-    let x_new = (half + (k as f32)) * TAU - x;
-    sin_approx(x_new)
-  }
-
-  /// This is the Bhaskara sine approximation.
-  /// It only works with input values between zero and half pi.
-  #[inline(always)]
-  fn fast_sin_bhaskara(self) -> Self {
-    let pi_squared = 9.869604401089358;
-    let a = self * (PI - self);
-    (16. * a) / (5. * pi_squared - 4. * a)
-  }
-
-  /// This is the Bhaskara cosine approximation.
-  /// It only works with input values between zero and half pi.
-  #[inline(always)]
-  fn fast_cos_bhaskara(self) -> Self {
-    let x_squared = self * self;
-    let pi_squared = 9.869604401089358;
-    (pi_squared - 4. * x_squared) / (pi_squared + x_squared)
+  fn mstosamps(self, sample_rate: Self) -> Self {
+    self * 0.001 * sample_rate
   }
 
   #[inline(always)]
-  fn fast_pow(self, exponent: Self) -> Self {
-    pow2(exponent * log2(self))
+  fn cubic_spline_curve(self) -> Self {
+    self * self * (3.0 - 2.0 * self)
+  }
+}
+
+impl FloatExt for f64 {
+  /// Converts decibels to a linear amplitude value
+  #[inline(always)]
+  fn dbtoa(self) -> Self {
+    (10_f64).powf(self * 0.05)
   }
 
-  /// Exponential function.
+  /// Fast decibels to linear amplitude conversion
   #[inline(always)]
-  fn fast_exp(self) -> Self {
-    pow2(1.442695040_f32 * self)
+  fn fast_dbtoa(self) -> Self {
+    const CONVERSION_FACTOR: f64 = std::f64::consts::LN_10 / 20.0;
+    (self * CONVERSION_FACTOR).exp()
+  }
+
+  #[inline(always)]
+  fn mix(self, right: Self, factor: Self) -> Self {
+    self + (right - self) * factor
   }
 
   /// Convert milliseconds to samples based on the samplerate.
@@ -172,16 +71,6 @@ impl FloatExt for f32 {
 #[cfg(test)]
 mod tests {
   use super::FloatExt;
-  use std::f32::consts::PI;
-
-  fn assert_approximately_eq(left: f32, right: f32, digits: usize) {
-    let tol = 10f32.powi(-(digits as i32));
-    let diff = (left - right).abs();
-    assert!(
-      diff <= tol,
-      "Values are not approximately equal: left={left}, right={right}, diff={diff}, tol={tol}"
-    );
-  }
 
   #[test]
   fn dbtoa() {
@@ -191,126 +80,9 @@ mod tests {
   }
 
   #[test]
-  fn scale() {
-    assert_eq!((1f32).scale(1., 500., -6., -15.), -6.);
-    assert_eq!((250f32).scale(1., 500., -6., -15.), -10.490982);
-    assert_eq!((500f32).scale(1., 500., -6., -15.), -15.);
-  }
-
-  #[test]
   fn mix() {
     assert_eq!((1f32).mix(0., 0.), 1.);
     assert_eq!((1f32).mix(0., 0.5), 0.5);
     assert_eq!((1f32).mix(0., 1.), 0.);
   }
-
-  #[test]
-  fn fast_atan1() {
-    assert_approximately_eq((0.5).fast_atan1(), (0.5f32).atan(), 5);
-    assert_approximately_eq((-0.5).fast_atan1(), (-0.5f32).atan(), 5);
-    assert_approximately_eq((1.).fast_atan1(), (1f32).atan(), 5);
-    assert_approximately_eq((-1.).fast_atan1(), (-1f32).atan(), 5);
-  }
-
-  #[test]
-  fn fast_atan2() {
-    assert_approximately_eq((0.5).fast_atan2(), (0.5f32).atan(), 2);
-    assert_approximately_eq((-0.5).fast_atan2(), (-0.5f32).atan(), 2);
-    assert_approximately_eq((1.).fast_atan2(), (1f32).atan(), 2);
-    assert_approximately_eq((-1.).fast_atan2(), (-1f32).atan(), 2);
-  }
-
-  #[test]
-  fn fast_tanh1() {
-    assert_approximately_eq((0.5).fast_tanh1(), (0.5f32).tanh(), 21);
-    assert_approximately_eq((-0.5).fast_tanh1(), (-0.5f32).tanh(), 21);
-    assert_approximately_eq((1.).fast_tanh1(), (1f32).tanh(), 21);
-    assert_approximately_eq((-1.).fast_tanh1(), (-1f32).tanh(), 21);
-    assert_approximately_eq((1.5).fast_tanh1(), (1.5f32).tanh(), 21);
-    assert_approximately_eq((-1.5).fast_tanh1(), (-1.5f32).tanh(), 21);
-  }
-
-  #[test]
-  fn fast_tanh2() {
-    assert_approximately_eq((0.5).fast_tanh2(), (0.5f32).tanh(), 4);
-    assert_approximately_eq((-0.5).fast_tanh2(), (-0.5f32).tanh(), 4);
-    assert_approximately_eq((1.).fast_tanh2(), (1f32).tanh(), 4);
-    assert_approximately_eq((-1.).fast_tanh2(), (-1f32).tanh(), 4);
-    assert_approximately_eq((1.5).fast_tanh2(), (1.5f32).tanh(), 4);
-    assert_approximately_eq((-1.5).fast_tanh2(), (-1.5f32).tanh(), 4);
-  }
-
-  #[test]
-  fn fast_tanh3() {
-    assert_approximately_eq((0.5).fast_tanh2(), (0.5f32).tanh(), 4);
-    assert_approximately_eq((-0.5).fast_tanh2(), (-0.5f32).tanh(), 4);
-    assert_approximately_eq((1.).fast_tanh2(), (1f32).tanh(), 4);
-    assert_approximately_eq((-1.).fast_tanh2(), (-1f32).tanh(), 4);
-    assert_approximately_eq((1.5).fast_tanh2(), (1.5f32).tanh(), 4);
-    assert_approximately_eq((-1.5).fast_tanh2(), (-1.5f32).tanh(), 4);
-  }
-
-  #[test]
-  fn fast_sin() {
-    assert_approximately_eq((0.1).fast_sin(), (0.1f32).sin(), 3);
-    assert_approximately_eq((0.5 * PI).fast_sin_bhaskara(), (0.5 * PI).sin(), 2);
-    assert_approximately_eq((PI).fast_sin(), (PI).sin(), 3);
-    assert_approximately_eq((PI * 1.5).fast_sin(), (PI * 1.5).sin(), 3);
-    assert_approximately_eq((PI * -1.9).fast_sin(), (PI * -1.9).sin(), 3);
-  }
-
-  #[test]
-  fn fast_cos() {
-    assert_approximately_eq((0.1).fast_cos(), (0.1f32).cos(), 3);
-    assert_approximately_eq((PI * 0.5).fast_cos(), (PI * 0.5).cos(), 3);
-    assert_approximately_eq((PI * 1.5).fast_cos(), (PI * 1.5).cos(), 3);
-    assert_approximately_eq((PI * 1.9).fast_cos(), (PI * 1.9).cos(), 3);
-  }
-
-  #[test]
-  fn fast_sin_bhaskara() {
-    assert_approximately_eq((0.0).fast_sin_bhaskara(), (0.0f32).sin(), 21);
-    assert_approximately_eq((0.25 * PI).fast_sin_bhaskara(), (0.25 * PI).sin(), 2);
-    assert_approximately_eq((0.5 * PI).fast_sin_bhaskara(), (0.5 * PI).sin(), 6);
-  }
-
-  #[test]
-  fn fast_cos_bhaskara() {
-    assert_approximately_eq((0.0).fast_cos_bhaskara(), (0.0f32).cos(), 21);
-    assert_approximately_eq((0.25 * PI).fast_cos_bhaskara(), (0.25 * PI).cos(), 2);
-    assert_approximately_eq((0.5 * PI).fast_cos_bhaskara(), (0.5 * PI).cos(), 7);
-  }
-}
-
-#[inline(always)]
-fn log2(x: f32) -> f32 {
-  let mut y = x.to_bits() as f32;
-  y *= 1.1920928955078125e-7_f32;
-  y - 126.94269504_f32
-}
-
-#[inline(always)]
-fn pow2(p: f32) -> f32 {
-  let clipp = if p < -126.0 { -126.0_f32 } else { p };
-  let v = ((1 << 23) as f32 * (clipp + 126.94269504_f32)) as u32;
-  f32::from_bits(v)
-}
-
-#[inline]
-fn sin_approx(x: f32) -> f32 {
-  const FOUROVERPI: f32 = 1.2732395447351627;
-  const FOUROVERPISQ: f32 = 0.40528473456935109;
-  const Q: f32 = 0.77633023248007499;
-
-  let mut p = 0.22308510060189463_f32.to_bits();
-  let mut v = x.to_bits();
-
-  let sign: u32 = v & 0x80000000;
-  v &= 0x7FFFFFFF;
-
-  let qpprox = FOUROVERPI * x - FOUROVERPISQ * x * f32::from_bits(v);
-
-  p |= sign;
-
-  qpprox * (Q + f32::from_bits(p) * qpprox)
 }

@@ -12,22 +12,22 @@ pub mod shared {
 }
 mod audio_file_processor;
 
+use {
+  crate::shared::tuple_ext::TupleExt, filter::Filter, mix::Mix, notes::Note, params::Smoother,
+  shared::float_ext::FloatExt, voices::Voices,
+};
 pub use {
   audio_file_processor::{AudioFileData, AudioFileProcessor},
   delay_line::{DelayLine, Interpolation},
   notes::Notes,
   params::{Params, SampleMode},
 };
-use {
-  filter::Filter, mix::Mix, notes::Note, params::Smoother, shared::float_ext::FloatExt,
-  shared::tuple_ext::TupleExt, voices::Voices,
-};
 
-const FADE_TIME: f32 = 5.;
+const FADE_TIME: f64 = 5.;
 pub const MIN_DELAY_TIME: f32 = 10.; // double of FADE_TIME
 const MAX_DELAY_TIME: f32 = 60000.;
-pub const MIN_DENSITY: f32 = 1.;
-pub const MAX_DENSITY: f32 = 8.;
+pub const MIN_DENSITY: f64 = 1.;
+pub const MAX_DENSITY: f64 = 8.;
 pub const CENTER_GRAIN_DURATION: f32 = 500.;
 
 pub struct TimeWarp {
@@ -41,7 +41,7 @@ impl TimeWarp {
   pub fn new(sample_rate: f32) -> Self {
     Self {
       delay_line: DelayLine::new(
-        (sample_rate * (MAX_DELAY_TIME + FADE_TIME) / 1000.) as usize,
+        (sample_rate * (MAX_DELAY_TIME + FADE_TIME as f32) / 1000.) as usize,
         sample_rate,
       ),
       voices: Voices::new(sample_rate),
@@ -53,6 +53,7 @@ impl TimeWarp {
   pub fn reset(&mut self) {
     self.delay_line.reset();
     self.filter.reset();
+    self.voices.reset();
   }
 
   pub fn process(
@@ -93,10 +94,10 @@ impl TimeWarp {
       notes,
       size,
       time,
-      density,
+      density as f64,
       stereo,
-      speed,
-      stretch,
+      speed as f64,
+      stretch as f64,
       scan,
       spray,
       midi_enabled,

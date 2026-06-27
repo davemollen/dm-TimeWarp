@@ -13,10 +13,10 @@ pub enum ADSRStage {
 #[derive(Clone)]
 pub struct Note {
   note: u8,
-  speed: f32,
+  speed: f64,
   gain: f32,
   adsr_stage: ADSRStage,
-  note_to_speed_table: [f32; 128],
+  note_to_speed_table: [f64; 128],
 }
 
 impl Note {
@@ -27,7 +27,7 @@ impl Note {
       gain: 0.,
       adsr_stage: ADSRStage::Idle,
       note_to_speed_table: array::from_fn(|note| {
-        2_f32.powf((note as f32 - 60.).clamp(-48., 48.) / 12.)
+        2_f64.powf((note as f64 - 60.).clamp(-48., 48.) / 12.)
       }),
     }
   }
@@ -68,7 +68,7 @@ impl Note {
     self.note
   }
 
-  pub fn get_speed(&self) -> f32 {
+  pub fn get_speed(&self) -> f64 {
     self.speed
   }
 

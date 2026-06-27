@@ -17,10 +17,10 @@ use {
 
 pub struct Voices {
   grains: Vec<Grains>,
-  adsr: Vec<ADSR>,
+  adsrs: Vec<ADSR>,
   phasors: Vec<StartPositionPhasor>,
   grain_triggers: Vec<GrainTrigger>,
-  sample_rate: f32,
+  sample_rate: f64,
   has_active_notes: bool,
 }
 
@@ -28,12 +28,28 @@ impl Voices {
   pub fn new(sample_rate: f32) -> Self {
     Self {
       grains: vec![Grains::new(sample_rate); 8],
-      adsr: vec![ADSR::new(sample_rate, 5.); 8],
+      adsrs: vec![ADSR::new(sample_rate, 5.); 8],
       phasors: vec![StartPositionPhasor::new(sample_rate); 8],
       grain_triggers: vec![GrainTrigger::new(sample_rate); 8],
-      sample_rate,
+      sample_rate: sample_rate as f64,
       has_active_notes: false,
     }
+  }
+
+  pub fn reset(&mut self) {
+    for grain in &mut self.grains {
+      grain.reset();
+    }
+    for adsr in &mut self.adsrs {
+      adsr.reset();
+    }
+    for phasor in &mut self.phasors {
+      phasor.reset(0.);
+    }
+    for grain_trigger in &mut self.grain_triggers {
+      grain_trigger.reset();
+    }
+    self.has_active_notes = false;
   }
 
   pub fn process(
@@ -42,10 +58,10 @@ impl Voices {
     notes: &mut Vec<Note>,
     size: f32,
     time: f32,
-    density: f32,
+    density: f64,
     stereo: f32,
-    speed: f32,
-    stretch: f32,
+    speed: f64,
+    stretch: f64,
     scan: f32,
     spray: f32,
     midi_enabled: bool,
@@ -64,10 +80,10 @@ impl Voices {
     let min_window_factor = 2.;
     let max_window_factor = extended_grain_duration / FADE_TIME;
     let window_factor = max_window_factor.mix(min_window_factor, normalized_density);
-    let fade_factor = time / FADE_TIME;
+    let fade_factor = time as f64 / FADE_TIME;
     let fade_offset = fade_factor.recip() + 1.;
     let is_in_granular_mode = size < 1. || density > 1.;
-    let freq = 1000. / time;
+    let freq = 1000. / time as f64;
 
     if midi_enabled {
       if sync_position {
@@ -85,7 +101,7 @@ impl Voices {
         notes
           .iter_mut()
           .zip(self.grains.iter_mut())
-          .zip(self.adsr.iter_mut())
+          .zip(self.adsrs.iter_mut())
           .zip(self.grain_triggers.iter_mut())
           .fold(
             ((0., 0.), 0.),
@@ -124,7 +140,7 @@ impl Voices {
         notes
           .iter_mut()
           .zip(self.grains.iter_mut())
-          .zip(self.adsr.iter_mut())
+          .zip(self.adsrs.iter_mut())
           .zip(self.phasors.iter_mut())
           .zip(self.grain_triggers.iter_mut())
           .fold(
@@ -193,13 +209,13 @@ impl Voices {
     }
   }
 
-  fn map_size_to_grain_duration(size: f32, time: f32) -> f32 {
+  fn map_size_to_grain_duration(size: f32, time: f32) -> f64 {
     if size < 0.5 {
       size * 2. * (CENTER_GRAIN_DURATION - MIN_DELAY_TIME) + MIN_DELAY_TIME
     } else {
       let range = (size - 0.5) * 2.;
       range * range * (time - CENTER_GRAIN_DURATION) + CENTER_GRAIN_DURATION
     }
-    .min(time)
+    .min(time) as f64
   }
 }

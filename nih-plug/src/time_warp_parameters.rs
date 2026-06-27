@@ -168,10 +168,10 @@ impl Default for TimeWarpParameters {
 
       density: FloatParam::new(
         "Density",
-        MIN_DENSITY,
+        MIN_DENSITY as f32,
         FloatRange::Skewed {
-          min: MIN_DENSITY,
-          max: MAX_DENSITY,
+          min: MIN_DENSITY as f32,
+          max: MAX_DENSITY as f32,
           factor: 0.5,
         },
       )

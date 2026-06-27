@@ -213,6 +213,7 @@ impl Plugin for DmTimeWarp {
 
   fn reset(&mut self) {
     self.time_warp.reset();
+    self.notes.remove_notes();
   }
 
   fn task_executor(&mut self) -> TaskExecutor<Self> {
