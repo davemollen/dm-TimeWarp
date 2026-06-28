@@ -11,7 +11,7 @@ crate-type = ["cdylib", "lib"]
 nih_plug = { git = "https://github.com/robbert-vdh/nih-plug", features = ["assert_process_allocs", "standalone"] }
 nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
 time_warp = { path = "../time_warp" }
-rfd = "0.15.2"
+rfd = "0.17.2"
 crossbeam-channel = "0.5.15"
 
 [workspace]

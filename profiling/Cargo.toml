@@ -10,12 +10,12 @@ debug = true
 debug = true
 
 [dependencies]
-fastrand = "2.3.0"
+fastrand = "2.4.1"
 time_warp = { path = "../time_warp" }
 
 [dev-dependencies]
-criterion = { version = "0.4", features = ["html_reports"] }
-flamegraph = "0.6.8"
+criterion = { version = "0.8.2", features = ["html_reports"] }
+flamegraph = "0.6.13"
 
 [[bench]]
 name = "time_warp_bench"
