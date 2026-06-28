@@ -15,7 +15,7 @@ impl Stopwatch {
     if start {
       self.sample_count = match self.sample_count {
         Some(count) => Some(count + buffer_size),
-        None => Some(0),
+        None => Some(buffer_size),
       };
       None
     } else if self.sample_count.map_or(false, |count| count == 0) {
@@ -42,6 +42,6 @@ mod tests {
     assert_eq!(stopwatch.process(true, 1), None);
     assert_eq!(stopwatch.process(true, 1), None);
     assert_eq!(stopwatch.process(true, 1), None);
-    assert_eq!(stopwatch.process(false, 1), Some(2000.));
+    assert_eq!(stopwatch.process(false, 1), Some(3000.));
   }
 }
