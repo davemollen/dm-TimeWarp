@@ -2,8 +2,10 @@ use {
   rubato::{audioadapter_buffers::direct::InterleavedSlice, Fft, FixedSync, Resampler},
   std::{fs::File, path::Path},
   symphonia::core::{
-    audio::SampleBuffer, codecs::DecoderOptions, formats::FormatOptions, io::MediaSourceStream,
-    meta::MetadataOptions, probe::Hint,
+    codecs::audio::AudioDecoderOptions,
+    formats::{probe::Hint, FormatOptions, TrackType},
+    io::MediaSourceStream,
+    meta::MetadataOptions,
   },
   thiserror::Error,
 };
@@ -65,103 +67,94 @@ impl AudioFileProcessor {
     let hint = Hint::new();
 
     // Use the default options when reading and decoding.
-    let format_opts: FormatOptions = Default::default();
-    let metadata_opts: MetadataOptions = Default::default();
-    let decoder_opts: DecoderOptions = Default::default();
+    let fmt_opts: FormatOptions = Default::default();
+    let meta_opts: MetadataOptions = Default::default();
+    let dec_opts: AudioDecoderOptions = Default::default();
 
     // Probe the media source stream for a format.
-    let probed =
-      symphonia::default::get_probe().format(&hint, mss, &format_opts, &metadata_opts)?;
+    let mut format = symphonia::default::get_probe().probe(&hint, mss, fmt_opts, meta_opts)?;
 
-    // Get the format reader yielded by the probe operation.
-    let mut format = probed.format;
-
-    // Get the default track.
-    let track = format.default_track().unwrap();
-
-    // Store the track identifier, we'll use it to filter packets.
-    let track_id = track.id;
-    let file_sample_rate = match track.codec_params.sample_rate {
-      Some(sample_rate) => Ok(sample_rate as usize),
-      None => Err(AudioFileProcessingError::SampleRateError),
-    }?;
+    // Get the default audio track.
+    let track = format.default_track(TrackType::Audio).unwrap();
 
     // Create a decoder for the track.
     let mut decoder = symphonia::default::get_codecs()
-      .make(&track.codec_params, &decoder_opts)
+      .make_audio_decoder(
+        track.codec_params.as_ref().unwrap().audio().unwrap(),
+        &dec_opts,
+      )
       .unwrap();
 
+    // Store the track identifier, we'll use it to filter packets.
+    let track_id = track.id;
+
+    // Read the track samplerate
+    let file_sample_rate = track
+      .codec_params
+      .as_ref()
+      .and_then(|params| {
+        params
+          .audio()
+          .and_then(|audio_params| audio_params.sample_rate.map(|sr| sr as usize))
+      })
+      .ok_or_else(|| AudioFileProcessingError::SampleRateError)?;
+
     let chunk_size = 1024;
-    let mut samples: Vec<f32> = Vec::new();
-    let mut sample_buf = None;
+    let mut samples: Vec<f32> = Default::default();
+    let mut sample_buf: Vec<f32> = Default::default();
     let mut resampler: Option<Fft<f32>> = None;
 
-    loop {
-      // Get the next packet from the format reader.
-      let packet = match format.next_packet() {
-        Ok(p) => p,
-        Err(symphonia::core::errors::Error::IoError(e)) => {
-          if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            break; // EOF reached
-          }
+    while let Some(packet) = match format.next_packet() {
+      Ok(p) => p,
+      Err(symphonia::core::errors::Error::IoError(e)) => {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+          None
+        } else {
           return Err(AudioFileProcessingError::SymphoniaError(
             symphonia::core::errors::Error::IoError(e),
           ));
         }
-        Err(e) => return Err(AudioFileProcessingError::SymphoniaError(e)),
-      };
-
+      }
+      Err(e) => return Err(AudioFileProcessingError::SymphoniaError(e)),
+    } {
       // If the packet does not belong to the selected track, skip it.
-      if packet.track_id() != track_id {
+      if packet.track_id != track_id {
         continue;
       }
 
       // Decode the packet into audio samples, ignoring any decode errors.
       let audio_buf = decoder.decode(&packet)?;
 
-      let frames = audio_buf.frames();
-      let spec = audio_buf.spec();
-      let channels = spec.channels.count();
-
-      // The decoded audio samples may now be accessed via the audio buffer if per-channel
-      // slices of samples in their native decoded format is desired. Use-cases where
-      // the samples need to be accessed in an interleaved order or converted into
-      // another sample format, or a byte buffer is required, are covered by copying the
-      // audio buffer into a sample buffer or raw sample buffer, respectively. In the
-      // example below, we will copy the audio buffer into a sample buffer in an
-      // interleaved order while also converting to a f32 sample format.
-
-      // If this is the *first* decoded packet, create a sample buffer matching the
-      // decoded audio buffer format.
-      if sample_buf.is_none() {
-        // Get the capacity of the decoded buffer. Note: This is capacity, not length!
-        let duration = audio_buf.capacity() as u64;
-
-        // Create the f32 sample buffer.
-        sample_buf = Some(SampleBuffer::<f32>::new(duration, *spec));
-      }
+      // The decoded audio samples may now be accessed via the generic audio buffer
+      // returned by the decoder. You may match on the buffer to access a sample-format
+      // specific buffer, or use generic routines to copy out the audio samples in the
+      // desired sample format.
 
       // Copy the decoded audio buffer into the sample buffer in an interleaved format.
-      if let Some(buf) = &mut sample_buf {
-        buf.copy_interleaved_ref(audio_buf);
-        let interleaved_samples = &buf.samples()[..frames * channels];
-        let mono_samples: Vec<f32> = match channels {
-          1 => Ok(interleaved_samples.to_vec()),
-          2 => Ok(
-            interleaved_samples
-              .chunks_exact(2)
-              .map(|chunk| (chunk[0] + chunk[1]) * 0.5)
-              .collect(),
-          ),
-          _ => Err(AudioFileProcessingError::ReadError(
-            "Only mono and stereo audio files are supported".to_string(),
-          )),
-        }?;
+      sample_buf.resize(audio_buf.samples_interleaved(), 0.);
+      audio_buf.copy_to_slice_interleaved(&mut sample_buf);
 
-        samples.extend_from_slice(&mono_samples);
-      };
+      // Convert stereo samples to mono samples and write the results
+      match audio_buf.spec().channels().count() {
+        1 => {
+          samples.extend_from_slice(&sample_buf);
+        }
+        2 => {
+          samples.extend(
+            sample_buf
+              .chunks_exact(2)
+              .map(|chunk| (chunk[0] + chunk[1]) * 0.5),
+          );
+        }
+        _ => {
+          return Err(AudioFileProcessingError::ReadError(
+            "Only mono and stereo audio files are supported".to_string(),
+          ));
+        }
+      }
     }
 
+    // Resample if the file samplerate does not match the host samplerate
     if file_sample_rate != self.host_sample_rate {
       // Initialize resampler
       if resampler.is_none() {
@@ -193,13 +186,14 @@ impl AudioFileProcessor {
       samples.copy_from_slice(&resample_buffer);
     }
 
+    // Calculate file duration (capped at the max buffer size)
     let duration_in_samples = if samples.len() > self.max_size {
       self.max_size
     } else {
       samples.len()
     };
     let duration_in_ms = duration_in_samples as f32 / self.host_sample_rate as f32 * 1000.;
-    samples.resize(self.max_size, 0.);
+    samples.resize(self.max_size, 0.); // Pad the buffer so it's full
 
     return Ok(AudioFileData {
       samples,

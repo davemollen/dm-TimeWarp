@@ -7,5 +7,5 @@ edition = "2021"
 [dependencies]
 fastrand = "2.4.1"
 rubato = "3.0.0"
-symphonia = { version = "0.5.4", features = ["all"] }
+symphonia = { version = "0.6.0", features = ["all"] }
 thiserror = "2.0.18"
