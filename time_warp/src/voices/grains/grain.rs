@@ -32,37 +32,23 @@ impl Grain {
     phase_step_size: f64,
     speed: f64,
     window_factor: f64,
-    fade_factor: f64,
-    fade_offset: f64,
   ) -> (f32, f32, f32) {
-    let speed = (if self.is_reversed {
+    let speed = if self.is_reversed {
       1. + speed
     } else {
       1. - speed
-    }) * 0.5;
-    let position_a = Self::wrap(self.position) * 2.;
-    let position_b = Self::wrap(self.position + 0.5) * 2.;
-    let position_a_fade = Self::get_playhead_fade(position_a, fade_factor, fade_offset);
-    let position_b_fade = 1. - position_a_fade;
-    let grain_fade = self.get_grain_fade(window_factor);
+    };
 
+    let grain_fade = self.get_grain_fade(window_factor);
+    let delay_out =
+      delay_line.read((self.position * time) as f32, Interpolation::Linear) * grain_fade;
+    self.position = Self::wrap(self.position + self.sample_factor / time * speed);
     let next_phase = self.phase + phase_step_size;
     if next_phase < 1. {
       self.phase = next_phase;
     } else {
       self.is_active = false;
     }
-
-    self.position += self.sample_factor / time * speed;
-    let delay_out = Self::read_from_delay(
-      delay_line,
-      time,
-      position_a,
-      position_b,
-      grain_fade,
-      position_a_fade,
-      position_b_fade,
-    );
     (delay_out * self.gain.0, delay_out * self.gain.1, grain_fade)
   }
 
@@ -84,41 +70,10 @@ impl Grain {
     let spray = fastrand::f32() * spray / time;
 
     self.phase = 0.;
-    self.position = (1. - (scan + spray + start_position_phase).fract() * 0.5) as f64;
+    self.position = (1. - (scan + spray + start_position_phase).fract()) as f64;
     self.is_active = true;
     self.is_reversed = is_reversed;
     self.set_panning(stereo);
-  }
-
-  fn read_from_delay(
-    delay_line: &DelayLine,
-    time: f64,
-    position_a: f64,
-    position_b: f64,
-    grain_fade: f32,
-    position_a_fade: f32,
-    position_b_fade: f32,
-  ) -> f32 {
-    let time_a = (position_a * time) as f32;
-    let time_b = (position_b * time) as f32;
-
-    match (position_a_fade > 0., position_b_fade > 0.) {
-      (true, true) => {
-        delay_line
-        .read(time_a, Interpolation::Linear)
-         * position_a_fade.min(grain_fade) // take the minimum of both fades to prevent audible decreasing gain
-         + delay_line
-            .read(time_b, Interpolation::Linear)
-            * position_b_fade.min(grain_fade)
-      }
-      (true, false) => {
-        delay_line.read(time_a, Interpolation::Linear) * position_a_fade.min(grain_fade)
-      }
-      (false, true) => {
-        delay_line.read(time_b, Interpolation::Linear) * position_b_fade.min(grain_fade)
-      }
-      _ => 0.,
-    }
   }
 
   pub fn is_active(&self) -> bool {
@@ -129,12 +84,6 @@ impl Grain {
     let fade_in = (self.phase * window_factor).min(1.);
     let fade_out = ((1. - self.phase) * window_factor).min(1.);
     let fade = fade_in * fade_out;
-    fade.cubic_spline_curve() as f32
-  }
-
-  fn get_playhead_fade(position: f64, fade_factor: f64, fade_offset: f64) -> f32 {
-    let fade =
-      (position * fade_factor).min(1.) * ((fade_offset - position) * fade_factor).clamp(0., 1.);
     fade.cubic_spline_curve() as f32
   }
 
