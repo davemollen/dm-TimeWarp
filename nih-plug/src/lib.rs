@@ -213,7 +213,11 @@ impl Plugin for DmTimeWarp {
 
   fn reset(&mut self) {
     self.time_warp.reset();
+    if self.process_params.sample_mode == Some(SampleMode::Delay) {
+      self.time_warp.reset_delay_line();
+    }
     self.notes.remove_notes();
+    self.process_params.set_reset_playback(true);
   }
 
   fn task_executor(&mut self) -> TaskExecutor<Self> {

@@ -51,9 +51,12 @@ impl TimeWarp {
   }
 
   pub fn reset(&mut self) {
-    self.delay_line.reset();
     self.filter.reset();
     self.voices.reset();
+  }
+
+  pub fn reset_delay_line(&mut self) {
+    self.delay_line.reset();
   }
 
   pub fn process(

@@ -211,7 +211,11 @@ impl Plugin for DmTimeWarp {
 
   fn activate(&mut self, _features: &mut Self::InitFeatures) {
     self.time_warp.reset();
+    if self.params.sample_mode == Some(SampleMode::Delay) {
+      self.time_warp.reset_delay_line();
+    }
     self.notes.remove_notes();
+    self.params.set_reset_playback(true);
     self.activated = true;
   }
 

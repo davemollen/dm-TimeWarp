@@ -43,6 +43,7 @@ pub struct Params {
   pub release: LinearSmooth,
   pub reset_playback: bool,
   pub start_offset_phase: f32,
+  pub sample_mode: Option<SampleMode>,
   file_duration: Option<f32>,
   loop_duration: Option<f32>,
   has_delay_mode_recording: bool,
@@ -51,7 +52,6 @@ pub struct Params {
   prev_play: bool,
   prev_erase: bool,
   is_erasing_buffer: bool,
-  prev_sample_mode: Option<SampleMode>,
   prev_midi_enabled: bool,
   pitch_bend_factor: f32,
   start_offset_phasor: Phasor,
@@ -85,6 +85,7 @@ impl Params {
       release: LinearSmooth::new(sample_rate, 20.),
       reset_playback: false,
       start_offset_phase: 0.,
+      sample_mode: None,
       file_duration: None,
       loop_duration: None,
       has_delay_mode_recording: false,
@@ -93,7 +94,6 @@ impl Params {
       prev_play: true,
       prev_erase: false,
       is_erasing_buffer: false,
-      prev_sample_mode: None,
       prev_midi_enabled: false,
       pitch_bend_factor: 1.,
       start_offset_phasor: Phasor::new(sample_rate),
@@ -146,9 +146,9 @@ impl Params {
     self.sync_position = sync_position;
 
     let sample_mode_has_changed = self
-      .prev_sample_mode
+      .sample_mode
       .map_or(false, |prev_sample_mode| sample_mode != prev_sample_mode);
-    self.prev_sample_mode = Some(sample_mode);
+    self.sample_mode = Some(sample_mode);
     let erase_has_changed = erase && !self.prev_erase;
     self.is_erasing_buffer = sample_mode_has_changed || erase_has_changed;
 
@@ -199,7 +199,7 @@ impl Params {
     }
     if sample_mode == SampleMode::Looper && self.loop_duration.is_none() {
       self.feedback.reset(0.);
-    } else if self.prev_sample_mode == Some(SampleMode::Looper) {
+    } else if self.sample_mode == Some(SampleMode::Looper) {
       self.feedback.reset(feedback);
     }
 
