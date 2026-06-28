@@ -279,11 +279,13 @@ impl Params {
           self.time.set_target(file_duration * length);
         } else {
           self.time.reset(file_duration * length);
+          self.reset_playback = true;
           self.should_reset_start_offset = true;
         }
       }
       (Some(file_duration), None, _, _) => {
         self.time.reset(file_duration * length);
+        self.reset_playback = true;
         self.should_reset_start_offset = true;
       }
       (None, _, None, SampleMode::Looper) => {
