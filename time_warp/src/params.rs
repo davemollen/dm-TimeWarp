@@ -1,7 +1,7 @@
 mod phasor;
 mod smooth;
 mod stopwatch;
-use crate::{FADE_TIME, MAX_DELAY_TIME};
+use crate::MAX_DELAY_TIME;
 pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,
@@ -207,6 +207,7 @@ impl Params {
 
     self.prev_play = play;
     self.prev_erase = erase;
+    self.prev_file_duration = self.file_duration;
   }
 
   pub fn settle(&mut self) {
@@ -220,7 +221,6 @@ impl Params {
   }
 
   pub fn set_file_duration(&mut self, file_duration: f32) {
-    self.prev_file_duration = self.file_duration;
     self.file_duration = Some(file_duration);
   }
 
