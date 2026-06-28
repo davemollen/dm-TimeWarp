@@ -40,8 +40,10 @@ impl Grain {
     };
 
     let grain_fade = self.get_grain_fade(window_factor);
-    let delay_out =
-      delay_line.read((self.position * time) as f32, Interpolation::Linear) * grain_fade;
+    let delay_out = delay_line.read(
+      (self.position * time) as f32 + time as f32,
+      Interpolation::Linear,
+    ) * grain_fade;
     self.position = Self::wrap(self.position + self.sample_factor / time * speed);
     let next_phase = self.phase + phase_step_size;
     if next_phase < 1. {
