@@ -70,7 +70,7 @@ impl Voices {
     decay: f32,
     sustain: f32,
     release: f32,
-    reset_playback: bool,
+    should_reset_playback: bool,
     phase_offset: f32,
   ) -> ((f32, f32), f32) {
     let grain_duration = Self::map_size_to_grain_duration(size, time);
@@ -88,7 +88,7 @@ impl Voices {
         let has_active_notes = notes
           .iter()
           .any(|note| *note.get_adsr_stage() != ADSRStage::Idle);
-        let reset = (has_active_notes && !self.has_active_notes) || reset_playback;
+        let reset = (has_active_notes && !self.has_active_notes) || should_reset_playback;
         self.has_active_notes = has_active_notes;
         if reset {
           self.phasors[0].reset(phase_offset);
@@ -147,7 +147,7 @@ impl Voices {
               }
               let speed = speed * adsr.get_speed();
               let gain = adsr.process(note, attack, decay, sustain, release);
-              let reset = adsr.get_trigger() || reset_playback;
+              let reset = adsr.get_trigger() || should_reset_playback;
               if reset {
                 phasor.reset(phase_offset);
                 grains.reset();
@@ -178,12 +178,12 @@ impl Voices {
           )
       }
     } else {
-      if reset_playback {
+      if should_reset_playback {
         self.phasors[0].reset(phase_offset);
         self.grains[0].reset();
       }
       let start_position_phase = self.phasors[0].process(freq, speed, stretch, is_in_granular_mode);
-      let trigger = self.grain_triggers[0].process(grain_duration, density, reset_playback);
+      let trigger = self.grain_triggers[0].process(grain_duration, density, should_reset_playback);
       let grains_out = self.grains[0].process(
         delay_line,
         trigger,

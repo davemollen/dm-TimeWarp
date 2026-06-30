@@ -75,7 +75,7 @@ impl TimeWarp {
       stretch,
       midi_enabled,
       sync_position,
-      reset_playback,
+      should_reset_playback,
       start_offset_phase,
       ..
     } = *params;
@@ -109,7 +109,7 @@ impl TimeWarp {
       decay,
       sustain,
       release,
-      reset_playback,
+      should_reset_playback,
       start_offset_phase,
     );
     let gain_compensation = if grains_gain == 0. {

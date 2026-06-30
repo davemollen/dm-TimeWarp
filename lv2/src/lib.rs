@@ -215,7 +215,7 @@ impl Plugin for DmTimeWarp {
       self.time_warp.reset_delay_line();
     }
     self.notes.remove_notes();
-    self.params.set_reset_playback(true);
+    self.params.reset_playback();
     self.activated = true;
   }
 

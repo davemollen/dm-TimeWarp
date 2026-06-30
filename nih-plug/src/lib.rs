@@ -217,7 +217,7 @@ impl Plugin for DmTimeWarp {
       self.time_warp.reset_delay_line();
     }
     self.notes.remove_notes();
-    self.process_params.set_reset_playback(true);
+    self.process_params.reset_playback();
   }
 
   fn task_executor(&mut self) -> TaskExecutor<Self> {
@@ -249,7 +249,7 @@ impl Plugin for DmTimeWarp {
             .time_warp
             .set_delay_line_values(samples, duration_in_samples);
           self.process_params.set_file_duration(duration_in_ms);
-          self.process_params.set_reset_playback(true);
+          self.process_params.reset_playback();
         }
         WorkerResponseData::FlushBuffer(samples) => {
           self.time_warp.set_delay_line_values(samples, 0);
