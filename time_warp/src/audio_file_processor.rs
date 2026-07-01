@@ -1,4 +1,7 @@
+mod fade_in_out;
 use {
+  crate::{shared::float_ext::FloatExt, FADE_TIME, MIN_DELAY_TIME},
+  fade_in_out::FadeInOut,
   rubato::{audioadapter_buffers::direct::InterleavedSlice, Fft, FixedSync, Resampler},
   std::{fs::File, path::Path},
   symphonia::core::{
@@ -29,6 +32,12 @@ pub enum AudioFileProcessingError {
 
   #[error("Sample rate not found.")]
   SampleRateError,
+
+  #[error("File duration can not be read.")]
+  DurationReadError,
+
+  #[error("File duration is too short.")]
+  DurationTooShortError,
 }
 
 pub struct AudioFileData {
@@ -41,6 +50,7 @@ pub struct AudioFileData {
 pub struct AudioFileProcessor {
   host_sample_rate: usize,
   max_size: usize,
+  fade_in_out: FadeInOut,
 }
 
 impl AudioFileProcessor {
@@ -48,11 +58,12 @@ impl AudioFileProcessor {
     Self {
       host_sample_rate: sample_rate as usize,
       max_size,
+      fade_in_out: FadeInOut::new(sample_rate, FADE_TIME as f32),
     }
   }
 
   pub fn read<'a, P: AsRef<Path>>(
-    &self,
+    &mut self,
     file_path: P,
   ) -> Result<AudioFileData, AudioFileProcessingError> {
     // Create a media source. Note that the MediaSource trait is automatically implemented for File,
@@ -97,7 +108,17 @@ impl AudioFileProcessor {
           .audio()
           .and_then(|audio_params| audio_params.sample_rate.map(|sr| sr as usize))
       })
-      .ok_or_else(|| AudioFileProcessingError::SampleRateError)?;
+      .ok_or(AudioFileProcessingError::SampleRateError)?;
+
+    // Read the track duration in milliseconds
+    let file_duration_in_ms = track
+      .duration
+      .ok_or(AudioFileProcessingError::DurationReadError)
+      .map(|dur| (dur.get() as f32).sampstoms(file_sample_rate as f32))?;
+    // Return error if the file duration is too short
+    if file_duration_in_ms < MIN_DELAY_TIME {
+      return Err(AudioFileProcessingError::DurationTooShortError);
+    }
 
     let chunk_size = 1024;
     let mut samples: Vec<f32> = Default::default();
@@ -151,7 +172,7 @@ impl AudioFileProcessor {
             "Only mono and stereo audio files are supported".to_string(),
           ));
         }
-      }
+      };
     }
 
     // Resample if the file samplerate does not match the host samplerate
@@ -186,13 +207,15 @@ impl AudioFileProcessor {
       samples.copy_from_slice(&resample_buffer);
     }
 
-    // Calculate file duration (capped at the max buffer size)
+    // Calculate file duration (capped at the max buffer size) and apply fades
     let duration_in_samples = if samples.len() > self.max_size {
+      self.fade_in_out.process(&mut samples[..self.max_size]);
       self.max_size
     } else {
+      self.fade_in_out.process(&mut samples);
       samples.len()
     };
-    let duration_in_ms = duration_in_samples as f32 / self.host_sample_rate as f32 * 1000.;
+    let duration_in_ms = (duration_in_samples as f32).sampstoms(self.host_sample_rate as f32);
     samples.resize(self.max_size, 0.); // Pad the buffer so it's full
 
     return Ok(AudioFileData {
@@ -205,25 +228,98 @@ impl AudioFileProcessor {
 
 #[cfg(test)]
 mod tests {
-  use crate::audio_file_processor::AudioFileProcessor;
+  use crate::{
+    assert_approximately_eq,
+    audio_file_processor::{fade_in_out::FadeInOut, AudioFileProcessingError, AudioFileProcessor},
+    FADE_TIME,
+  };
   use std::path::Path;
 
   #[test]
-  fn should_read_audio_file() {
-    let file_path = Path::new("src/audio_file_processor/read_example.wav");
-    let audio_file_processor = AudioFileProcessor::new(44100., 44100);
+  fn should_throw_error_for_short_audio_file() {
+    let file_path = Path::new("src/audio_file_processor/short_file.wav");
+    let mut audio_file_processor = AudioFileProcessor::new(44100., 44100);
+    let result = audio_file_processor.read(file_path);
+
+    assert!(result.is_err());
+    match result {
+      Err(AudioFileProcessingError::DurationTooShortError) => assert!(true),
+      _ => assert!(false),
+    };
+  }
+
+  #[test]
+  fn should_read_mono_audio_file_correctly() {
+    let sample_rate = 44100.;
+    let file_path = Path::new("src/audio_file_processor/valid_mono_file.wav");
+    let mut fade = FadeInOut::new(sample_rate, FADE_TIME as f32);
+    let mut audio_file_processor = AudioFileProcessor::new(sample_rate, 44100);
+    let result = audio_file_processor.read(file_path);
+
+    assert!(result.is_ok());
+
+    match result {
+      Ok(r) => {
+        let mut expected = vec![0.5; 44100];
+        fade.process(&mut expected);
+
+        r.samples
+          .iter()
+          .zip(expected.iter())
+          .for_each(|(actual, expected)| {
+            assert_approximately_eq!(*actual, expected, 4);
+          });
+      }
+      _ => (),
+    }
+  }
+
+  #[test]
+  fn should_read_stereo_audio_file_correctly() {
+    let sample_rate = 44100.;
+    let file_path = Path::new("src/audio_file_processor/valid_stereo_file.wav");
+    let mut fade = FadeInOut::new(sample_rate, FADE_TIME as f32);
+    let mut audio_file_processor = AudioFileProcessor::new(sample_rate, 44100);
     let result = audio_file_processor.read(file_path);
 
     assert!(result.is_ok());
     match result {
       Ok(r) => {
+        let mut expected = vec![0.5; 44100];
+        fade.process(&mut expected);
+
         r.samples
           .iter()
-          .zip([-0.61001587, 0.049987793])
+          .zip(expected.iter())
           .for_each(|(actual, expected)| {
-            assert_eq!(*actual, expected);
+            assert_approximately_eq!(*actual, expected, 4);
           });
-        assert_eq!(r.duration_in_ms, 0.36281177);
+      }
+      _ => (),
+    }
+  }
+
+  #[test]
+  fn should_apply_fades_at_max_size_when_file_is_too_big() {
+    let sample_rate = 44100.;
+    // This file has a length of 44100 samples, but it will capped at 22050 samples
+    let file_path = Path::new("src/audio_file_processor/valid_mono_file.wav");
+    let mut fade = FadeInOut::new(sample_rate, FADE_TIME as f32);
+    let mut audio_file_processor = AudioFileProcessor::new(sample_rate, 22050);
+    let result = audio_file_processor.read(file_path);
+
+    assert!(result.is_ok());
+    match result {
+      Ok(r) => {
+        let mut expected = vec![0.5; 22050];
+        fade.process(&mut expected);
+
+        r.samples
+          .iter()
+          .zip(expected.iter())
+          .for_each(|(actual, expected)| {
+            assert_approximately_eq!(*actual, expected, 4);
+          });
       }
       _ => (),
     }

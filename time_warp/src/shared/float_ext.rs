@@ -3,6 +3,7 @@ pub trait FloatExt {
   fn fast_dbtoa(self) -> Self;
   fn mix(self, right: Self, factor: Self) -> Self;
   fn mstosamps(self, sample_rate: Self) -> Self;
+  fn sampstoms(self, sample_rate: Self) -> Self;
   fn cubic_spline_curve(self) -> Self;
 }
 
@@ -29,6 +30,12 @@ impl FloatExt for f32 {
   #[inline(always)]
   fn mstosamps(self, sample_rate: Self) -> Self {
     self * 0.001 * sample_rate
+  }
+
+  /// Convert samples to milliseconds based on the samplerate.
+  #[inline(always)]
+  fn sampstoms(self, sample_rate: Self) -> Self {
+    self / sample_rate * 1000.0
   }
 
   #[inline(always)]
@@ -60,6 +67,12 @@ impl FloatExt for f64 {
   #[inline(always)]
   fn mstosamps(self, sample_rate: Self) -> Self {
     self * 0.001 * sample_rate
+  }
+
+  /// Convert samples to milliseconds based on the samplerate.
+  #[inline(always)]
+  fn sampstoms(self, sample_rate: Self) -> Self {
+    self / sample_rate * 1000.0
   }
 
   #[inline(always)]

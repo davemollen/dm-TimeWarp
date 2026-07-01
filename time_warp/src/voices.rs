@@ -15,6 +15,8 @@ use {
   start_position_phasor::StartPositionPhasor,
 };
 
+const VOICE_COUNT: usize = 8;
+
 pub struct Voices {
   grains: Vec<Grains>,
   adsrs: Vec<ADSR>,
@@ -27,10 +29,10 @@ pub struct Voices {
 impl Voices {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      grains: vec![Grains::new(sample_rate); 8],
-      adsrs: vec![ADSR::new(sample_rate, 5.); 8],
-      phasors: vec![StartPositionPhasor::new(sample_rate); 8],
-      grain_triggers: vec![GrainTrigger::new(sample_rate); 8],
+      grains: vec![Grains::new(sample_rate); VOICE_COUNT],
+      adsrs: vec![ADSR::new(sample_rate, 5.); VOICE_COUNT],
+      phasors: vec![StartPositionPhasor::new(sample_rate); VOICE_COUNT],
+      grain_triggers: vec![GrainTrigger::new(sample_rate); VOICE_COUNT],
       sample_rate: sample_rate as f64,
       has_active_notes: false,
     }
