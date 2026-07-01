@@ -7,6 +7,7 @@ mod voices;
 pub mod shared {
   pub mod delta;
   pub mod float_ext;
+  pub mod macros;
   pub mod phasor;
   pub mod tuple_ext;
 }

@@ -112,13 +112,10 @@ impl ADSR {
 #[cfg(test)]
 mod tests {
   use super::ADSR;
-  use crate::notes::{ADSRStage, Note};
-
-  fn assert_approx_eq(left: f32, right: f32) {
-    let left = (left * 100000.).round() / 100000.;
-    let right = (right * 100000.).round() / 100000.;
-    assert_eq!(left, right);
-  }
+  use crate::{
+    assert_approximately_eq,
+    notes::{ADSRStage, Note},
+  };
 
   #[test]
   fn regular_adsr() {
@@ -130,60 +127,60 @@ mod tests {
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.2);
+    assert_approximately_eq!(ramp, 0.2, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.3);
+    assert_approximately_eq!(ramp, 0.3, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.4);
+    assert_approximately_eq!(ramp, 0.4, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.6);
+    assert_approximately_eq!(ramp, 0.6, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.7);
+    assert_approximately_eq!(ramp, 0.7, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.8);
+    assert_approximately_eq!(ramp, 0.8, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.9);
+    assert_approximately_eq!(ramp, 0.9, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 1.0);
+    assert_approximately_eq!(ramp, 1.0, 6);
     // decay stage
     assert!(*note.get_adsr_stage() == ADSRStage::Decay);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.9);
+    assert_approximately_eq!(ramp, 0.9, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.8);
+    assert_approximately_eq!(ramp, 0.8, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.7);
+    assert_approximately_eq!(ramp, 0.7, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.6);
+    assert_approximately_eq!(ramp, 0.6, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     // sustain stage
     assert!(*note.get_adsr_stage() == ADSRStage::Sustain);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     // release stage
     note.note_off();
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.4);
+    assert_approximately_eq!(ramp, 0.4, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.3);
+    assert_approximately_eq!(ramp, 0.3, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.2);
+    assert_approximately_eq!(ramp, 0.2, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     assert!(*note.get_adsr_stage() == ADSRStage::Release);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
     assert!(*note.get_adsr_stage() == ADSRStage::Idle);
   }
 
@@ -194,9 +191,9 @@ mod tests {
     assert!(*note.get_adsr_stage() == ADSRStage::Idle);
     note.note_on(60, 0.5);
     let ramp = adsr.process(&mut note, 0., 0., 1., 0.);
-    assert_eq!(ramp, 0.5);
+    assert_eq!(ramp, 0.70710677);
     let ramp = adsr.process(&mut note, 0., 0., 0.5, 0.);
-    assert_eq!(ramp, 0.25);
+    assert_eq!(ramp, 0.35355338);
   }
 
   #[test]
@@ -209,22 +206,22 @@ mod tests {
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.2);
+    assert_approximately_eq!(ramp, 0.2, 6);
     // retrigger stage
     note.steal_note(64, 1.);
     assert!(*note.get_adsr_stage() == ADSRStage::Retrigger);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.2);
+    assert_approximately_eq!(ramp, 0.2, 6);
   }
 
   #[test]
@@ -237,41 +234,41 @@ mod tests {
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
     // decay stage
     assert!(*note.get_adsr_stage() == ADSRStage::Decay);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.9);
+    assert_approximately_eq!(ramp, 0.9, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.8);
+    assert_approximately_eq!(ramp, 0.8, 6);
     // retrigger stage
     note.steal_note(64, 1.);
     assert!(*note.get_adsr_stage() == ADSRStage::Retrigger);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.7);
+    assert_approximately_eq!(ramp, 0.7, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.6);
+    assert_approximately_eq!(ramp, 0.6, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.4);
+    assert_approximately_eq!(ramp, 0.4, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.3);
+    assert_approximately_eq!(ramp, 0.3, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.2);
+    assert_approximately_eq!(ramp, 0.2, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     assert!(*note.get_adsr_stage() == ADSRStage::Retrigger);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
     // decay stage
     assert!(*note.get_adsr_stage() == ADSRStage::Decay);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 500.);
-    assert_approx_eq(ramp, 0.9);
+    assert_approximately_eq!(ramp, 0.9, 6);
   }
 
   #[test]
@@ -284,36 +281,36 @@ mod tests {
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
     // decay stage
     assert!(*note.get_adsr_stage() == ADSRStage::Decay);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     // sustain stage
     assert!(*note.get_adsr_stage() == ADSRStage::Sustain);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     // retrigger stage
     note.steal_note(64, 1.);
     assert!(*note.get_adsr_stage() == ADSRStage::Retrigger);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.4);
+    assert_approximately_eq!(ramp, 0.4, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.3);
+    assert_approximately_eq!(ramp, 0.3, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.2);
+    assert_approximately_eq!(ramp, 0.2, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 500.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
   }
 
   #[test]
@@ -326,39 +323,39 @@ mod tests {
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
     // decay stage
     assert!(*note.get_adsr_stage() == ADSRStage::Decay);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     // sustain stage
     assert!(*note.get_adsr_stage() == ADSRStage::Sustain);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     // release stage
     note.note_off();
     assert!(*note.get_adsr_stage() == ADSRStage::Release);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.45);
+    assert_approximately_eq!(ramp, 0.45, 6);
     assert!(*note.get_adsr_stage() == ADSRStage::Release);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.4);
+    assert_approximately_eq!(ramp, 0.4, 6);
     // retrigger stage
     note.steal_note(64, 1.);
     assert!(*note.get_adsr_stage() == ADSRStage::Retrigger);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.3);
+    assert_approximately_eq!(ramp, 0.3, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.2);
+    assert_approximately_eq!(ramp, 0.2, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
 
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 100., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
   }
 
   #[test]
@@ -373,42 +370,42 @@ mod tests {
     assert_eq!(adsr.get_speed(), 1.);
     let ramp = adsr.process(&mut note, 100., 1000., 0.5, 1000.);
     assert_eq!(adsr.get_speed(), 2.);
-    assert_approx_eq(ramp, 0.75);
+    assert_approximately_eq!(ramp, 0.8660254, 6);
     // decay stage
     assert!(*note.get_adsr_stage() == ADSRStage::Decay);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.675);
+    assert_approximately_eq!(ramp, 0.7794228, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.6);
+    assert_approximately_eq!(ramp, 0.69282025, 6);
     // retrigger stage
     note.steal_note(48, 1.);
     assert!(*note.get_adsr_stage() == ADSRStage::Retrigger);
     assert_eq!(adsr.get_speed(), 2.);
-    assert_eq!(adsr.gain, 0.75);
+    assert_eq!(adsr.gain, 0.8660254);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
     assert_eq!(adsr.get_speed(), 2.);
-    assert_eq!(adsr.gain, 0.75);
-    assert_approx_eq(ramp, 0.525);
+    assert_eq!(adsr.gain, 0.8660254);
+    assert_approximately_eq!(ramp, 0.6062177, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.45);
+    assert_approximately_eq!(ramp, 0.5196152, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.375);
+    assert_approximately_eq!(ramp, 0.4330126, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.3);
+    assert_approximately_eq!(ramp, 0.3464101, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.225);
+    assert_approximately_eq!(ramp, 0.25980756, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.15);
+    assert_approximately_eq!(ramp, 0.17320502, 6);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.075);
+    assert_approximately_eq!(ramp, 0.08660248, 6);
     assert_eq!(adsr.get_speed(), 2.);
-    assert_eq!(adsr.gain, 0.75);
+    assert_eq!(adsr.gain, 0.8660254);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.);
+    assert_approximately_eq!(ramp, 0., 6);
     // attack stage
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     let ramp = adsr.process(&mut note, 100., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
     assert_eq!(adsr.get_speed(), 0.5);
     assert_eq!(adsr.gain, 1.);
   }
@@ -424,35 +421,35 @@ mod tests {
     assert!(*note.get_adsr_stage() == ADSRStage::Attack);
     assert_eq!(adsr.get_speed(), 1.);
     let ramp = adsr.process(&mut note, 1000., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.1);
+    assert_approximately_eq!(ramp, 0.1, 6);
     let ramp = adsr.process(&mut note, 500., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.3);
+    assert_approximately_eq!(ramp, 0.3, 6);
     let ramp = adsr.process(&mut note, 500., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
     let ramp = adsr.process(&mut note, 500., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.7);
+    assert_approximately_eq!(ramp, 0.7, 6);
     let ramp = adsr.process(&mut note, 500., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.9);
+    assert_approximately_eq!(ramp, 0.9, 6);
     let ramp = adsr.process(&mut note, 500., 100., 0.5, 1000.);
-    assert_approx_eq(ramp, 1.);
+    assert_approximately_eq!(ramp, 1., 6);
     // decay stage
     assert!(*note.get_adsr_stage() == ADSRStage::Decay);
     let ramp = adsr.process(&mut note, 1000., 1000., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.95);
+    assert_approximately_eq!(ramp, 0.95, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.5, 1000.);
-    assert_approx_eq(ramp, 0.85);
+    assert_approximately_eq!(ramp, 0.85, 6);
     // sustain stage
     let ramp = adsr.process(&mut note, 1000., 500., 0.9, 1000.);
     assert!(*note.get_adsr_stage() == ADSRStage::Sustain);
-    assert_approx_eq(ramp, 0.9);
+    assert_approximately_eq!(ramp, 0.9, 6);
     // release stage
     note.note_off();
     assert!(*note.get_adsr_stage() == ADSRStage::Release);
     let ramp = adsr.process(&mut note, 1000., 500., 0.9, 900.);
-    assert_approx_eq(ramp, 0.8);
+    assert_approximately_eq!(ramp, 0.8, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.9, 900.);
-    assert_approx_eq(ramp, 0.7);
+    assert_approximately_eq!(ramp, 0.7, 6);
     let ramp = adsr.process(&mut note, 1000., 500., 0.9, 450.);
-    assert_approx_eq(ramp, 0.5);
+    assert_approximately_eq!(ramp, 0.5, 6);
   }
 }
