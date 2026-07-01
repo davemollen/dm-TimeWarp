@@ -70,7 +70,6 @@ impl TimeWarp {
       scan,
       spray,
       size,
-      density,
       stereo,
       speed,
       stretch,
@@ -81,6 +80,7 @@ impl TimeWarp {
       ..
     } = *params;
 
+    let density = params.density.next();
     let recording_gain = params.recording_gain.next();
     let playback_gain = params.playback_gain.next();
     let time = params.time.next();

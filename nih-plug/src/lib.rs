@@ -218,7 +218,7 @@ impl Plugin for DmTimeWarp {
       self.time_warp.reset_delay_line();
     }
     self.notes.remove_notes();
-    self.process_params.reset_playback();
+    self.process_params.reset();
   }
 
   fn task_executor(&mut self) -> TaskExecutor<Self> {

@@ -21,7 +21,7 @@ pub struct Params {
   pub scan: f32,
   pub spray: f32,
   pub size: f32,
-  pub density: f32,
+  pub density: LinearSmooth,
   pub stereo: f32,
   pub speed: f32,
   pub stretch: f32,
@@ -63,7 +63,7 @@ impl Params {
       scan: 0.,
       spray: 0.,
       size: 1.,
-      density: 0.,
+      density: LinearSmooth::new(sample_rate, 20.),
       stereo: 1.,
       speed: 1.,
       stretch: 0.,
@@ -100,6 +100,11 @@ impl Params {
     }
   }
 
+  pub fn reset(&mut self) {
+    self.is_initialized = false;
+    self.reset_playback();
+  }
+
   pub fn set(
     &mut self,
     scan: f32,
@@ -132,7 +137,6 @@ impl Params {
     self.scan = scan;
     self.spray = spray;
     self.size = size;
-    self.density = density;
     self.stereo = stereo;
     self.speed = 2_f32.powf((pitch + detune * 0.01) / 12.)
       * if midi_enabled {
@@ -172,6 +176,7 @@ impl Params {
     let wet = if wet <= -70. { 0. } else { wet.fast_dbtoa() };
 
     if self.is_initialized {
+      self.density.set_target(density);
       self.recording_gain.set_target(recording_gain);
       self.playback_gain.set_target(playback_gain);
       self.set_time(sample_mode, record, play, time, length, buffer_size);
@@ -184,6 +189,7 @@ impl Params {
       self.sustain.set_target(sustain);
       self.release.set_target(release);
     } else {
+      self.density.reset(density);
       self.recording_gain.reset(recording_gain);
       self.playback_gain.reset(playback_gain);
       self.reset_time(time, length);
