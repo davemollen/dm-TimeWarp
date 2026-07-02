@@ -1,6 +1,6 @@
+mod adsr;
 mod grain_trigger;
 mod grains;
-mod linear_adsr;
 mod start_position_phasor;
 use {
   crate::{
@@ -9,9 +9,9 @@ use {
     shared::float_ext::FloatExt,
     CENTER_GRAIN_DURATION, FADE_TIME, MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY,
   },
+  adsr::ADSR,
   grain_trigger::GrainTrigger,
   grains::Grains,
-  linear_adsr::ADSR,
   start_position_phasor::StartPositionPhasor,
 };
 
