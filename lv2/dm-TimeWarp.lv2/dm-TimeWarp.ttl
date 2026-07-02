@@ -259,7 +259,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:portProperty pprops:logarithmic ;
 		lv2:default 1.0 ;
 		lv2:minimum 0.1 ;
-		lv2:maximum 5000.0 ;
+		lv2:maximum 15000.0 ;
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
@@ -269,7 +269,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:portProperty pprops:logarithmic ;
 		lv2:default 5.0 ;
 		lv2:minimum 1.0 ;
-		lv2:maximum 15000.0 ;
+		lv2:maximum 30000.0 ;
 		units:unit units:ms
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
@@ -287,7 +287,7 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:portProperty pprops:logarithmic ;
 		lv2:default 5.0 ;
 		lv2:minimum 1.0 ;
-		lv2:maximum 15000.0 ;
+		lv2:maximum 30000.0 ;
 		units:unit units:ms
 	], [
 		a lv2:InputPort, lv2:ControlPort ;

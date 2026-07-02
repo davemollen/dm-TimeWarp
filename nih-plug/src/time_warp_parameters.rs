@@ -268,7 +268,7 @@ impl Default for TimeWarpParameters {
         1.,
         FloatRange::Skewed {
           min: 0.1,
-          max: 5000.,
+          max: 15000.,
           factor: 0.2,
         },
       )
@@ -280,7 +280,7 @@ impl Default for TimeWarpParameters {
         5.,
         FloatRange::Skewed {
           min: 1.,
-          max: 15000.,
+          max: 30000.,
           factor: 0.2,
         },
       )
@@ -295,8 +295,8 @@ impl Default for TimeWarpParameters {
         5.,
         FloatRange::Skewed {
           min: 1.,
-          max: 15000.,
-          factor: 0.3,
+          max: 30000.,
+          factor: 0.2,
         },
       )
       .with_value_to_string(v2s_f32_ms_then_s())
