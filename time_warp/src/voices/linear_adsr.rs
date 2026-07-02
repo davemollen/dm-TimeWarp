@@ -6,23 +6,27 @@ use crate::{
 #[derive(Clone)]
 pub struct ADSR {
   x: f32,
+  adsr_output: f32,
   sample_rate: f32,
   retrigger_step_size: f32,
   gain: f32,
   speed: f64,
   trigger: bool,
+  ramp_down_start_value: Option<f32>,
 }
 
 impl ADSR {
   pub fn new(sample_rate: f32, retrigger_time: f32) -> Self {
     let retrigger_step_size = retrigger_time.mstosamps(sample_rate).recip();
     Self {
+      adsr_output: 0.,
       x: 0.,
       sample_rate,
       retrigger_step_size,
       gain: 1.,
       speed: 1.,
       trigger: false,
+      ramp_down_start_value: None,
     }
   }
 
@@ -31,6 +35,7 @@ impl ADSR {
     self.gain = 1.;
     self.speed = 1.;
     self.trigger = false;
+    self.ramp_down_start_value = None;
   }
 
   pub fn process(
@@ -41,9 +46,11 @@ impl ADSR {
     sustain: f32,
     release_time: f32,
   ) -> f32 {
-    match note.get_adsr_stage() {
+    let adsr_stage = note.get_adsr_stage().clone();
+    match adsr_stage {
       ADSRStage::Idle => {
         self.x = 0.;
+        self.adsr_output = 0.;
       }
       ADSRStage::Attack => {
         self.trigger = self.x == 0.;
@@ -57,47 +64,75 @@ impl ADSR {
         } else {
           self.x = next_x;
         }
+
+        self.adsr_output = self.x;
       }
       ADSRStage::Decay => {
         if sustain == 1. {
           note.set_adsr_stage(ADSRStage::Sustain);
         } else {
-          let decay_step_size = decay_time.mstosamps(self.sample_rate).recip() * (1. - sustain);
+          let decay_step_size = decay_time.mstosamps(self.sample_rate).recip();
           let next_x = self.x - decay_step_size;
-          if next_x <= sustain {
-            self.x = sustain;
+          if next_x <= 0. {
+            self.x = 1.;
             note.set_adsr_stage(ADSRStage::Sustain);
           } else {
             self.x = next_x;
           }
         }
+
+        self.adsr_output = self.x.cube() * (1. - sustain) + sustain;
       }
       ADSRStage::Sustain => {
-        self.x = sustain;
+        self.adsr_output = sustain;
       }
       ADSRStage::Release => {
-        let release_step_size = release_time.mstosamps(self.sample_rate).recip()
-          * if sustain == 0. { 1. } else { sustain };
+        let range = match self.ramp_down_start_value {
+          Some(range) => range,
+          None => {
+            self.ramp_down_start_value = Some(self.adsr_output);
+            self.x = 1.;
+            self.adsr_output
+          }
+        };
+
+        let release_step_size = release_time.mstosamps(self.sample_rate).recip();
         let next_x = self.x - release_step_size;
         if next_x <= 0. {
           self.x = 0.;
+          self.ramp_down_start_value = None;
           note.set_adsr_stage(ADSRStage::Idle);
         } else {
           self.x = next_x;
         }
+
+        self.adsr_output = self.x.cube() * range;
       }
       ADSRStage::Retrigger => {
+        let range = match self.ramp_down_start_value {
+          Some(range) => range,
+          None => {
+            self.ramp_down_start_value = Some(self.adsr_output);
+            self.x = 1.;
+            self.adsr_output
+          }
+        };
+
+        self.x = self.adsr_output;
         let next_x = self.x - self.retrigger_step_size;
         if next_x <= 0. {
           self.x = 0.;
+          self.ramp_down_start_value = None;
           note.set_adsr_stage(ADSRStage::Attack);
         } else {
           self.x = next_x;
         }
+
+        self.adsr_output = self.x.cube() * range;
       }
     };
 
-    self.x * self.gain
+    self.adsr_output * self.gain
   }
 
   pub fn get_speed(&self) -> f64 {

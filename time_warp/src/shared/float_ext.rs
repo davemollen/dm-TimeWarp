@@ -5,6 +5,8 @@ pub trait FloatExt {
   fn mstosamps(self, sample_rate: Self) -> Self;
   fn sampstoms(self, sample_rate: Self) -> Self;
   fn cubic_spline_curve(self) -> Self;
+  fn square(self) -> Self;
+  fn cube(self) -> Self;
 }
 
 impl FloatExt for f32 {
@@ -42,6 +44,16 @@ impl FloatExt for f32 {
   fn cubic_spline_curve(self) -> Self {
     self * self * (3.0 - 2.0 * self)
   }
+
+  #[inline(always)]
+  fn square(self) -> Self {
+    self * self
+  }
+
+  #[inline(always)]
+  fn cube(self) -> Self {
+    self * self * self
+  }
 }
 
 impl FloatExt for f64 {
@@ -78,6 +90,16 @@ impl FloatExt for f64 {
   #[inline(always)]
   fn cubic_spline_curve(self) -> Self {
     self * self * (3.0 - 2.0 * self)
+  }
+
+  #[inline(always)]
+  fn square(self) -> Self {
+    self * self
+  }
+
+  #[inline(always)]
+  fn cube(self) -> Self {
+    self * self * self
   }
 }
 
