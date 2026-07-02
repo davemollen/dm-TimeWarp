@@ -13,7 +13,7 @@ function(event) {
 
   function handle_port_values(symbol, value) {
     switch (symbol) {
-      case "freeze":
+      case "freeze": {
         const freeze = event.icon.find("[mod-port-symbol=freeze]");
         const stretch = event.icon.find("[mod-port-symbol=stretch]");
         if(value == 1) {
@@ -24,7 +24,8 @@ function(event) {
           stretch.removeClass("disabled");
         }
         break;
-      case "record":
+      }
+      case "record": {
         const record = event.icon.find("[mod-port-symbol=record]");
         if(value == 1) {
           record.addClass("on");
@@ -32,9 +33,11 @@ function(event) {
           record.removeClass("on");
         }
         break;
-      case "sample_mode":
+      }
+      case "sample_mode": {
         show_correct_time_control_knob(value)
         const sample = event.icon.find("[mod-role=input-parameter]").parent();
+        const record = event.icon.find("[mod-port-symbol=record]");
         if(value == 3) {
           sample.removeClass("disabled");
           sample.removeClass("prevent-clicks");
@@ -43,7 +46,8 @@ function(event) {
           sample.addClass("prevent-clicks");
         }
         break;
-      case "play":
+      }
+      case "play": {
         const play = event.icon.find("[mod-port-symbol=play]");
         if(value == 1) {
           play.addClass("on");
@@ -51,7 +55,8 @@ function(event) {
           play.removeClass("on");
         }
         break;
-      case "erase":
+      }
+      case "erase": {
         const erase = event.icon.find("[mod-port-symbol=erase]");
         if(value == 1) {
           erase.addClass("on");
@@ -62,6 +67,7 @@ function(event) {
           erase.removeClass("on");
         }
         break;
+      }
       case "midi_enabled": {
         const midi = event.icon.find("[mod-port-symbol=midi_enabled]");
         const attack = event.icon.find("[mod-port-symbol=attack]").parent();
@@ -85,7 +91,7 @@ function(event) {
         })
         break;
       }
-      case "sync_position":
+      case "sync_position": {
         const sync_position = event.icon.find("[mod-port-symbol=sync_position]");
         if(value == 1) {
           sync_position.addClass("on");
@@ -93,6 +99,7 @@ function(event) {
           sync_position.removeClass("on");
         }
         break;
+      }
       case "attack":
       case "decay":
       case "release": {
