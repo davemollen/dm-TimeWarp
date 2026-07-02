@@ -30,9 +30,6 @@
 	] ;
 	mod:brand "DM" ;
 	mod:label "TimeWarp" ;
-	rdfs:comment """
-A granular delay, looper & sampler with time stretch capabilities.
-""" ;
 	lv2:requiredFeature urid:map, work:schedule ;
 	lv2:optionalFeature lv2:hardRTCapable,
 		state:loadDefaultState ,
@@ -334,4 +331,66 @@ A granular delay, looper & sampler with time stretch capabilities.
 		lv2:index 33 ;
 		lv2:symbol "output_right" ;
 		lv2:name "Out right"
-	] .
+	] ;
+	rdfs:comment """
+A granular delay, looper & sampler with time stretch capabilities.
+
+1. Granular controls:
+- Scan controls the start position for each grain.
+
+- Spray controls the amount of random on the start position for each grain. Put this on zero if you want some nasty glitchy sounds.
+
+- Size controls the duration of the grains. At full clockwise the whole buffer will be played. The middle position gives you a grain size of 500 milliseconds. And at full counter-clockwise you will get the smallest possible grain size of 10 milliseconds.
+
+- Density controls the amount of overlap between the grains. E.g. how many grains will be played simultaneously. At full counter-clockwise you will get one grain at a time. At full clockwise you will get 8 grains at a time.
+
+- Stereo controls the stereo width of the grains. At full counter-clockwise each grain is mono. At full clockwise each grain is randomly hard-panned to either the left or right. Dial it in for a stereo width in-between these two.
+
+- Detune controls the pitch of the grains in cents.
+
+- Pitch controls the pitch of the grains in semitones.
+
+- Freeze sets the Stretch control to zero which effectively freezes the sample playback position.
+
+- Stretch controls the start position of the grains. At zero the sample playback position is frozen. At -1 it will play back in reverse. At 2 it will play back at double the speed.
+
+2. Buffer controls:
+- Sample controls the file that's being loaded from disk if Sample Mode is set to the Sampler option.
+
+- Sample Mode controls how we write to the buffer. In Delay mode the delay time is set with the Time parameter. In Looper mode the delay time is set to the length of the first recording. In Sampler mode you can load a file from disk. The time is set to the length of the loaded file. You can record and overdub in each of these modes.
+
+- Time is activated if the Sampler Mode is set to Delay. It controls the delay time.
+
+- Length is activated if the Sampler Mode is set to Looper or Sampler. Like the Time parameter it controls the delay time. But in this case it's a fractional value of the sample or loop duration.
+
+- Highpass and Lowpass control the filter frequencies. The filter is in the feedback path. It's only activated when you're recording or overdubbing.
+
+- Feedback controls how much of the buffer contents is preserved when overdubbing.
+
+- Recycle controls how much of the wet effect is fed back into the delay line when overdubbing. At full counter-clockwise the signal is preserved as-is. At full clockwise the wet signal including all the pitch shifting and time stretching effects are fed back.
+
+3. MIDI controls:
+MIDI notes and pitchbend messages control the pitch. Velocity controls the volume. And sustain will hold the notes until released.
+
+- The MIDI control turns MIDI input on or off.
+
+- Voices controls how many notes can sound simultaneously. The maximum is 8 voices.
+
+- Sync Position controls whether multiple notes will be synchronized to the same playback position or not. If it's on the first active note will play back from the beginning of the buffer. Notes that are triggered later will follow the position of that first note. If it's off, each note will always start playing back from the beginning of the buffer.
+
+- Attack, Decay, Sustain & Release control the amplitude envelope for each voice.
+
+4. Footswitches:
+- On / Off controls if the effect is bypassed.
+
+- Record / Overdub controls if you're recording into the buffer.
+
+- Play / Stop controls if you're playing back from the buffer.
+
+- Erase will clear the buffer contents.
+
+5. Mix controls:
+- Dry controls the dry signal volume.
+
+- Wet controls the effect signal volume.
+""" .
