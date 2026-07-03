@@ -12,8 +12,9 @@ pub struct ADSR {
   gain: f32,
   speed: f64,
   trigger: bool,
-  release_start_value: Option<f32>,
-  retrigger_start_value: Option<f32>,
+  release_start_value: f32,
+  retrigger_start_value: f32,
+  prev_adsr_stage: ADSRStage,
 }
 
 impl ADSR {
@@ -27,8 +28,9 @@ impl ADSR {
       gain: 1.,
       speed: 1.,
       trigger: false,
-      release_start_value: None,
-      retrigger_start_value: None,
+      release_start_value: 1.,
+      retrigger_start_value: 1.,
+      prev_adsr_stage: ADSRStage::Idle,
     }
   }
 
@@ -37,7 +39,7 @@ impl ADSR {
     self.gain = 1.;
     self.speed = 1.;
     self.trigger = false;
-    self.release_start_value = None;
+    self.prev_adsr_stage = ADSRStage::Idle;
   }
 
   pub fn process(
@@ -48,7 +50,22 @@ impl ADSR {
     sustain: f32,
     release_time: f32,
   ) -> f32 {
-    match note.get_adsr_stage() {
+    let adsr_stage = note.get_adsr_stage().clone();
+    if adsr_stage != self.prev_adsr_stage {
+      match adsr_stage {
+        ADSRStage::Release => {
+          self.release_start_value = self.adsr_output;
+          self.x = 1.0;
+        }
+        ADSRStage::Retrigger => {
+          self.retrigger_start_value = self.adsr_output;
+          self.x = 1.0;
+        }
+        _ => {}
+      }
+    }
+
+    match adsr_stage {
       ADSRStage::Idle => {
         self.x = 0.;
         self.adsr_output = 0.;
@@ -88,49 +105,30 @@ impl ADSR {
         self.adsr_output = sustain;
       }
       ADSRStage::Release => {
-        let range = match self.release_start_value {
-          Some(range) => range,
-          None => {
-            self.release_start_value = Some(self.adsr_output);
-            self.x = 1.;
-            self.adsr_output
-          }
-        };
-
         let release_step_size = release_time.mstosamps(self.sample_rate).recip();
         let next_x = self.x - release_step_size;
         if next_x <= 0. {
           self.x = 0.;
-          self.release_start_value = None;
           note.set_adsr_stage(ADSRStage::Idle);
         } else {
           self.x = next_x;
         }
 
-        self.adsr_output = self.x.cube() * range;
+        self.adsr_output = self.x.cube() * self.release_start_value;
       }
       ADSRStage::Retrigger => {
-        let range = match self.retrigger_start_value {
-          Some(range) => range,
-          None => {
-            self.retrigger_start_value = Some(self.adsr_output);
-            self.x = 1.;
-            self.adsr_output
-          }
-        };
-
         let next_x = self.x - self.retrigger_step_size;
         if next_x <= 0. {
           self.x = 0.;
-          self.release_start_value = None;
           note.set_adsr_stage(ADSRStage::Attack);
         } else {
           self.x = next_x;
         }
 
-        self.adsr_output = self.x.cube() * range;
+        self.adsr_output = self.x.cube() * self.retrigger_start_value;
       }
     };
+    self.prev_adsr_stage = adsr_stage;
 
     self.adsr_output * self.gain
   }
