@@ -46,10 +46,7 @@ impl Notes {
               None => return,
             }
           }
-          None => match self.notes.get_mut(self.note_queue.len()) {
-            Some(n) => n.steal_note(note, velocity),
-            None => return,
-          },
+          None => self.notes[self.note_queue.len()].steal_note(note, velocity),
         }
       }
     }
