@@ -46,7 +46,7 @@ impl Note {
   pub fn steal_note(&mut self, note: u8, velocity: f32) {
     self.note = note;
     self.speed = self.note_to_speed_table[note as usize];
-    self.gain = velocity;
+    self.gain = velocity.sqrt();
     self.adsr_stage = match self.adsr_stage {
       ADSRStage::Idle => ADSRStage::Attack,
       _ => ADSRStage::Retrigger,
