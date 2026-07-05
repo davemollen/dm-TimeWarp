@@ -1,4 +1,5 @@
 mod note;
+use crate::MAX_VOICE_COUNT;
 pub use note::{ADSRStage, Note};
 
 pub struct Notes {
@@ -12,7 +13,7 @@ pub struct Notes {
 impl Notes {
   pub fn new() -> Self {
     Self {
-      notes: vec![Note::default(); 8],
+      notes: vec![Note::default(); MAX_VOICE_COUNT],
       note_queue: Vec::with_capacity(128),
       note_off_queue: Vec::with_capacity(128),
       voice_count: 1,

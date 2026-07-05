@@ -30,6 +30,7 @@ const MAX_DELAY_TIME: f32 = 60000.;
 pub const MIN_DENSITY: f64 = 1.;
 pub const MAX_DENSITY: f64 = 8.;
 pub const CENTER_GRAIN_DURATION: f32 = 500.;
+pub const MAX_VOICE_COUNT: usize = 8;
 
 pub struct TimeWarp {
   delay_line: DelayLine,

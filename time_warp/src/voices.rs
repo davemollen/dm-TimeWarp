@@ -7,15 +7,13 @@ use {
     delay_line::DelayLine,
     notes::{ADSRStage, Note},
     shared::float_ext::FloatExt,
-    CENTER_GRAIN_DURATION, FADE_TIME, MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY,
+    CENTER_GRAIN_DURATION, FADE_TIME, MAX_DENSITY, MAX_VOICE_COUNT, MIN_DELAY_TIME, MIN_DENSITY,
   },
   adsr::ADSR,
   grain_trigger::GrainTrigger,
   grains::Grains,
   start_position_phasor::StartPositionPhasor,
 };
-
-const VOICE_COUNT: usize = 8;
 
 pub struct Voices {
   grains: Vec<Grains>,
@@ -29,10 +27,10 @@ pub struct Voices {
 impl Voices {
   pub fn new(sample_rate: f32) -> Self {
     Self {
-      grains: vec![Grains::new(sample_rate); VOICE_COUNT],
-      adsrs: vec![ADSR::new(sample_rate, 5.); VOICE_COUNT],
-      phasors: vec![StartPositionPhasor::new(sample_rate); VOICE_COUNT],
-      grain_triggers: vec![GrainTrigger::new(sample_rate); VOICE_COUNT],
+      grains: vec![Grains::new(sample_rate); MAX_VOICE_COUNT],
+      adsrs: vec![ADSR::new(sample_rate, 5.); MAX_VOICE_COUNT],
+      phasors: vec![StartPositionPhasor::new(sample_rate); MAX_VOICE_COUNT],
+      grain_triggers: vec![GrainTrigger::new(sample_rate); MAX_VOICE_COUNT],
       sample_rate: sample_rate as f64,
       has_active_notes: false,
     }

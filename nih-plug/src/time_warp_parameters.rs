@@ -17,7 +17,7 @@ use {
   },
   nih_plug_vizia::ViziaState,
   std::sync::{Arc, Mutex},
-  time_warp::{MAX_DENSITY, MIN_DELAY_TIME, MIN_DENSITY},
+  time_warp::{MAX_DENSITY, MAX_VOICE_COUNT, MIN_DELAY_TIME, MIN_DENSITY},
 };
 
 const MAX_PARAM_DELAY_TIME: f32 = 10000.;
@@ -261,7 +261,14 @@ impl Default for TimeWarpParameters {
 
       sync_position: BoolParam::new("Sync Pos.", false),
 
-      voices: IntParam::new("Voices", 1, IntRange::Linear { min: 1, max: 8 }),
+      voices: IntParam::new(
+        "Voices",
+        1,
+        IntRange::Linear {
+          min: 1,
+          max: MAX_VOICE_COUNT as i32,
+        },
+      ),
 
       attack: FloatParam::new(
         "Attack",
