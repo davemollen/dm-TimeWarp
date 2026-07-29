@@ -34,6 +34,15 @@ pub struct TimeWarpParameters {
   #[persist = "editor-state"]
   pub editor_state: Arc<ViziaState>,
 
+  #[id = "record"]
+  pub record: BoolParam,
+
+  #[id = "play"]
+  pub play: BoolParam,
+
+  #[id = "erase"]
+  pub erase: BoolParam,
+
   #[id = "scan"]
   pub scan: FloatParam,
 
@@ -60,12 +69,6 @@ pub struct TimeWarpParameters {
 
   #[id = "pitch"]
   pub pitch: IntParam,
-
-  #[id = "record"]
-  pub record: BoolParam,
-
-  #[id = "play"]
-  pub play: BoolParam,
 
   #[id = "sample_mode"]
   pub sample_mode: EnumParam<SampleMode>,
@@ -94,15 +97,6 @@ pub struct TimeWarpParameters {
   #[id = "feedback"]
   pub feedback: FloatParam,
 
-  #[id = "midi_enabled"]
-  pub midi_enabled: BoolParam,
-
-  #[id = "voices"]
-  pub voices: IntParam,
-
-  #[id = "sync_position"]
-  pub sync_position: BoolParam,
-
   #[id = "attack"]
   pub attack: FloatParam,
 
@@ -115,14 +109,20 @@ pub struct TimeWarpParameters {
   #[id = "release"]
   pub release: FloatParam,
 
+  #[id = "midi_enabled"]
+  pub midi_enabled: BoolParam,
+
+  #[id = "voices"]
+  pub voices: IntParam,
+
+  #[id = "sync_position"]
+  pub sync_position: BoolParam,
+
   #[id = "dry"]
   pub dry: FloatParam,
 
   #[id = "wet"]
   pub wet: FloatParam,
-
-  #[id = "erase"]
-  pub erase: BoolParam,
 
   #[persist = "file_path"]
   pub file_path: Arc<Mutex<String>>,
@@ -137,6 +137,12 @@ impl Default for TimeWarpParameters {
 
     Self {
       editor_state: editor::default_state(),
+
+      record: BoolParam::new("Record / Dub", false),
+
+      play: BoolParam::new("Play / Stop", true),
+
+      erase: BoolParam::new("Erase", false),
 
       scan: FloatParam::new("Scan", 0., FloatRange::Linear { min: 0., max: 1. })
         .with_unit(" %")
@@ -193,10 +199,6 @@ impl Default for TimeWarpParameters {
       .with_unit(" ct"),
 
       pitch: IntParam::new("Pitch", 0, IntRange::Linear { min: -24, max: 24 }).with_unit(" st"),
-
-      record: BoolParam::new("Record / Dub", false),
-
-      play: BoolParam::new("Play / Stop", true),
 
       sample_mode: EnumParam::new("Sample Mode", SampleMode::Delay),
 
@@ -257,19 +259,6 @@ impl Default for TimeWarpParameters {
         .with_value_to_string(v2s_f32_percentage(2))
         .with_string_to_value(s2v_f32_percentage()),
 
-      midi_enabled: BoolParam::new("MIDI", false),
-
-      sync_position: BoolParam::new("Sync Pos.", false),
-
-      voices: IntParam::new(
-        "Voices",
-        1,
-        IntRange::Linear {
-          min: 1,
-          max: MAX_VOICE_COUNT as i32,
-        },
-      ),
-
       attack: FloatParam::new(
         "Attack",
         1.,
@@ -309,6 +298,19 @@ impl Default for TimeWarpParameters {
       .with_value_to_string(v2s_f32_ms_then_s())
       .with_string_to_value(s2v_f32_ms_then_s()),
 
+      midi_enabled: BoolParam::new("MIDI", false),
+
+      sync_position: BoolParam::new("Sync Pos.", false),
+
+      voices: IntParam::new(
+        "Voices",
+        1,
+        IntRange::Linear {
+          min: 1,
+          max: MAX_VOICE_COUNT as i32,
+        },
+      ),
+
       dry: FloatParam::new(
         "Dry",
         0.,
@@ -344,8 +346,6 @@ impl Default for TimeWarpParameters {
           format!("{:.2}", value)
         }
       })),
-
-      erase: BoolParam::new("Erase", false),
 
       file_path: Arc::new(Mutex::new("".to_string())),
 

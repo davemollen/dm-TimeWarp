@@ -40,6 +40,9 @@ impl Default for DmTimeWarp {
 impl DmTimeWarp {
   fn set_param_values(&mut self, buffer_size: usize, context: &mut impl ProcessContext<Self>) {
     self.process_params.set(
+      self.params.record.value(),
+      self.params.play.value(),
+      self.params.erase.value(),
       self.params.scan.value(),
       self.params.spray.value(),
       self.params.freeze.value(),
@@ -49,8 +52,6 @@ impl DmTimeWarp {
       self.params.stereo.value(),
       self.params.detune.value() as f32,
       self.params.pitch.value() as f32,
-      self.params.record.value(),
-      self.params.play.value(),
       match self.params.sample_mode.value() {
         ParamSampleMode::Delay => SampleMode::Delay,
         ParamSampleMode::Looper => SampleMode::Looper,
@@ -60,15 +61,14 @@ impl DmTimeWarp {
       self.params.length.value(),
       self.params.recycle.value(),
       self.params.feedback.value(),
-      self.params.dry.value(),
-      self.params.wet.value(),
-      self.params.midi_enabled.value(),
-      self.params.sync_position.value(),
       self.params.attack.value(),
       self.params.decay.value(),
       self.params.sustain.value(),
       self.params.release.value(),
-      self.params.erase.value(),
+      self.params.midi_enabled.value(),
+      self.params.sync_position.value(),
+      self.params.dry.value(),
+      self.params.wet.value(),
       buffer_size,
     );
 

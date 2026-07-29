@@ -7,6 +7,9 @@ fn main() {
   let mut params = Params::new(44100.);
   let mut notes = Notes::new();
   params.set(
+    true,
+    true,
+    false,
     0.,
     0.1,
     false,
@@ -16,22 +19,19 @@ fn main() {
     0.,
     0.,
     1.,
-    true,
-    true,
     time_warp::SampleMode::Delay,
     250.,
     1.,
     0.75,
     0.5,
-    0.,
-    0.,
-    false,
-    true,
     10.,
     50.,
     -12.,
     1000.,
     false,
+    true,
+    0.,
+    0.,
     512,
   );
   time_warp.get_filter().set_cutoff_frequencies(200., 3000.);
