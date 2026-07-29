@@ -145,6 +145,9 @@ jobs:
       - name: Add an OS-specific readme file with installation instructions
         run: cp ".github/workflows/readme-${{ runner.os }}.txt" "$ARCHIVE_NAME/README.txt"
 
+      - name: Add manual pdf
+        run: cp ".github/workflows/manual.pdf" "$ARCHIVE_NAME/manual.pdf"
+
       - name: Zip files
         if: startsWith(matrix.os, 'windows')
         shell: pwsh

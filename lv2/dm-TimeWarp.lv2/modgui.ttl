@@ -4,6 +4,7 @@
 <https://github.com/davemollen/dm-TimeWarp>
     modgui:gui [
         modgui:resourcesDirectory <modgui> ;
+        modgui:documentation <modgui/mod-manual.pdf>;
         modgui:iconTemplate <modgui/icon-dm-timewarp.html> ;
         modgui:stylesheet <modgui/stylesheet-dm-timewarp.css> ;
         modgui:screenshot <modgui/screenshot-dm-timewarp.png> ;
