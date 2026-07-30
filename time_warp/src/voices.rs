@@ -80,6 +80,8 @@ impl Voices {
     let min_window_factor = 2.;
     let max_window_factor = extended_grain_duration / FADE_TIME;
     let window_factor = max_window_factor.mix(min_window_factor, normalized_density);
+    let fade_factor = time as f64 / FADE_TIME;
+    let fade_offset = fade_factor.recip() + 1.;
     let is_in_granular_mode = size < 1. || density > 1.;
     let freq = 1000. / time as f64;
 
@@ -122,6 +124,8 @@ impl Voices {
                 speed,
                 stretch < 0.,
                 window_factor,
+                fade_factor,
+                fade_offset,
               );
               (
                 (
@@ -166,6 +170,8 @@ impl Voices {
                 speed,
                 stretch < 0.,
                 window_factor,
+                fade_factor,
+                fade_offset,
               );
               (
                 (
@@ -196,6 +202,8 @@ impl Voices {
         speed,
         stretch < 0.,
         window_factor,
+        fade_factor,
+        fade_offset,
       );
       ((grains_out.0, grains_out.1), self.grains[0].get_gain())
     }
