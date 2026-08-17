@@ -33,27 +33,34 @@ impl DmTimeWarp {
       None => return,
     };
 
-    let mut object_writer = notify_sequence
-      .init(
-        TimeStamp::Frames(self.time_stamp),
-        self.urids.atom.object,
-        ObjectHeader {
-          id: None,
-          otype: self.urids.patch.set_class.into_general(),
-        },
-      )
-      .unwrap();
-    object_writer
+    // Every writer returns None when the notify port runs out of space, which a
+    // long file path can do. Bail out instead of panicking on the audio thread.
+    let Some(mut object_writer) = notify_sequence.init(
+      TimeStamp::Frames(self.time_stamp),
+      self.urids.atom.object,
+      ObjectHeader {
+        id: None,
+        otype: self.urids.patch.set_class.into_general(),
+      },
+    ) else {
+      return;
+    };
+    if object_writer
       .init(
         self.urids.patch.property,
         self.urids.atom.urid,
         self.urids.sample.into_general(),
       )
-      .unwrap();
-    let mut path_value_writer = object_writer
-      .init(self.urids.patch.value, self.urids.atom.path, ())
-      .unwrap();
-    path_value_writer.append(&self.file_path).unwrap();
+      .is_none()
+    {
+      return;
+    }
+    let Some(mut path_value_writer) =
+      object_writer.init(self.urids.patch.value, self.urids.atom.path, ())
+    else {
+      return;
+    };
+    let _ = path_value_writer.append(&self.file_path);
   }
 
   fn read_patch_set_events(
@@ -71,17 +78,18 @@ impl DmTimeWarp {
     if object_header.otype == self.urids.patch.set_class {
       for (property_header, property) in object_reader {
         if property_header.key == self.urids.patch.property {
+          // A patch:Set for any other property carries a different atom type.
           should_read_patch_value = property
             .read(self.urids.atom.urid, ())
             .map(|patch_property| self.urids.sample.get() == patch_property.get())
-            .unwrap();
+            .unwrap_or(false);
         }
 
         if should_read_patch_value && property_header.key == self.urids.patch.value {
-          self.file_path = property
-            .read(self.urids.atom.path, ())
-            .map(|path| path.to_string())
-            .unwrap();
+          let Some(path) = property.read(self.urids.atom.path, ()) else {
+            continue;
+          };
+          self.file_path = path.to_string();
 
           features
             .schedule
