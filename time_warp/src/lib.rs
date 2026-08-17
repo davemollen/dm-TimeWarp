@@ -84,7 +84,9 @@ impl TimeWarp {
     let density = params.density.next();
     let recording_gain = params.recording_gain.next();
     let playback_gain = params.playback_gain.next();
-    let time = params.time.next();
+    // Length can drive the target to 0 ms, and 1000. / time then latches inf/NaN
+    // into the grain trigger and start position phasors, silencing the plugin.
+    let time = params.time.next().max(MIN_DELAY_TIME);
     let recycle = params.recycle.next();
     let feedback = params.feedback.next();
     let dry = params.dry.next();
