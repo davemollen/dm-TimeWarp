@@ -51,6 +51,9 @@ impl DelayLine {
 
   pub fn set_values(&mut self, mut values: Vec<f32>) {
     mem::swap(&mut self.buffer, &mut values);
+    debug_assert!(self.buffer.len().is_power_of_two());
+    self.wrap = self.buffer.len() - 1;
+    self.write_pointer &= self.wrap;
   }
 
   pub fn set_write_pointer(&mut self, index: usize) {
@@ -145,6 +148,20 @@ impl DelayLine {
 #[cfg(test)]
 mod tests {
   use super::DelayLine;
+
+  #[test]
+  fn should_keep_the_wrap_mask_in_sync_with_the_buffer() {
+    let mut delay_line = DelayLine::new(2, 1000.);
+    delay_line.set_write_pointer(1);
+    delay_line.set_values(vec![0.; 8]);
+
+    assert_eq!(delay_line.wrap, 7);
+    // Reads and writes have to stay inside the buffer that was just swapped in.
+    for _ in 0..16 {
+      delay_line.read(1., super::Interpolation::Linear);
+      delay_line.write(0.5);
+    }
+  }
 
   #[test]
   fn should_set_values() {
