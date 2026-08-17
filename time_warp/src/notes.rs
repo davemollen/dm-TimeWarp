@@ -94,6 +94,9 @@ impl Notes {
   }
 
   pub fn set_voice_count(&mut self, voice_count: usize) {
+    // A host is free to report a value outside the advertised range, and both
+    // 0 and values above MAX_VOICE_COUNT index out of bounds in note_on.
+    let voice_count = voice_count.clamp(1, MAX_VOICE_COUNT);
     if voice_count == self.voice_count {
       return;
     }
@@ -102,6 +105,10 @@ impl Notes {
   }
 
   pub fn remove_notes(&mut self) {
+    // The queues have to go with the voices, or note_off reactivates a note
+    // that was already removed and leaves it sounding forever.
+    self.note_queue.clear();
+    self.note_off_queue.clear();
     for note in &mut self.notes {
       note.reset_note();
     }
@@ -246,6 +253,33 @@ mod tests {
         (60, ADSRStage::Release),
       ],
     );
+  }
+
+  #[test]
+  fn does_not_resurrect_removed_notes() {
+    let mut notes = Notes::new();
+    notes.set_voice_count(1);
+    notes.note_on(60, 1.);
+    // MIDI CC 120, MIDI being switched off, or a voice count change
+    notes.remove_notes();
+    notes.note_on(64, 1.);
+    notes.note_off(64);
+
+    assert_eq!(notes.notes[0].get_note(), 64);
+  }
+
+  #[test]
+  fn accepts_voice_counts_outside_the_advertised_range() {
+    for voice_count in [0, 9, 999] {
+      let mut notes = Notes::new();
+      notes.set_voice_count(voice_count);
+      for note in 60..72 {
+        notes.note_on(note, 1.);
+      }
+      for note in 60..72 {
+        notes.note_off(note);
+      }
+    }
   }
 
   #[test]
