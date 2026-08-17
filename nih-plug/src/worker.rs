@@ -1,6 +1,9 @@
 use crossbeam_channel::{Receiver, Sender}; // TODO: check other crates like omange, ringbuf or rtrb as an alternative
 use nih_plug::prelude::AtomicF32;
-use std::sync::{atomic::Ordering, Arc, Mutex};
+use std::sync::{
+  atomic::{AtomicUsize, Ordering},
+  Arc, Mutex,
+};
 use time_warp::{AudioFileData, AudioFileProcessor};
 
 pub enum WorkerRequest {
@@ -19,7 +22,7 @@ pub struct Worker {
   file_path_param: Arc<Mutex<String>>,
   sender: Sender<WorkerResponseData>,
   receiver: Receiver<WorkerResponseData>,
-  delay_line_size: usize,
+  delay_line_size: Arc<AtomicUsize>,
 }
 
 impl Worker {
@@ -34,13 +37,13 @@ impl Worker {
       file_path_param,
       sender,
       receiver,
-      delay_line_size,
+      delay_line_size: Arc::new(AtomicUsize::new(delay_line_size)),
     }
   }
 
   pub fn initialize(&mut self, sample_rate: f32, size: usize) {
     self.sample_rate.store(sample_rate, Ordering::Relaxed);
-    self.delay_line_size = size;
+    self.delay_line_size.store(size, Ordering::Relaxed);
   }
 
   pub fn handle_task(&self, task: WorkerRequest) {
@@ -51,7 +54,7 @@ impl Worker {
         }
         let audio_file_data = match AudioFileProcessor::new(
           self.sample_rate.load(Ordering::Relaxed),
-          self.delay_line_size,
+          self.delay_line_size.load(Ordering::Relaxed),
         )
         .read(&file_path)
         {
@@ -75,7 +78,7 @@ impl Worker {
         }
       }
       WorkerRequest::FlushBuffer => {
-        let empty_buffer = vec![0.; self.delay_line_size];
+        let empty_buffer = vec![0.; self.delay_line_size.load(Ordering::Relaxed)];
         self
           .sender
           .try_send(WorkerResponseData::FlushBuffer(empty_buffer))
