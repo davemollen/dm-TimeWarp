@@ -127,11 +127,9 @@ impl Grain {
   }
 
   fn wrap(x: f64) -> f64 {
-    if x < 0. {
-      x + 1.
-    } else {
-      x.fract()
-    }
+    // Subtracting the floor also normalizes positions below -1., which happens
+    // whenever the effective speed exceeds 4. (e.g. Pitch +24 st plus Detune).
+    x - x.floor()
   }
 
   fn set_panning(&mut self, stereo: f32) {
@@ -154,6 +152,30 @@ impl Grain {
       let stereo_factor = stereo * 1.25;
       let panning = (fastrand::f32() - 0.5) * stereo_factor + 0.5;
       self.gain = (panning, 1. - panning);
+    }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::Grain;
+
+  #[test]
+  fn should_wrap_positions_into_the_unit_range() {
+    assert_eq!(Grain::wrap(0.25), 0.25);
+    assert_eq!(Grain::wrap(-0.25), 0.75);
+    // A grain's position drifts below -1. once the effective speed exceeds 4.,
+    // which a negative playhead fade turns into a huge negative gain.
+    assert_eq!(Grain::wrap(-1.25), 0.75);
+    assert_eq!(Grain::wrap(-2.5), 0.5);
+    assert_eq!(Grain::wrap(3.75), 0.75);
+
+    for position in [-14.5, -3.05, -1., 0., 1., 7.9] {
+      let wrapped = Grain::wrap(position);
+      assert!(
+        (0. ..1.).contains(&wrapped),
+        "wrap({position}) returned {wrapped}, which is outside [0., 1.)"
+      );
     }
   }
 }
