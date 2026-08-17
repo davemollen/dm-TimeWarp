@@ -17,7 +17,9 @@ impl FadeInOut {
   }
 
   pub fn process(&mut self, samples: &mut [f32]) {
-    for i in 0..self.fade_time_in_samples {
+    // The fades read from both ends, so they can't be longer than half the slice.
+    // The declared file duration is no guarantee of how many samples were decoded.
+    for i in 0..self.fade_time_in_samples.min(samples.len() / 2) {
       let fade = ((i as f32) * self.step_size).cubic_spline_curve();
 
       samples[i] *= fade;
@@ -30,6 +32,15 @@ impl FadeInOut {
 mod tests {
   use super::*;
   use crate::assert_approximately_eq;
+
+  #[test]
+  fn should_not_panic_on_slices_shorter_than_the_fade() {
+    // A container can declare a longer duration than it actually decodes to.
+    let mut fade = FadeInOut::new(44100., 5.); // 220 samples
+    for length in [0, 1, 100, 219, 220, 441] {
+      fade.process(&mut vec![1.; length]);
+    }
+  }
 
   #[test]
   fn should_apply_fade_in_and_out() {
