@@ -169,3 +169,67 @@ impl TimeWarp {
     self.filter.process(feedback_signal.clamp(-1., 1.))
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::{Notes, Params, SampleMode, TimeWarp};
+  use std::f32::consts::TAU;
+
+  /// Pitch and Detune at their maxima give an effective speed of 2^(25/12) = 4.24,
+  /// which moves a grain's position below -1. within its lifetime. A position that
+  /// far negative used to reach get_playhead_fade unnormalized, where it turned
+  /// into a large negative gain on one of the two crossfade taps: this measured
+  /// 83.6 with a 0.5 amplitude input, and 11602 at a Time of 500 ms.
+  #[test]
+  fn should_not_amplify_the_input_at_maximum_pitch() {
+    let sample_rate = 48000.;
+    let buffer_size = 128;
+    let mut time_warp = TimeWarp::new(sample_rate);
+    let mut params = Params::new(sample_rate);
+    let mut notes = Notes::new();
+    let mut phase = 0.;
+    let mut peak = 0_f32;
+
+    for _ in 0..(sample_rate as usize / buffer_size / 4) {
+      params.set(
+        true,              // record
+        true,              // play
+        false,             // erase
+        0.,                // scan
+        0.,                // spray, kept at 0. so the grain positions are deterministic
+        false,             // freeze
+        1.,                // stretch
+        1.,                // size
+        1.,                // density
+        0.,                // stereo, kept at 0. so the panning is deterministic
+        100.,              // detune
+        24.,               // pitch
+        SampleMode::Delay, //
+        20.,               // time
+        1.,                // length
+        0.,                // recycle
+        0.,                // feedback
+        1.,                // attack
+        5.,                // decay
+        1.,                // sustain
+        5.,                // release
+        false,             // midi_enabled
+        false,             // sync_position
+        -70.,              // dry, muted so only the grains are measured
+        0.,                // wet
+        buffer_size,
+      );
+      for _ in 0..buffer_size {
+        phase = (phase + 1000. / sample_rate).fract();
+        let input = (phase * TAU).sin() * 0.5;
+        let (left, right) = time_warp.process((input, input), &mut params, notes.get_notes());
+        peak = peak.max(left.abs()).max(right.abs());
+      }
+    }
+
+    assert!(
+      peak < 2.,
+      "the loudest sample was {peak}, which is more than the 0.5 amplitude input"
+    );
+  }
+}
