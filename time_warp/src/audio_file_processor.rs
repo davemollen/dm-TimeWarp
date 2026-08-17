@@ -68,7 +68,9 @@ impl AudioFileProcessor {
   ) -> Result<AudioFileData, AudioFileProcessingError> {
     // Create a media source. Note that the MediaSource trait is automatically implemented for File,
     // among other types.
-    let file = Box::new(File::open(file_path).unwrap());
+    let file = Box::new(
+      File::open(file_path).map_err(|e| AudioFileProcessingError::ReadError(e.to_string()))?,
+    );
 
     // Create the media source stream using the boxed media source from above.
     let mss = MediaSourceStream::new(file, Default::default());
@@ -86,15 +88,20 @@ impl AudioFileProcessor {
     let mut format = symphonia::default::get_probe().probe(&hint, mss, fmt_opts, meta_opts)?;
 
     // Get the default audio track.
-    let track = format.default_track(TrackType::Audio).unwrap();
+    let track = format
+      .default_track(TrackType::Audio)
+      .ok_or_else(|| AudioFileProcessingError::ReadError("No audio track found.".to_string()))?;
 
     // Create a decoder for the track.
-    let mut decoder = symphonia::default::get_codecs()
-      .make_audio_decoder(
-        track.codec_params.as_ref().unwrap().audio().unwrap(),
-        &dec_opts,
-      )
-      .unwrap();
+    let audio_params = track
+      .codec_params
+      .as_ref()
+      .and_then(|params| params.audio())
+      .ok_or_else(|| {
+        AudioFileProcessingError::ReadError("No audio codec parameters found.".to_string())
+      })?;
+    let mut decoder =
+      symphonia::default::get_codecs().make_audio_decoder(audio_params, &dec_opts)?;
 
     // Store the track identifier, we'll use it to filter packets.
     let track_id = track.id;
