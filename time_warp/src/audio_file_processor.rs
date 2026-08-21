@@ -18,6 +18,9 @@ pub enum AudioFileProcessingError {
   #[error("Symphonia error: {0}")]
   SymphoniaError(#[from] symphonia::core::errors::Error),
 
+  #[error("File I/O error: {0}")]
+  FileIOError(#[from] std::io::Error),
+
   #[error("Read error: {0}")]
   ReadError(String),
 
@@ -68,9 +71,7 @@ impl AudioFileProcessor {
   ) -> Result<AudioFileData, AudioFileProcessingError> {
     // Create a media source. Note that the MediaSource trait is automatically implemented for File,
     // among other types.
-    let file = Box::new(
-      File::open(file_path).map_err(|e| AudioFileProcessingError::ReadError(e.to_string()))?,
-    );
+    let file = Box::new(File::open(file_path)?);
 
     // Create the media source stream using the boxed media source from above.
     let mss = MediaSourceStream::new(file, Default::default());
