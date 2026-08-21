@@ -1,7 +1,7 @@
 mod phasor;
 mod smooth;
 mod stopwatch;
-use crate::MAX_DELAY_TIME;
+use crate::{MAX_DELAY_TIME, MIN_DELAY_TIME};
 pub use smooth::Smoother;
 use {
   crate::shared::float_ext::FloatExt,
@@ -282,15 +282,21 @@ impl Params {
     ) {
       (Some(file_duration), Some(prev_file_duration), _, _) => {
         if file_duration == prev_file_duration {
-          self.time.set_target(file_duration * length);
+          self
+            .time
+            .set_target(Self::multiply_by_length(file_duration, length));
         } else {
-          self.time.reset(file_duration * length);
+          self
+            .time
+            .reset(Self::multiply_by_length(file_duration, length));
           self.should_reset_start_offset = true;
           self.should_reset_playback = true;
         }
       }
       (Some(file_duration), None, _, _) => {
-        self.time.reset(file_duration * length);
+        self
+          .time
+          .reset(Self::multiply_by_length(file_duration, length));
         self.should_reset_start_offset = true;
         self.should_reset_playback = true;
       }
@@ -298,14 +304,18 @@ impl Params {
         // stop stopwatch if play changed from false to true
         let start = record && !(!self.prev_play && play);
         if let Some(loop_duration) = self.stopwatch.process(start, buffer_size) {
-          self.time.reset(loop_duration * length);
+          self
+            .time
+            .reset(Self::multiply_by_length(loop_duration, length));
           self.loop_duration = Some(loop_duration);
           self.should_reset_start_offset = true;
           self.should_reset_playback = true;
         }
       }
       (_, _, Some(loop_duration), SampleMode::Looper) => {
-        self.time.set_target(loop_duration * length);
+        self
+          .time
+          .set_target(Self::multiply_by_length(loop_duration, length));
       }
       _ => {
         if record && !self.is_recording_in_delay_mode {
@@ -319,8 +329,8 @@ impl Params {
 
   fn reset_time(&mut self, time: f32, length: f32) {
     match (self.file_duration, self.loop_duration) {
-      (Some(dur), None) => self.time.reset(dur * length),
-      (None, Some(dur)) => self.time.reset(dur * length),
+      (Some(dur), None) => self.time.reset(Self::multiply_by_length(dur, length)),
+      (None, Some(dur)) => self.time.reset(Self::multiply_by_length(dur, length)),
       _ => {
         self.time.reset(time);
       }
@@ -336,5 +346,10 @@ impl Params {
       - self
         .start_offset_phasor
         .process(if time == 0. { 0. } else { 1000. / time }, buffer_size);
+  }
+
+  #[inline(always)]
+  fn multiply_by_length(duration: f32, length: f32) -> f32 {
+    (duration * length).max(MIN_DELAY_TIME)
   }
 }
