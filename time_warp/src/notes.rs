@@ -102,6 +102,8 @@ impl Notes {
   }
 
   pub fn remove_notes(&mut self) {
+    self.note_queue.clear();
+    self.note_off_queue.clear();
     for note in &mut self.notes {
       note.reset_note();
     }
