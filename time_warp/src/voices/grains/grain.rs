@@ -127,11 +127,7 @@ impl Grain {
   }
 
   fn wrap(x: f64) -> f64 {
-    if x < 0. {
-      x + 1.
-    } else {
-      x.fract()
-    }
+    x - x.floor()
   }
 
   fn set_panning(&mut self, stereo: f32) {
