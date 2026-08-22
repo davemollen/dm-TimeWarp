@@ -1,9 +1,11 @@
-## dm-TimeWarp
+## TimeWarp
 
 <img src="screenshot.png" alt="plugin screenshot" style="display:block;width:75%;max-width:1056px;">
 
-A granular audio effect written in Rust.
-It's a granular delay, looper & sampler with time stretch capabilities wrapped into one plugin. You can morph from regular playback into the granular universe.
+### A granular delay, looper & sampler built for sonic exploration.
+Capture live audio or import samples, then independently stretch time and transpose
+pitch to create everything from subtle enhancements to lush soundscapes. Connect a
+MIDI device to achieve polyphony, transforming any sound source into a playable, multi-layered instrument.
 
 The effect can be compiled to a [MOD audio](https://mod.audio/), VST3, CLAP, AUv2 or LV2 plugin.
 
