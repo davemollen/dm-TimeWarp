@@ -5,6 +5,7 @@
 @prefix midi:  	<http://lv2plug.in/ns/ext/midi#> .
 @prefix mod:   	<http://moddevices.com/ns/mod#> .
 @prefix patch: 	<http://lv2plug.in/ns/ext/patch#> .
+@prefix pg:    	<http://lv2plug.in/ns/ext/port-groups#> .
 @prefix pprops:	<http://lv2plug.in/ns/ext/port-props#> .
 @prefix rdf:   	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:  	<http://www.w3.org/2000/01/rdf-schema#> .
@@ -30,6 +31,8 @@
 	] ;
 	mod:brand "DM" ;
 	mod:label "TimeWarp" ;
+	lv2:minorVersion 1 ;
+	lv2:microVersion 2 ;
 	lv2:requiredFeature urid:map, work:schedule ;
 	lv2:optionalFeature lv2:hardRTCapable,
 		state:loadDefaultState ,
@@ -48,6 +51,7 @@
 		lv2:default 0 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_switches> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 1 ;
@@ -57,6 +61,7 @@
 		lv2:default 1 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_switches> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 2 ;
@@ -66,6 +71,7 @@
 		lv2:default 0 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_switches> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 3 ;
@@ -74,6 +80,7 @@
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 4 ;
@@ -82,7 +89,8 @@
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 500.0 ;
-		units:unit units:ms
+		units:unit units:ms ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 5 ;
@@ -92,6 +100,7 @@
 		lv2:default 0 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 6 ;
@@ -100,6 +109,7 @@
 		lv2:default 1.0 ;
 		lv2:minimum -2.0 ;
 		lv2:maximum 2.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 7 ;
@@ -108,6 +118,7 @@
 		lv2:default 1.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 8 ;
@@ -117,6 +128,7 @@
 		lv2:default 1.0 ;
 		lv2:minimum 1.0 ;
 		lv2:maximum 8.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 9 ;
@@ -125,6 +137,7 @@
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 10 ;
@@ -134,7 +147,8 @@
 		lv2:default 0 ;
 		lv2:minimum -100 ;
 		lv2:maximum 100 ;
-		units:unit units:cent
+		units:unit units:cent ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 11 ;
@@ -144,7 +158,8 @@
 		lv2:default 0 ;
 		lv2:minimum -24 ;
 		lv2:maximum 24 ;
-		units:unit units:semitone12TET
+		units:unit units:semitone12TET ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_grains> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 12 ;
@@ -158,6 +173,7 @@
 		lv2:scalePoint [rdfs:label "delay"; rdf:value 1];
 		lv2:scalePoint [rdfs:label "looper"; rdf:value 2];
 		lv2:scalePoint [rdfs:label "sampler"; rdf:value 3];
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_buffer> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 13 ;
@@ -167,7 +183,8 @@
 		lv2:default 2000.0 ;
 		lv2:minimum 10.0 ;
 		lv2:maximum 10000.0 ;
-		units:unit units:ms
+		units:unit units:ms ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_buffer> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 14 ;
@@ -176,6 +193,7 @@
 		lv2:default 1.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_buffer> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 15 ;
@@ -185,7 +203,8 @@
 		lv2:default 20.0 ;
 		lv2:minimum 20.0 ;
 		lv2:maximum 20000.0 ;
-		units:unit units:hz
+		units:unit units:hz ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_buffer> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 16 ;
@@ -195,7 +214,8 @@
 		lv2:default 20000.0 ;
 		lv2:minimum 20.0 ;
 		lv2:maximum 20000.0 ;
-		units:unit units:hz
+		units:unit units:hz ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_buffer> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 17 ;
@@ -204,6 +224,7 @@
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_buffer> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 18 ;
@@ -212,6 +233,7 @@
 		lv2:default 1.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_buffer> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 19 ;
@@ -221,7 +243,8 @@
 		lv2:default 1.0 ;
 		lv2:minimum 0.1 ;
 		lv2:maximum 15000.0 ;
-		units:unit units:ms
+		units:unit units:ms ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_midi> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 20 ;
@@ -231,7 +254,8 @@
 		lv2:default 5.0 ;
 		lv2:minimum 1.0 ;
 		lv2:maximum 30000.0 ;
-		units:unit units:ms
+		units:unit units:ms ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_midi> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 21 ;
@@ -240,6 +264,7 @@
 		lv2:default 1.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_midi> ;
 	], [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 22 ;
@@ -249,7 +274,8 @@
 		lv2:default 5.0 ;
 		lv2:minimum 1.0 ;
 		lv2:maximum 30000.0 ;
-		units:unit units:ms
+		units:unit units:ms ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_midi> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 23 ;
@@ -259,6 +285,7 @@
 		lv2:default 0 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_midi> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 24 ;
@@ -268,6 +295,7 @@
 		lv2:default 0 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_midi> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 25 ;
@@ -277,6 +305,7 @@
 		lv2:default 1 ;
 		lv2:minimum 1 ;
 		lv2:maximum 8 ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_midi> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 26 ;
@@ -285,7 +314,8 @@
 		lv2:default 0.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum 12.0 ;
-		units:unit units:db
+		units:unit units:db ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_mix> ;
 	] , [
 		a lv2:InputPort, lv2:ControlPort ;
 		lv2:index 27 ;
@@ -294,7 +324,8 @@
 		lv2:default 0.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum 12.0 ;
-		units:unit units:db
+		units:unit units:db ;
+		pg:group <https://github.com/davemollen/dm-TimeWarp#group_mix> ;
 	] , [
 		a lv2:InputPort , atom:AtomPort ;
 		atom:bufferType atom:Sequence ;
@@ -338,3 +369,34 @@ A granular delay, looper & sampler built for sonic exploration.
 Capture live audio or import samples, then independently stretch time and transpose pitch to create everything from subtle enhancements to lush soundscapes. 
 Connect a MIDI device to achieve polyphony, transforming any sound source into a playable, multi-layered instrument.
 """ .
+
+# Port groups
+<https://github.com/davemollen/dm-TimeWarp#group_switches>
+	a pg:InputGroup ;
+	lv2:symbol "switches" ;
+	lv2:name "Switches" ;
+	lv2:index 0 .
+
+<https://github.com/davemollen/dm-TimeWarp#group_grains>
+	a pg:InputGroup ;
+	lv2:symbol "grains" ;
+	lv2:name "Grains" ;
+	lv2:index 1 .
+
+<https://github.com/davemollen/dm-TimeWarp#group_buffer>
+	a pg:InputGroup ;
+	lv2:symbol "buffer" ;
+	lv2:name "Buffer" ;
+	lv2:index 2 .
+
+<https://github.com/davemollen/dm-TimeWarp#group_midi>
+	a pg:InputGroup ;
+	lv2:symbol "midi" ;
+	lv2:name "Midi" ;
+	lv2:index 3 .
+
+<https://github.com/davemollen/dm-TimeWarp#group_mix>
+	a pg:InputGroup ;
+	lv2:symbol "mix" ;
+	lv2:name "Mix" ;
+	lv2:index 4 .
