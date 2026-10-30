@@ -3,7 +3,7 @@ mod state;
 mod worker;
 use lv2::prelude::*;
 use std::string::String;
-use time_warp::{Notes, Params, SampleMode, TimeWarp};
+use time_warp::{Bypass, Notes, Params, SampleMode, TimeWarp};
 use worker::*;
 
 #[derive(PortCollection)]
@@ -42,6 +42,7 @@ struct Ports {
   input_right: InputPort<InPlaceAudio>,
   output_left: OutputPort<InPlaceAudio>,
   output_right: OutputPort<InPlaceAudio>,
+  enabled: InputPort<InPlaceControl>,
 }
 
 #[derive(FeatureCollection)]
@@ -71,6 +72,7 @@ struct URIDs {
 struct DmTimeWarp {
   time_warp: TimeWarp,
   params: Params,
+  bypass: Bypass,
   urids: URIDs,
   notes: Notes,
   activated: bool,
@@ -156,6 +158,7 @@ impl Plugin for DmTimeWarp {
     Some(Self {
       time_warp: TimeWarp::new(sample_rate),
       params: Params::new(sample_rate),
+      bypass: Bypass::new(sample_rate),
       urids: features.map.populate_collection()?,
       notes: Notes::new(),
       activated: false,
@@ -187,6 +190,22 @@ impl Plugin for DmTimeWarp {
       self.worker_is_finished = false;
     }
 
+    self.bypass.set_enabled(ports.enabled.get() == 0., || {
+      self
+        .time_warp
+        .reset(self.params.sample_mode == Some(SampleMode::Delay));
+      self.notes.remove_notes();
+      self.params.reset();
+    });
+
+    if self.bypass.is_done_activating() {
+      ports.output_left.copy_from(&ports.input_left, sample_count);
+      ports
+        .output_right
+        .copy_from(&ports.input_right, sample_count);
+      return;
+    }
+
     self.set_param_values(ports, features, sample_count);
     self.handle_events(ports, features);
 
@@ -195,13 +214,13 @@ impl Plugin for DmTimeWarp {
     for ((input_left, input_right), (output_left, output_right)) in
       input_channels.zip(output_channels)
     {
-      let time_warp_output = self.time_warp.process(
-        (input_left.get(), input_right.get()),
-        &mut self.params,
-        &mut self.notes.get_notes(),
-      );
-      output_left.set(time_warp_output.0);
-      output_right.set(time_warp_output.1);
+      let dry = (input_left.get(), input_right.get());
+      let wet = self
+        .time_warp
+        .process(dry, &mut self.params, &mut self.notes.get_notes());
+      let output = self.bypass.process(dry, wet);
+      output_left.set(output.0);
+      output_right.set(output.1);
     }
   }
 
@@ -210,13 +229,12 @@ impl Plugin for DmTimeWarp {
   }
 
   fn activate(&mut self, _features: &mut Self::InitFeatures) {
-    self.time_warp.reset();
-    if self.params.sample_mode == Some(SampleMode::Delay) {
-      // Only reset the delay line if the sample mode is Delay
-      self.time_warp.reset_delay_line();
-    }
+    self
+      .time_warp
+      .reset(self.params.sample_mode == Some(SampleMode::Delay));
     self.notes.remove_notes();
     self.params.reset();
+    self.bypass.reset();
     self.activated = true;
   }
 

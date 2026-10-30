@@ -9,7 +9,7 @@ lv2 = { git = "https://github.com/davemollen/rust-lv2.git", branch = "master", f
     "full", "wmidi"
 ] }
 time_warp = { path = "../time_warp" }
-wmidi = "3.1.0"
+wmidi = "4.0.10"
 
 [lib]
 crate-type = ["cdylib"]

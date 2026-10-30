@@ -5,14 +5,12 @@ pub trait Smoother {
 
   fn set_target(&mut self, target: f32);
 
-  fn get_target(&self) -> f32;
-
   fn next(&mut self) -> f32;
 }
 
 pub struct LinearSmooth {
-  current: f32,
-  target: f32,
+  pub current: f32,
+  pub target: f32,
   factor: f32,
   step_size: f32,
   steps: usize,
@@ -47,10 +45,6 @@ impl Smoother for LinearSmooth {
     }
   }
 
-  fn get_target(&self) -> f32 {
-    self.target
-  }
-
   fn next(&mut self) -> f32 {
     if self.step_counter > 0 {
       self.current += self.step_size;
@@ -63,8 +57,8 @@ impl Smoother for LinearSmooth {
 }
 
 pub struct ExponentialSmooth {
-  current: f32,
-  target: f32,
+  pub current: f32,
+  pub target: f32,
   b1: f32,
   is_active: bool,
 }
@@ -83,17 +77,12 @@ impl ExponentialSmooth {
 impl Smoother for ExponentialSmooth {
   fn reset(&mut self, target: f32) {
     self.current = target;
-    self.target = target;
     self.is_active = false;
   }
 
   fn set_target(&mut self, target: f32) {
     self.target = target;
     self.is_active = self.current != self.target;
-  }
-
-  fn get_target(&self) -> f32 {
-    self.target
   }
 
   fn next(&mut self) -> f32 {
@@ -112,7 +101,7 @@ impl Smoother for ExponentialSmooth {
 pub struct CascadedExponentialSmooth {
   current1: f32,
   current2: f32,
-  target: f32,
+  pub target: f32,
   b1: f32,
   is_active: bool,
 }
@@ -142,10 +131,6 @@ impl Smoother for CascadedExponentialSmooth {
     self.is_active = self.current2 != self.target;
   }
 
-  fn get_target(&self) -> f32 {
-    self.target
-  }
-
   fn next(&mut self) -> f32 {
     if self.is_active {
       let a0 = 1.0 - self.b1;
@@ -164,8 +149,8 @@ impl Smoother for CascadedExponentialSmooth {
 }
 
 pub struct LogarithmicSmooth {
-  current: f32,
-  target: f32,
+  pub current: f32,
+  pub target: f32,
   factor: f32,
   is_active: bool,
 }
@@ -184,17 +169,12 @@ impl LogarithmicSmooth {
 impl Smoother for LogarithmicSmooth {
   fn reset(&mut self, target: f32) {
     self.current = target;
-    self.target = target;
     self.is_active = false;
   }
 
   fn set_target(&mut self, target: f32) {
     self.target = target;
     self.is_active = self.current != self.target;
-  }
-
-  fn get_target(&self) -> f32 {
-    self.target
   }
 
   fn next(&mut self) -> f32 {

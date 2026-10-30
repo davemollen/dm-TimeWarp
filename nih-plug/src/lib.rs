@@ -212,11 +212,9 @@ impl Plugin for DmTimeWarp {
   }
 
   fn reset(&mut self) {
-    self.time_warp.reset();
-    if self.process_params.sample_mode == Some(SampleMode::Delay) {
-      // Only reset the delay line if the sample mode is Delay
-      self.time_warp.reset_delay_line();
-    }
+    self
+      .time_warp
+      .reset(self.process_params.sample_mode == Some(SampleMode::Delay));
     self.notes.remove_notes();
     self.process_params.reset();
   }

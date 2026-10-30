@@ -2,11 +2,9 @@ mod phasor;
 mod smooth;
 mod stopwatch;
 use crate::{MAX_DELAY_TIME, MIN_DELAY_TIME};
-pub use smooth::Smoother;
+pub use smooth::{LinearSmooth, Smoother};
 use {
-  crate::shared::float_ext::FloatExt,
-  phasor::Phasor,
-  smooth::{CascadedExponentialSmooth, LinearSmooth},
+  crate::shared::float_ext::FloatExt, phasor::Phasor, smooth::CascadedExponentialSmooth,
   stopwatch::Stopwatch,
 };
 
@@ -248,7 +246,7 @@ impl Params {
   }
 
   pub fn get_target_time(&self) -> f32 {
-    self.time.get_target()
+    self.time.target
   }
 
   fn override_play(&mut self, play: bool, sample_mode: &SampleMode) -> bool {
@@ -341,7 +339,7 @@ impl Params {
     if self.should_reset_start_offset {
       self.start_offset_phasor.reset();
     }
-    let time = self.time.get_target();
+    let time = self.time.target;
     self.start_offset_phase = 1.
       - self
         .start_offset_phasor

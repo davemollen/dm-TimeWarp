@@ -1,3 +1,4 @@
+mod bypass;
 mod delay_line;
 mod filter;
 mod mix;
@@ -19,6 +20,7 @@ use {
 };
 pub use {
   audio_file_processor::{AudioFileData, AudioFileProcessor},
+  bypass::Bypass,
   delay_line::{DelayLine, Interpolation},
   notes::Notes,
   params::{Params, SampleMode},
@@ -52,13 +54,12 @@ impl TimeWarp {
     }
   }
 
-  pub fn reset(&mut self) {
-    self.filter.reset();
+  pub fn reset(&mut self, should_reset_delay_line: bool) {
+    if should_reset_delay_line {
+      self.delay_line.reset();
+    }
     self.voices.reset();
-  }
-
-  pub fn reset_delay_line(&mut self) {
-    self.delay_line.reset();
+    self.filter.reset();
   }
 
   pub fn process(

@@ -10,7 +10,7 @@ debug = true
 debug = true
 
 [dependencies]
-fastrand = "2.4.1"
+fastrand = "2.5.0"
 time_warp = { path = "../time_warp" }
 
 [dev-dependencies]
